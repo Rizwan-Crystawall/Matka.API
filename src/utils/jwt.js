@@ -17,7 +17,7 @@ const getSignedToken = (user) => {
       role: user.u_role
     },
     common.SHRI_JWT_SECRET,
-    { expiresIn: '1h' }
+    { expiresIn: '8h' }
   );
 };
 

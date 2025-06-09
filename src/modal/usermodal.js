@@ -1,28 +1,56 @@
 const { execute } = require('../utils/dbHelper');
 
-const Login = async (email) => {
-  const sql = "SELECT name, email, password, role_id as u_role FROM users WHERE email = ? AND is_active = 1 LIMIT 1";
-  return await execute(sql, [email]);
-};
-
-module.exports = {
-  Login
-};
-
-const getProfile = async (email) => {
-  const sql = 'SELECT id, parent_id, role_id as u_role FROM users WHERE email = ? AND is_active = 1 LIMIT 1';
-  const [rows] = await pool.query(sql, [email]);
+const getAllUsers = async () => {
+  const sql = 'SELECT id, name, email, role_id FROM users';
+  const rows = await execute(sql);
   return rows;
 };
 
-const getUsers = async (s_id) => {
-  const sql = 'SELECT id, name, email, role_id FROM users WHERE parent_id = ? AND is_active = 1';
-  const [rows] = await pool.query(sql, [s_id]);
-  return rows;
+const insertUser = async ({name, phone_number,email, role_id, is_active }) => {
+  const sql = `INSERT INTO users (name, phone_number,email, role_id, is_active) VALUES (?, ?, ?, ?, ?)`;
+  const result = await execute(sql, [name, phone_number,email, role_id, is_active]);
+  
+  if (result.insertId) {
+    return { id: result.insertId, name, phone_number,email, role_id, is_active };
+  }
+
+  return null;
 };
+
+const updateUser = async (id, userData) => {  
+  const sql = `
+    UPDATE users 
+    SET name = ?, phone_number = ?, email = ?, role_id = ?, is_active = ? 
+    WHERE id = ?
+  `;
+
+  const params = [
+    userData.name,
+    userData.phone_number,
+    userData.email,
+    userData.role_id,
+    userData.is_active,
+    id,
+  ];
+
+  const result = await execute(sql, params);
+  if (result.affectedRows > 0) {
+    return { id, ...userData };
+  }
+  return null;
+};
+const deleteUser = async (id) => {
+  const sql = `DELETE FROM users WHERE id = ?`;
+  const result = await execute(sql, [id]);
+
+  return result.affectedRows > 0;
+};
+
 
 module.exports = {
-  getProfile,
-  getUsers,
+  getAllUsers,
+  insertUser,
+  updateUser,
+  deleteUser
+  
 };
-

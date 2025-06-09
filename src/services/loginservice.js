@@ -21,7 +21,7 @@ const loginService = async (email, password) => {
     throw new AuthError("Wrong Username Or Password");
   }
 
-  const token = await getSignedToken(user[0]);
+  const token = await getSignedToken(user);
 
   return {
     success: true,
