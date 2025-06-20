@@ -1,56 +1,101 @@
 const { execute } = require('../utils/dbHelper');
 
-const getAllUsers = async () => {
-  const sql = 'SELECT id, name, email, role_id FROM users';
-  const rows = await execute(sql);
+
+
+const getAdminDashboardUsers = async (data) => {
+  const _sql = `
+    SELECT u.id, u.name, u.email, u.phone_number AS phone, ur.name AS role, u.is_active AS status
+    FROM users u
+    JOIN user_roles ur ON ur.id = u.role_id
+    WHERE u.is_deleted = 0 AND u.id != ?;
+  `;
+
+  const rows = await execute(_sql,[data.user_id]);
   return rows;
 };
 
-const insertUser = async ({name, phone_number,email, role_id, is_active }) => {
-  const sql = `INSERT INTO users (name, phone_number,email, role_id, is_active) VALUES (?, ?, ?, ?, ?)`;
-  const result = await execute(sql, [name, phone_number,email, role_id, is_active]);
-  
-  if (result.insertId) {
-    return { id: result.insertId, name, phone_number,email, role_id, is_active };
-  }
 
-  return null;
+const registerUser = async (email, name, password, phone, role_id, status) => {
+   const queryCheck ="SELECT * FROM users WHERE email = ?";
+   const existingUsers = await execute(queryCheck, [ email]);
+  
+
+  if (existingUsers.length > 0) {
+    throw new Error("User with this email already exists.");
+  }
+  const insertQuery = `
+    INSERT INTO users 
+      (email, name, password, phone_number, role_id, is_active)
+    VALUES 
+      (?, ?, ?, ?, ?, ?)
+  `;
+  return await execute (insertQuery, [
+    email,
+    name,
+    password,     // already hashed by your service
+    phone,
+    role_id,
+    status
+  ]);
 };
 
-const updateUser = async (id, userData) => {  
-  const sql = `
-    UPDATE users 
-    SET name = ?, phone_number = ?, email = ?, role_id = ?, is_active = ? 
+
+
+
+
+
+const updateUserFromAdmin = async (data) => {
+     const role_id = data.role === "user" ? 2 : 1;
+  const { user_id, email, name, phone, status } = data;
+
+  // Check if email already exists for a different user
+  const queryCheck = "SELECT * FROM users WHERE id != ? AND email = ?";
+  const existingUsers = await execute(queryCheck, [user_id, email]);
+  console.log(existingUsers);
+  
+
+  if (existingUsers.length > 0) {
+    throw new Error("User with this email already exists.");
+  }
+
+  // Update the user
+  const updateQuery = `
+    UPDATE users
+    SET email = ?, name = ?, phone_number = ?, role_id = ?, is_active = ?
     WHERE id = ?
   `;
+  const result = await execute(updateQuery, [
+    email,
+    name,
+    phone,
+    role_id,
+    status,
+    user_id,
+  ]);
 
-  const params = [
-    userData.name,
-    userData.phone_number,
-    userData.email,
-    userData.role_id,
-    userData.is_active,
-    id,
-  ];
-
-  const result = await execute(sql, params);
-  if (result.affectedRows > 0) {
-    return { id, ...userData };
-  }
-  return null;
+  return result; // contains affectedRows, insertId, etc.
 };
-const deleteUser = async (id) => {
-  const sql = `DELETE FROM users WHERE id = ?`;
-  const result = await execute(sql, [id]);
 
-  return result.affectedRows > 0;
+
+
+
+
+const deleteUserFromAdmin = async (data) => {
+  const userId = data.delete_user_id;
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
+  // const _sql_rest_url = "DELETE FROM users WHERE id = ?";
+  const _sql_rest_url = "UPDATE users SET is_deleted = 1 WHERE id = ?";
+   const rows = await execute(_sql_rest_url, [userId]);
+  return rows;
 };
 
 
 module.exports = {
-  getAllUsers,
-  insertUser,
-  updateUser,
-  deleteUser
+  getAdminDashboardUsers,
+  deleteUserFromAdmin,
+  updateUserFromAdmin,
+  registerUser
   
 };

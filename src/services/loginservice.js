@@ -27,7 +27,9 @@ const loginService = async (email, password) => {
     success: true,
     role: user[0].u_role,
     name: user[0].name,
-    token
+    token,
+    email: user[0].email,
+    uid: user[0].uid
   };
 };
 
