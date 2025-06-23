@@ -52,7 +52,6 @@ const deleteUser = async (req, res) => {
 
 const updateUserController = async (req, res) => {
   try {
-    console.log(req.body);
     
     await UserService.updateUserFromAdmin(req.body);
     return res.status(200).json({

@@ -6,6 +6,8 @@ const matchcontroller =  require('../controllers/matchcontroller');
 const registerController =  require('../controllers/registercontroller');
 const marketcontoller =  require('../controllers/marketcontoller');
 const dashboardcontroller =   require('../controllers/dashboardcontroller');
+const ResultController =   require('../controllers/ResultController');
+
 
 
 const authMiddleware = require('../middleware/middleware');
@@ -21,21 +23,32 @@ router.post("/delete/user", usercontroller.deleteUser);
  router.post('/getmatch',authMiddleware,matchcontroller.getAllMatches);
  router.post('/addmatch', authMiddleware,matchcontroller.addMatch); 
  router.post('/editmatch/:id', authMiddleware,matchcontroller.updateMatch);
- router.get('/matches/:id', matchcontroller.getMatchById); 
+ router.post('/matches', matchcontroller.getMatchById); 
  router.delete('/deletematch/:id', authMiddleware,matchcontroller.deleteMatch);
 
 
   router.post('/getmarket', marketcontoller.getAllMarkets);
-  router.post('/getmarkets', marketcontoller.getAdminDashboardMarkets);
-  // router.post('/getmarket', marketcontoller.getAllMarkets);
-  // router.post('/getmarket', marketcontoller.getAllMarkets);
-  // router.post('/getmarket', marketcontoller.getAllMarkets);
+  router.post('/getmarkets', marketcontoller.getMarket);
+  router.post('/addmarket', marketcontoller.addMarket);
+  router.post("/updatemarket", marketcontoller.updateMarket);
+  router.post("/deletemarket", marketcontoller.deleteMarket);
 
 
   router.post('/totaldata',authMiddleware,dashboardcontroller.getDashboardData);
   router.post("/dashboard/marketwise",authMiddleware, dashboardcontroller.getMarketwiseDashboardData);
   router.post("/dashboard/bettype",authMiddleware, dashboardcontroller.getBetTypeDistribution);
   router.post("/recent/matches", authMiddleware,dashboardcontroller.getRecentMatches);
+
+
+  
+    router.post('/saveResults',ResultController.saveBetResults);
+    router.post('/getAllResults',ResultController.getAllResults);
+    router.post('/getResultById', ResultController.getResultById);
+    router.post('/getMarketById', ResultController.getMarketById);
+
+
+    
+
 
 
 

@@ -72,7 +72,10 @@ const addMatch = async (req, res) => {
 // controllers/matchController.js
 
 const getMatchById = async (req, res) => {
-  const matchId = parseInt(req.params.id);
+   const matchId = parseInt(req.body.match_id);
+    if (isNaN(matchId)) {
+    return res.status(400).json({ success: false, message: 'Invalid match_id' });
+  }
 
   try {
     const data = await MatchService.getMatchById(matchId);
@@ -88,10 +91,11 @@ const getMatchById = async (req, res) => {
 };
 const updateMatch = async (req, res) => {
   try {
-    console.log(req.body)
-    const matchId = req.params.id; // extract match ID from URL
+     console.log(req.body)
+    // const matchId = req.params.id; // extract match ID from URL
     
     const {
+      id,
       market_id,
       name,
       draw_date,
@@ -104,7 +108,7 @@ const updateMatch = async (req, res) => {
     } = req.body;
 
     const result = await MatchService.updateMatch({
-      id: matchId,
+      id,
       market_id,
       name,
       draw_date,

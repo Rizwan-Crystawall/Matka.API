@@ -25,16 +25,80 @@ const getAllMarkets = async (req, res, next) => {
     next(error); // Use Express error handler middleware
   }
 };
-const getAdminDashboardMarkets = async (req, res) => {
+const getMarket = async (req, res) => {
   try {
-    const markets = await MarketService.getAdminDashboardMarkets();
+    const markets = await MarketService.getMarket();
     res.status(200).json({ success: true, data: markets });
   } catch (error) {
     console.error("Error fetching admin markets:", error.message);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
+const addMarket = async (req, res) => {
+ try {
+    const { name } = req.body;
+
+    const result = await MarketService.addMarket(name);
+    console.log(result);
+    
+ if (!result.success) {
+      return res.status(400).json(result);
+    }
+    res.status(201).json({
+      success: true,
+      message: "Market added successfully.",
+      marketId: result.insertId,
+    });
+  } catch (error) {
+    console.error("Error adding market:", error.message);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+const updateMarket = async (req, res) => {
+  try {
+    const { market_id, name, status } = req.body;
+
+    if (!market_id || !name || typeof is_active === "undefined") {
+      return res.status(400).json({
+        success: false,
+        message: "market_id, name, and is_active are required.",
+      });
+    }
+
+    const result = await MarketService.updateMarket(market_id, name, is_active);
+
+    return res.status(200).json({
+      success: true,
+      message: "Market updated successfully.",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+const deleteMarket = async (req, res) => {
+  try {
+    const { delete_market_id } = req.body;
+
+    await MarketService.deleteMarket(delete_market_id);
+
+    res.status(200).json({
+      success: true,
+      message: "Market deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Error deleting market:", error.message);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
 module.exports = {
   getAllMarkets,
-  getAdminDashboardMarkets
+  addMarket,
+  getMarket,
+  updateMarket,
+  deleteMarket
 };

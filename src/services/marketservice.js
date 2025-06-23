@@ -10,12 +10,54 @@ const getAllMarkets = async () => {
     }
   };
 
-  const getAdminDashboardMarkets = async () => {
-  const rows = await MarketModel.getAdminDashboardMarkets();
+  const getMarket = async () => {
+  const rows = await MarketModel.getMarket();
   return rows;
 };
+const addMarket = async (name) => {
+  if (!name || name.trim() === "") {
+    throw new Error("Market name is required.");
+  }
 
+  const existingRows = await MarketModel.checkMarketExists(name.trim());
+
+  if (existingRows.length > 0) {
+    return {
+      success: false,
+      message: "Market name already exists.",
+    };
+  }
+
+  const result = await MarketModel.addMarket(name.trim());
+
+  return {
+    success: true,
+    message: "Market added successfully.",
+    marketId: result.insertId, // ✅ for controller to use
+  };
+};
+const updateMarket = async (market_id, name, is_active) => {
+  const duplicate = await MarketModel.checkDuplicateMarket(name, is_active, market_id);
+
+  if (duplicate.length > 0) {
+    throw new Error("Market with the same name and active status already exists.");
+  }
+
+  const result = await MarketModel.updateMarket(market_id, name, is_active);
+  return result;
+};
+const deleteMarket = async (id) => {
+  if (!id || isNaN(id)) {
+    throw new Error("Invalid market ID.");
+  }
+
+  const result = await MarketModel.deleteMarket(id);
+  return result;
+};
 module.exports = {
   getAllMarkets,
-  getAdminDashboardMarkets
+  getMarket,
+  addMarket,
+  updateMarket,
+  deleteMarket
 }

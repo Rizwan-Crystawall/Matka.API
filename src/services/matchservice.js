@@ -48,10 +48,10 @@ const getMatchById = async (matchId) => {
   }
 }
 
-const updateMatch = async (matchData) => {
+const updateMatch = async (id) => {
   
   try {
-    const result = await Match.updateMatch(matchData);
+    const result = await Match.updateMatch(id);
     return result;
   } catch (error) {
     console.error('Match Service Update Error:', error);
