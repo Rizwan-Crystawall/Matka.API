@@ -24,17 +24,18 @@ const getAdminDashboardUsers = async (req, res) => {
 
 const registerUser = async (req, res) => {
   try {
-    console.log(req.body,"1");
-    
     const result = await UserService.registerUser(req.body);
-    console.log(result,"ll");
-    
-    res.status(200).json(result);
+
+    if (result.success) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(400).json(result);
+    }
   } catch (error) {
     console.error("Register User Error:", error.message);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Internal server error",
     });
   }
 };
@@ -52,8 +53,8 @@ const deleteUser = async (req, res) => {
 
 const updateUserController = async (req, res) => {
   try {
-    
     await UserService.updateUserFromAdmin(req.body);
+    
     return res.status(200).json({
       success: true,
       message: "User updated successfully.",
@@ -65,6 +66,7 @@ const updateUserController = async (req, res) => {
     });
   }
 };
+
 
 
 module.exports = {

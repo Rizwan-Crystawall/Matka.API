@@ -57,14 +57,10 @@ const addMarket = async (req, res) => {
 };
 const updateMarket = async (req, res) => {
   try {
+    console.log( req.body);
+    
     const { market_id, name, status } = req.body;
-
-    if (!market_id || !name || typeof is_active === "undefined") {
-      return res.status(400).json({
-        success: false,
-        message: "market_id, name, and is_active are required.",
-      });
-    }
+     const is_active = status;
 
     const result = await MarketService.updateMarket(market_id, name, is_active);
 

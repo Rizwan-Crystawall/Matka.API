@@ -14,29 +14,40 @@ const getAdminDashboardUsers = async (data) => {
   return rows;
 };
 
+const findUserByEmail = async (email) => {
+  const query = "SELECT * FROM users WHERE email = ?";
+  return await execute(query, [email]);
+};
 
-const registerUser = async (email, name, password, phone, role_id, status) => {
-   const queryCheck ="SELECT * FROM users WHERE email = ?";
-   const existingUsers = await execute(queryCheck, [ email]);
-  
-
-  if (existingUsers.length > 0) {
-    throw new Error("User with this email already exists.");
-  }
-  const insertQuery = `
+const registerUser = async (email, name, password, phone, role_id, status, wallet_balance) => {  
+  const insertUserQuery = `
     INSERT INTO users 
       (email, name, password, phone_number, role_id, is_active)
-    VALUES 
-      (?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
-  return await execute (insertQuery, [
+  const userResult = await execute(insertUserQuery, [
     email,
     name,
-    password,     // already hashed by your service
+    password,
     phone,
     role_id,
-    status
+    status,
   ]);
+
+  const user_id = userResult.insertId;
+
+  const insertWalletQuery = "INSERT INTO wallet (user_id, wallet_balance) VALUES (?, ?)";
+  const result_ = await execute(insertWalletQuery, [user_id, wallet_balance]);
+
+  return {
+    user_id,
+    email,
+    name,
+    phone,
+    role_id,
+    status,
+    wallet_balance,
+  };
 };
 
 
@@ -44,27 +55,13 @@ const registerUser = async (email, name, password, phone, role_id, status) => {
 
 
 
-const updateUserFromAdmin = async (data) => {
-     const role_id = data.role === "user" ? 2 : 1;
-  const { user_id, email, name, phone, status } = data;
-
-  // Check if email already exists for a different user
-  const queryCheck = "SELECT * FROM users WHERE id != ? AND email = ?";
-  const existingUsers = await execute(queryCheck, [user_id, email]);
-  console.log(existingUsers);
-  
-
-  if (existingUsers.length > 0) {
-    throw new Error("User with this email already exists.");
-  }
-
-  // Update the user
+const updateUserFromAdmin = async ({ user_id, email, name, phone, role_id, status }) => {
   const updateQuery = `
     UPDATE users
     SET email = ?, name = ?, phone_number = ?, role_id = ?, is_active = ?
     WHERE id = ?
   `;
-  const result = await execute(updateQuery, [
+  return await execute(updateQuery, [
     email,
     name,
     phone,
@@ -72,8 +69,10 @@ const updateUserFromAdmin = async (data) => {
     status,
     user_id,
   ]);
-
-  return result; // contains affectedRows, insertId, etc.
+};
+const checkEmailUser = async (user_id, email) => {
+  const query = "SELECT * FROM users WHERE id != ? AND email = ?";
+  return await execute(query, [user_id, email]);
 };
 
 
@@ -96,6 +95,9 @@ module.exports = {
   getAdminDashboardUsers,
   deleteUserFromAdmin,
   updateUserFromAdmin,
-  registerUser
+  registerUser,
+  findUserByEmail,
+  checkEmailUser,
+
   
 };
