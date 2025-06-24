@@ -54,8 +54,87 @@ const getUserBetsByMatch = async (user_id, match_id) => {
   const rows = await execute(sql, [user_id, match_id]);
   return rows;
 };
+const getMatchMap = async (match_id, type_id) => {
+  const sql = "SELECT id FROM matches_type_mapping WHERE match_id = ? AND type_id = ?";
+  const result = await execute(sql, [match_id, type_id]);
+  return result[0] || null;
+};
 
+// const insertBet = async (data) => {
+//   // console.log(data);return;
+//   const sql = `
+//     INSERT INTO bets (user_id, match_map_id, stake, rate, status_id, ip, is_closed_type)
+//     VALUES (?, ?, ?, ?, ?, ?, ?)`;
+//   const result = await execute(sql, [
+//     data.user_id,
+//     data.match_map_id,
+//     data.stake,
+//     data.rate,
+//     data.status_id,
+//     data.ip,
+//     data.is_closed_type || 0,
+//   ]);
+//   return result.insertId;
+// };
+
+const insertBet = async (data) => {
+ // Step 1: Insert into `bets` table
+  const betSql = `
+    INSERT INTO bets (user_id, match_map_id, stake, rate, status_id, ip, is_closed_type)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  const [betResult] = await execute(betSql, [
+    data.user_id,
+    data.match_map_id,
+    data.stake,
+    data.rate,
+    data.status_id,
+    data.ip,
+    data.is_closed_type || 0,
+  ]);
+
+  // const betId = betResult.insertId;
+
+  const result = execute(sql, [betResult]);
+  return result.insertId;
+};
+
+
+const insertBetDigits = async (digitData) => {
+  const formatted = digitData.map(d => [d.digit, d.bet_id, d.potential_profit]);
+  const sql = "INSERT INTO bet_digits (digit, bet_id, potential_profit) VALUES ?";
+  await execute(sql, [formatted]);
+};
+
+const getExistingDigits = async ({ is_closed_type, match_map_id, user_id }) => {
+  const sql = `
+    SELECT bd.id, bd.digit, bd.potential_profit
+    FROM bet_digits bd
+    JOIN bets b ON b.id = bd.bet_id
+    WHERE b.is_closed_type = ? AND b.match_map_id = ? AND b.user_id = ?`;
+  return await execute(sql, [is_closed_type, match_map_id, user_id]);
+};
+
+const updateDigitProfit = async (id, profit) => {
+  const sql = "UPDATE bet_digits SET potential_profit = ? WHERE id = ?";
+  await execute(sql, [profit, id]);
+};
+
+const updateWallet = async (user_id, amount) => {
+  const sql = `
+    UPDATE wallet
+    SET exposure = exposure + ?, wallet_balance = wallet_balance - ?
+    WHERE user_id = ?`;
+  await execute(sql, [amount, amount, user_id]);
+};
 module.exports = {
   getBetsByMatchAndUser,
-  getUserBetsByMatch
+  getUserBetsByMatch,
+  getMatchMap,
+  insertBet,
+  insertBetDigits,
+  getExistingDigits,
+  updateDigitProfit,
+  updateWallet,
 };

@@ -59,6 +59,8 @@ router.post('/wallet', WalletController.getWalletDetails);
 
 router.post('/betUsers', BetController.getBetsByMatchAndUser);
 router.post('/betsUserLog', BetController.getUserBets);
+router.post('/saveUserBet', BetController.saveUserBet);
+
 
 
 
