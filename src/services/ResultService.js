@@ -1,47 +1,58 @@
 const ResultModel = require("../modal/ResultModal");
 
 const saveBetResults = async (data) => {
-  console.log(data,"mi");
   
-   if (!data.payload || !Array.isArray(data.payload)) {
-    throw new Error("Invalid or missing 'payload' in request data");
+    if (!data || !Array.isArray(data.payload)) {
+    throw new Error("Invalid data: payload must be an array.");
   }
 
-  if (!data.result || !Array.isArray(data.result)) {
-    throw new Error("Invalid or missing 'result' in request data");
+  if (!Array.isArray(data.result)) {
+    throw new Error("Invalid data: result must be an array.");
   }
+  const values = data.payload.map((r) => [
+    r.mmid,
+    r.open_result,
+    r.close_result,
+    data.user_id,
+  ]);
 
+  await ResultModel.insertOrUpdateResults(values);
   
-  await ResultModel.insertOrUpdateResults(data.payload, data.user_id);
 
   for (const item of data.result) {
     const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
     const digit = item.open_result ?? item.close_result;
     const mmid = item.mmid;
 
-    const allBets = await ResultModel.fetchBetsWithDigitStats(digit, mmid, isClosedType);
+    const bets = await ResultModel.fetchBets(digit, mmid, isClosedType);
 
-    const result = Object.values(
-      allBets.reduce((acc, curr) => {
+    const grouped = Object.values(
+      bets.reduce((acc, curr) => {
         if (!acc[curr.user_id]) {
-          acc[curr.user_id] = { user_id: curr.user_id, total_stake: 0, profit: null };
+          acc[curr.user_id] = {
+            user_id: curr.user_id,
+            total_stake: 0,
+            profit: null,
+          };
         }
         acc[curr.user_id].total_stake += curr.total_stake_against_bet;
-
-        if (acc[curr.user_id].profit === null && curr.winning_potential_profit !== null) {
+        if (
+          acc[curr.user_id].profit === null &&
+          curr.winning_potential_profit !== null
+        ) {
           acc[curr.user_id].profit = curr.winning_potential_profit;
         }
         return acc;
       }, {})
     );
 
-    const winners = result.filter((entry) => entry.profit !== null);
-    const losers = result.filter((entry) => entry.profit === null);
+    const winners = grouped.filter((entry) => entry.profit !== null);
+    const losers = grouped.filter((entry) => entry.profit === null);
 
     for (const row of winners) {
       const { user_id, total_stake, profit } = row;
-      const allTogetherProfit = profit + total_stake;
-      await ResultModel.updateWinnerWallet(user_id, allTogetherProfit, total_stake);
+      const totalProfit = profit + total_stake;
+      await ResultModel.updateWinnerWallet(user_id, totalProfit, total_stake);
     }
 
     for (const row of losers) {
@@ -49,7 +60,7 @@ const saveBetResults = async (data) => {
       await ResultModel.updateLoserWallet(user_id, total_stake);
     }
 
-    await ResultModel.closeBets(mmid, isClosedType);
+    await ResultModel.updateBetsStatus(mmid, isClosedType);
   }
 };
 
@@ -63,7 +74,7 @@ const getAllResults = async () => {
   return results;
 };
 const getResultById = async (result_id) => {
-  console.log("From service - result_id:", result_id); 
+  // console.log("From service - result_id:", result_id); 
   
   // Validation
   if (!result_id || isNaN(result_id)) {
@@ -104,5 +115,23 @@ const getActiveMatchesWithMarket = async () => {
     };
   }
 };
+const fetchMatchTypeData = async (matchId) => {
+  if (!matchId || isNaN(matchId)) {
+    throw new Error('Invalid or missing match_id');
+  }
 
-module.exports = { saveBetResults,getAllResults,getResultById,getActiveMatchesWithMarket };
+  const rows= await ResultModel.fetchMatchTypeData(matchId);
+  return rows;
+};
+const getMatchTypeId = async (match_id) => {
+  if (!match_id || isNaN(match_id)) {
+    throw new Error('Invalid match_id');
+  }
+
+  const result = await ResultModel.getMatchTypeResults(match_id);
+  return result;
+};
+
+
+
+module.exports = { saveBetResults,getAllResults,getResultById,getActiveMatchesWithMarket,fetchMatchTypeData,getMatchTypeId };

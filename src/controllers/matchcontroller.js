@@ -66,11 +66,6 @@ const addMatch = async (req, res) => {
   }
 };
 
-
-
-
-// controllers/matchController.js
-
 const getMatchById = async (req, res) => {
    const matchId = parseInt(req.body.match_id);
     if (isNaN(matchId)) {
@@ -91,7 +86,6 @@ const getMatchById = async (req, res) => {
 };
 const updateMatch = async (req, res) => {
   try {
-     console.log(req.body)
     // const matchId = req.params.id; // extract match ID from URL
     
     const {
@@ -140,16 +134,10 @@ const updateMatch = async (req, res) => {
   }
 };
 
-
-
 const deleteMatch = async (req, res) => {
   try {
     const { id } = req.params;
     const result = await MatchService.deleteMatch(id);
-
-    console.log(result);
-    
-
     if (!result) {
       return res
         .status(404)
@@ -164,11 +152,30 @@ const deleteMatch = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
+const getMatchTypes = async (req, res) => {
+  try {
+    const { match_id } = req.body;
+
+    const result = await MatchService.fetchMatchTypesByMatchId(match_id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Match type data fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Failed to fetch match type data",
+    });
+  }
+};
 
 module.exports = {
   getAllMatches,
   addMatch,
   updateMatch,
   deleteMatch,
-  getMatchById
+  getMatchById,
+  getMatchTypes
 };

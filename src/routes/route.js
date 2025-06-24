@@ -7,6 +7,8 @@ const registerController =  require('../controllers/registercontroller');
 const marketcontoller =  require('../controllers/marketcontoller');
 const dashboardcontroller =   require('../controllers/dashboardcontroller');
 const ResultController =   require('../controllers/ResultController');
+const WalletController = require('../controllers/WalletController');
+const BetController = require('../controllers/BetController');
 
 
 
@@ -25,6 +27,8 @@ router.post("/delete/user", usercontroller.deleteUser);
  router.post('/editmatch/:id', authMiddleware,matchcontroller.updateMatch);
  router.post('/matches', matchcontroller.getMatchById); 
  router.delete('/deletematch/:id', authMiddleware,matchcontroller.deleteMatch);
+ router.post('/matchDetails', matchcontroller.getMatchTypes);
+
 
 
   router.post('/getmarket', marketcontoller.getAllMarkets);
@@ -32,6 +36,8 @@ router.post("/delete/user", usercontroller.deleteUser);
   router.post('/addmarket', marketcontoller.addMarket);
   router.post("/updatemarket", marketcontoller.updateMarket);
   router.post("/deletemarket", marketcontoller.deleteMarket);
+  router.post('/activeMatchMmappings', marketcontoller.getActiveMatchMappings);
+
 
 
   router.post('/totaldata',authMiddleware,dashboardcontroller.getDashboardData);
@@ -45,6 +51,18 @@ router.post("/delete/user", usercontroller.deleteUser);
     router.post('/getAllResults',ResultController.getAllResults);
     router.post('/getResultById', ResultController.getResultById);
     router.post('/getMarketById', ResultController.getMarketById);
+    router.post('/getMatchTypeResults', ResultController.getMatchTypeResults);
+    router.post('/getMatchTypeId', ResultController.getMatchTypeId);
+
+    
+router.post('/wallet', WalletController.getWalletDetails);
+
+router.post('/betUsers', BetController.getBetsByMatchAndUser);
+router.post('/betsUserLog', BetController.getUserBets);
+
+
+
+
 
 
     

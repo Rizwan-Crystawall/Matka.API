@@ -111,7 +111,6 @@ const insertMatch = async ({
   }
 };
 
-
 const updateMatch = async ({
   id,
   market_id,
@@ -199,7 +198,6 @@ const fetchMatchById = async (matchId) => {
 
 const deleteMatch = async (id) => {
   try {
-    console.log("Soft deleting match with ID:", id);
 
     // Soft delete the match
     const matchSql = `UPDATE matches SET is_deleted = 1 WHERE id = ?`;
@@ -211,6 +209,31 @@ const deleteMatch = async (id) => {
     return false;
   }
 };
+const getMatchTypesByMatchId = async (matchId) => {
+  const sql = `
+    SELECT 
+      m.name AS match_name, 
+      mtm.type_id, 
+      mt.name AS type_name, 
+      mtm.rate, 
+      mtm.min_stake, 
+      mtm.max_stake, 
+      m.open_time, 
+      m.close_time, 
+      m.is_active, 
+      m.open_suspend, 
+      m.close_suspend, 
+      m.draw_date 
+    FROM matches_type_mapping mtm
+    JOIN matches m ON m.id = mtm.match_id
+    JOIN match_types mt ON mt.id = mtm.type_id
+    WHERE mtm.match_id = ?
+    ORDER BY mtm.type_id ASC
+  `;
+
+  const rows = await execute(sql, [matchId]);
+  return rows;
+};
 
 module.exports = {
   getAllMatches,
@@ -218,4 +241,5 @@ module.exports = {
   updateMatch,
   deleteMatch,
   fetchMatchById,
+  getMatchTypesByMatchId
 };

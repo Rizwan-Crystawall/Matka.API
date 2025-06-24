@@ -58,6 +58,32 @@ const deleteMarket = async (id) => {
   return await execute(sql, [id]);
 };
 
+const fetchActiveMatchMappings = async () => {
+  const sql = `
+    SELECT 
+      m.market_id, 
+      mkt.name AS market_name, 
+      m.id AS match_name_id, 
+      m.name AS match_name, 
+      mtm.type_id, 
+      mtm.rate, 
+      m.draw_date, 
+      m.open_time, 
+      m.close_time, 
+      m.is_active, 
+      m.open_suspend, 
+      m.close_suspend
+    FROM matches m
+    JOIN matches_type_mapping mtm ON mtm.match_id = m.id
+    JOIN markets mkt ON m.market_id = mkt.id
+    WHERE 
+      mkt.is_active = 1 AND 
+      m.is_active = 1 AND 
+      m.is_deleted = 0
+  `;
+
+  return await execute(sql);
+};
 
 module.exports = {
   getAllMarkets,
@@ -66,5 +92,6 @@ module.exports = {
   updateMarket,
   deleteMarket,
   checkMarketExists,
-  checkDuplicateMarket
+  checkDuplicateMarket,
+  fetchActiveMatchMappings
 }

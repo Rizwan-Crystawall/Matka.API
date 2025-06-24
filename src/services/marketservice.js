@@ -54,10 +54,16 @@ const deleteMarket = async (id) => {
   const result = await MarketModel.deleteMarket(id);
   return result;
 };
+const getActiveMatchMappings = async () => {
+  // You can add additional validation or transformation here if needed
+  return await MarketModel.fetchActiveMatchMappings();
+};
+
 module.exports = {
   getAllMarkets,
   getMarket,
   addMarket,
   updateMarket,
-  deleteMarket
+  deleteMarket,
+  getActiveMatchMappings
 }

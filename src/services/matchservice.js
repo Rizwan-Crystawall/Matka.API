@@ -58,15 +58,16 @@ const updateMatch = async (id) => {
     throw error;
   }
 };
-
-module.exports = {
-  updateMatch,
-};
-
-
-
 const deleteMatch = async (id) => {
   return await Match.deleteMatch(id);
+};
+const fetchMatchTypesByMatchId = async (matchId) => {
+  if (!matchId || isNaN(matchId)) {
+    throw new Error("Invalid match ID");
+  }
+
+  const data = await Match.getMatchTypesByMatchId(matchId);
+  return data;
 };
 
 module.exports = {
@@ -74,5 +75,6 @@ module.exports = {
   createMatch,
   updateMatch,
   deleteMatch,
-  getMatchById
+  getMatchById,
+  fetchMatchTypesByMatchId
 };

@@ -39,9 +39,7 @@ const addMarket = async (req, res) => {
  try {
     const { name } = req.body;
 
-    const result = await MarketService.addMarket(name);
-    console.log(result);
-    
+    const result = await MarketService.addMarket(name);    
  if (!result.success) {
       return res.status(400).json(result);
     }
@@ -56,9 +54,7 @@ const addMarket = async (req, res) => {
   }
 };
 const updateMarket = async (req, res) => {
-  try {
-    console.log( req.body);
-    
+  try {    
     const { market_id, name, status } = req.body;
      const is_active = status;
 
@@ -91,10 +87,28 @@ const deleteMarket = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+const getActiveMatchMappings = async (req, res) => {
+  try {
+    const result = await MarketService.getActiveMatchMappings();
+
+    return res.status(200).json({
+      success: true,
+      message: "Active match mappings fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching match mappings",
+      error: error.message,
+    });
+  }
+};
 module.exports = {
   getAllMarkets,
   addMarket,
   getMarket,
   updateMarket,
-  deleteMarket
+  deleteMarket,
+  getActiveMatchMappings
 };
