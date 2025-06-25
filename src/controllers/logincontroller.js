@@ -16,7 +16,8 @@ exports.login = async (req, res) => {
       name: result.name,
       uid: result.uid,
       email: result.email,
-
+      balance: result.wbal,
+      exposure: result.wexp
     });
 
   } catch (error) {

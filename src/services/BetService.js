@@ -29,7 +29,7 @@ const saveUserBet = async (data) => {
 
   if (!data.digit || data.digit.length === 0) {
     throw new Error("No digits provided for the bet.");
-  }
+  }  
 
   const digitData = data.digit.map((digit) => {
     const profit = data.results[digit] ?? 0;
@@ -48,11 +48,11 @@ const saveUserBet = async (data) => {
     const digit = row.digit.toString();
     if (digit in data.results) {
       const profit = data.results[digit];
-      await UserBetModal.updateDigitProfit(row.id, profit);
+      await BetsModal.updateDigitProfit(row.id, profit);
     }
   }
 
-  await UserBetModal.updateWallet(data.user_id, data.amount);
+  await BetsModal.updateWallet(data.user_id, data.amount);
 
   return { bet_id: betId };
 };

@@ -60,31 +60,13 @@ const getMatchMap = async (match_id, type_id) => {
   return result[0] || null;
 };
 
-// const insertBet = async (data) => {
-//   // console.log(data);return;
-//   const sql = `
-//     INSERT INTO bets (user_id, match_map_id, stake, rate, status_id, ip, is_closed_type)
-//     VALUES (?, ?, ?, ?, ?, ?, ?)`;
-//   const result = await execute(sql, [
-//     data.user_id,
-//     data.match_map_id,
-//     data.stake,
-//     data.rate,
-//     data.status_id,
-//     data.ip,
-//     data.is_closed_type || 0,
-//   ]);
-//   return result.insertId;
-// };
-
 const insertBet = async (data) => {
- // Step 1: Insert into `bets` table
   const betSql = `
     INSERT INTO bets (user_id, match_map_id, stake, rate, status_id, ip, is_closed_type)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
-  const [betResult] = await execute(betSql, [
+  const betResult = await execute(betSql, [
     data.user_id,
     data.match_map_id,
     data.stake,
@@ -94,17 +76,22 @@ const insertBet = async (data) => {
     data.is_closed_type || 0,
   ]);
 
-  // const betId = betResult.insertId;
-
-  const result = execute(sql, [betResult]);
-  return result.insertId;
+  return betResult.insertId;
 };
-
 
 const insertBetDigits = async (digitData) => {
   const formatted = digitData.map(d => [d.digit, d.bet_id, d.potential_profit]);
-  const sql = "INSERT INTO bet_digits (digit, bet_id, potential_profit) VALUES ?";
-  await execute(sql, [formatted]);
+
+  const placeholders = formatted.map(() => `(?, ?, ?)`).join(", ");
+  const flatValues = formatted.flat();
+
+  const sql = `
+    INSERT INTO bet_digits (digit, bet_id, potential_profit)
+    VALUES ${placeholders}
+  `;
+
+  const result = await execute(sql, flatValues);
+  return result.insertId;
 };
 
 const getExistingDigits = async ({ is_closed_type, match_map_id, user_id }) => {
