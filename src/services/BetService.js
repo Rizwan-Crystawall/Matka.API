@@ -44,10 +44,12 @@ const saveUserBet = async (data) => {
     is_closed_type: data.is_closed_type,
   });
 
+
+
   for (const row of existingDigits) {
     const digit = row.digit.toString();
     if (digit in data.results) {
-      const profit = data.results[digit];
+      const profit = parseInt(data.results[digit]);
       await BetsModal.updateDigitProfit(row.id, profit);
     }
   }

@@ -3,10 +3,8 @@ const common = require("../utils/common");
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
-  console.log("Authorization Header:", authHeader);
 
   const token = authHeader && authHeader.split(" ")[1];
-  console.log("Extracted Token:", token);
 
   if (!token) {
     return res.status(401).json({

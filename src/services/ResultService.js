@@ -25,6 +25,7 @@ const saveBetResults = async (data) => {
     const mmid = item.mmid;
 
     const bets = await ResultModel.fetchBets(digit, mmid, isClosedType);
+    
 
     const grouped = Object.values(
       bets.reduce((acc, curr) => {
@@ -35,12 +36,15 @@ const saveBetResults = async (data) => {
             profit: null,
           };
         }
-        acc[curr.user_id].total_stake += curr.total_stake_against_bet;
+        acc[curr.user_id].total_stake = parseInt(acc[curr.user_id].total_stake) + parseInt(curr.total_stake_against_bet);
+        const amount=   parseInt(acc[curr.user_id].total_stake) + parseInt(curr.total_stake_against_bet);
+        
+        
         if (
           acc[curr.user_id].profit === null &&
           curr.winning_potential_profit !== null
         ) {
-          acc[curr.user_id].profit = curr.winning_potential_profit;
+          acc[curr.user_id].profit = parseInt(curr.winning_potential_profit);
         }
         return acc;
       }, {})
@@ -48,6 +52,9 @@ const saveBetResults = async (data) => {
 
     const winners = grouped.filter((entry) => entry.profit !== null);
     const losers = grouped.filter((entry) => entry.profit === null);
+
+
+
 
     for (const row of winners) {
       const { user_id, total_stake, profit } = row;

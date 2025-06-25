@@ -2,8 +2,6 @@ const { execute } = require("../utils/dbHelper");
 
 
 const insertOrUpdateResults = async (values) => {
-  // if (!values.length) return;  
-
   const placeholders = values.map(() => "(?, ?, ?, ?)").join(", ");
 
   const flatValues = values.reduce((acc, curr) => acc.concat(curr), []);
@@ -32,6 +30,7 @@ const fetchBets = async (digit, mmid, isClosedType) => {
      GROUP BY b.id, b.user_id, b.stake, bd_win.potential_profit`,
     [digit, mmid, isClosedType]
   );
+  
   return rows;
 };
 
