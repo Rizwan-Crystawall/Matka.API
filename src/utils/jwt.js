@@ -13,7 +13,7 @@ const getSignedToken = (user) => {
   return jwt.sign(
     {
       id: user.id,
-      email: user.email,
+      username: user.username,
       role: user.u_role
     },
     common.SHRI_JWT_SECRET,

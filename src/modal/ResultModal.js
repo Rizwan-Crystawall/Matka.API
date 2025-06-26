@@ -1,6 +1,5 @@
 const { execute } = require("../utils/dbHelper");
 
-
 const insertOrUpdateResults = async (values) => {
   const placeholders = values.map(() => "(?, ?, ?, ?)").join(", ");
 
@@ -14,9 +13,8 @@ const insertOrUpdateResults = async (values) => {
       close_result = VALUES(close_result)
   `;
 
-  await execute(sql,flatValues);
+  await execute(sql, flatValues);
 };
-
 
 const fetchBets = async (digit, mmid, isClosedType) => {
   const rows = await execute(
@@ -30,7 +28,7 @@ const fetchBets = async (digit, mmid, isClosedType) => {
      GROUP BY b.id, b.user_id, b.stake, bd_win.potential_profit`,
     [digit, mmid, isClosedType]
   );
-  
+
   return rows;
 };
 
@@ -44,10 +42,10 @@ const updateWinnerWallet = async (user_id, totalProfit, total_stake) => {
 };
 
 const updateLoserWallet = async (user_id, total_stake) => {
-  await execute(
-    `UPDATE wallet SET exposure = exposure - ? WHERE user_id = ?`,
-    [total_stake, user_id]
-  );
+  await execute(`UPDATE wallet SET exposure = exposure - ? WHERE user_id = ?`, [
+    total_stake,
+    user_id,
+  ]);
 };
 
 const updateBetsStatus = async (mmid, isClosedType) => {
@@ -56,8 +54,6 @@ const updateBetsStatus = async (mmid, isClosedType) => {
     [mmid, isClosedType]
   );
 };
-
-
 
 const getAllResults = async () => {
   const sql = `
@@ -125,7 +121,81 @@ const getMatchTypeResults = async (match_id) => {
   const rows = await execute(sql, [match_id]);
   return rows;
 };
+const fetchRollbackBets = async (digit, mmid, isClosedType) => {
+  const sql = `
+    SELECT b.id AS bet_id, b.user_id, b.stake,
+           COUNT(bd_all.id) AS digit_count,
+           b.stake * COUNT(bd_all.id) AS total_stake_against_bet,
+           bd_win.potential_profit AS winning_potential_profit
+    FROM bets b
+    JOIN bet_digits bd_all ON b.id = bd_all.bet_id
+    LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ?
+    WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 2
+    GROUP BY b.id, b.user_id, b.stake, bd_win.potential_profit
+  `;
 
+  const rows = await execute(sql, [digit, mmid, isClosedType]);
+  return Array.isArray(rows) ? rows : []; // <-- Ensure always array
+};
+const groupBetsByUser = (bets) => {
+  if (!Array.isArray(bets) || bets.length === 0) {
+  return {
+    success: false,
+    message: "No bets found to rollback.",
+  };
+}
+  return Object.values(
+    bets.reduce((acc, curr) => {
+      if (!acc[curr.user_id]) {
+        acc[curr.user_id] = {
+          user_id: curr.user_id,
+          total_stake: 0,
+          profit: null,
+        };
+      }
+
+      acc[curr.user_id].total_stake += parseFloat(
+        curr.total_stake_against_bet || 0
+      );
+
+      if (
+        acc[curr.user_id].profit === null &&
+        curr.winning_potential_profit !== null
+      ) {
+        acc[curr.user_id].profit = parseFloat(curr.winning_potential_profit);
+      }
+
+      return acc;
+    }, {})
+  );
+};
+const rollbackWinner = async (user_id, total, stake) => {
+  await  execute(
+    `UPDATE wallet SET wallet_balance = wallet_balance - ?, exposure = exposure + ? WHERE user_id = ?`,
+    [total, stake, user_id]
+  );
+};
+const rollbackLoser = async (user_id, stake) => {
+  await  execute(
+    `UPDATE wallet SET exposure = exposure + ? WHERE user_id = ?`,
+    [stake, user_id]
+  );
+};
+
+const resetBetStatus = async (mmid, isClosedType) => {
+  await  execute(
+    `UPDATE bets SET status_id = 1 WHERE match_map_id = ? AND is_closed_type = ?`,
+    [mmid, isClosedType]
+  );
+};
+
+const clearResult = async (mmid, isClosedType) => {
+  const field = isClosedType === 0 ? "open_result" : "close_result";
+  await  execute(
+    `UPDATE results SET ${field} = NULL WHERE match_map_id = ?`,
+    [mmid]
+  );
+};
 
 module.exports = {
   getAllResults,
@@ -133,9 +203,15 @@ module.exports = {
   fetchMarketByMatchId,
   fetchMatchTypeData,
   getMatchTypeResults,
-    insertOrUpdateResults,
+  insertOrUpdateResults,
   fetchBets,
   updateWinnerWallet,
   updateLoserWallet,
   updateBetsStatus,
+  fetchRollbackBets,
+  groupBetsByUser,
+  rollbackWinner,
+  rollbackLoser,
+  resetBetStatus,
+  clearResult,
 };

@@ -71,6 +71,50 @@ const saveBetResults = async (data) => {
   }
 };
 
+const rollBackBetResult = async (data) => {
+  const { mmid, isClosedType, digit } = data;
+
+  try {
+    const bets = await ResultModel.fetchRollbackBets(digit, mmid, isClosedType);
+
+    if (!bets || bets.length === 0) {
+      return {
+        success: false,
+        message: "No bets found to rollback.",
+      };
+    }
+
+    const grouped = ResultModel.groupBetsByUser(bets);
+    const winners = grouped.filter((u) => u.profit !== null);
+    const losers = grouped.filter((u) => u.profit === null);
+
+    for (const { user_id, total_stake, profit } of winners) {
+      const rollbackAmount = profit + total_stake;
+      await ResultModel.rollbackWinner(user_id, rollbackAmount, total_stake);
+    }
+
+    for (const { user_id, total_stake } of losers) {
+      await ResultModel.rollbackLoser(user_id, total_stake);
+    }
+
+    await ResultModel.resetBetStatus(mmid, isClosedType);
+    await ResultModel.clearResult(mmid, isClosedType);
+
+    return {
+      success: true,
+      message: "Bet result rolled back successfully.",
+    };
+  } catch (err) {
+    console.error("Rollback error:", err);
+    return {
+      success: false,
+      message: "Failed to rollback bet result.",
+      error: err.message,
+    };
+  }
+};
+
+
 const getAllResults = async () => {
   const results = await ResultModel.getAllResults();
 
@@ -141,4 +185,4 @@ const getMatchTypeId = async (match_id) => {
 
 
 
-module.exports = { saveBetResults,getAllResults,getResultById,getActiveMatchesWithMarket,fetchMatchTypeData,getMatchTypeId };
+module.exports = { saveBetResults,rollBackBetResult,getAllResults,getResultById,getActiveMatchesWithMarket,fetchMatchTypeData,getMatchTypeId };

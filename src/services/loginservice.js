@@ -5,14 +5,14 @@ const argon2 = require('argon2');
 
 
 
-const loginService = async (email, password) => {
+const loginService = async (username, password) => {
 
- if (!email) {
-  throw new InputError("Email is required");
+ if (!username) {
+  throw new InputError("username is required");
 }
   if (!password) throw new InputError("Password is required");
 
-  const user = await Login.Login(email);
+  const user = await Login.Login(username);
  if (!user || user.length === 0) {
     throw new AuthError("Wrong Username Or Password");
   }
@@ -28,7 +28,7 @@ const loginService = async (email, password) => {
     role: user[0].u_role,
     name: user[0].name,
     token,
-    email: user[0].email,
+    username: user[0].username,
     uid: user[0].uid,
     wbal: user[0].wbal,
     wexp: user[0].wexp

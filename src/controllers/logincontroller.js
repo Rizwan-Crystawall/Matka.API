@@ -5,9 +5,9 @@ const utils = require('../utils/success');
 
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
     const ip = req.ip; 
-    const result = await loginService(email, password, ip);
+    const result = await loginService(username, password, ip);
 
     utils.successResponse(res, {
       message: 'Login successful',
@@ -15,7 +15,7 @@ exports.login = async (req, res) => {
       role: result.role,
       name: result.name,
       uid: result.uid,
-      email: result.email,
+      username: result.username,
       balance: result.wbal,
       exposure: result.wexp
     });

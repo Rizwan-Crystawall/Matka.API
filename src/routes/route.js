@@ -47,6 +47,10 @@ router.post("/recent/matches",authMiddleware,dashboardcontroller.getRecentMatche
 
 //Results
 router.post("/saveResults", authMiddleware, ResultController.saveBetResults);
+
+ router.post("/rollbackResults",ResultController.rollbackBetResults);
+
+
 router.post("/getAllResults", authMiddleware, ResultController.getAllResults);
 router.post("/getResultById", authMiddleware, ResultController.getResultById);
 router.post("/getMarketById", authMiddleware, ResultController.getMarketById);
@@ -56,7 +60,7 @@ router.post("/getMatchTypeId", authMiddleware, ResultController.getMatchTypeId);
 
 
 //Wallet
-router.post("/wallet", authMiddleware, WalletController.getWalletDetails);
+router.post("/wallet", authMiddleware,WalletController.getWalletDetails);
 
 
 //BetUsers

@@ -117,8 +117,23 @@ const saveBetResults = async (req, res) => {
   }
 };
 
+const rollbackBetResults = async (req, res) => {
+  try {
+    const result = await ResultService.rollBackBetResult(req.body);
+    res.status(result.success ? 200 : 400).json(result);
+  } catch (error) {
+    console.error("Rollback Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+
 module.exports = {
  saveBetResults,
+ rollbackBetResults,
  getAllResults,
  getResultById,
  getMarketById,
