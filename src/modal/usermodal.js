@@ -4,10 +4,7 @@ const { execute } = require('../utils/dbHelper');
 
 const getAdminDashboardUsers = async (data) => {
   const _sql = `
-    SELECT u.id, u.name, u.email, u.phone_number AS phone, ur.name AS role, u.is_active AS status
-    FROM users u
-    JOIN user_roles ur ON ur.id = u.role_id
-    WHERE u.is_deleted = 0 AND u.id != ?;
+   SELECT u.id,u.name,u.username,u.password,u.email,w.wallet_balance,u.phone_number as phone,ur.name as role,u.is_active as status FROM users u, user_roles ur,wallet w WHERE ur.id=u.role_id and is_deleted=0 and u.id = w.user_id and u.id != ? ORDER BY u.id DESC;
   `;
 
   const rows = await execute(_sql,[data.user_id]);

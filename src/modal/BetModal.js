@@ -115,6 +115,31 @@ const updateWallet = async (user_id, amount) => {
     WHERE user_id = ?`;
   await execute(sql, [amount, amount, user_id]);
 };
+const getBetsByOperatorId = async (operatorId) => {
+  const sql = `
+    SELECT 
+      id AS bet_id,
+      match_map_id,
+      user_id,
+      stake,
+      rate,
+      status_id,
+      is_closed_type,
+      created_on,
+      operator_id
+    FROM bets
+    WHERE operator_id = ?
+    ORDER BY created_on DESC
+  `;
+  return await execute(sql, [operatorId]);
+};
+
+const getOperatorIds = async () => {
+  const sql = 'SELECT id FROM operators';
+  const rows = await execute(sql);
+  console.log("Operator rows:", rows);
+  return rows.map(row => row.id); // returns [1, 2, 3]
+};
 module.exports = {
   getBetsByMatchAndUser,
   getUserBetsByMatch,
@@ -124,4 +149,6 @@ module.exports = {
   getExistingDigits,
   updateDigitProfit,
   updateWallet,
+  getBetsByOperatorId,
+  getOperatorIds
 };

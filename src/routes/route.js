@@ -67,5 +67,9 @@ router.post("/wallet", authMiddleware,WalletController.getWalletDetails);
 router.post("/betUsers", authMiddleware, BetController.getBetsByMatchAndUser);
 router.post("/betsUserLog", authMiddleware, BetController.getUserBets);
 router.post("/saveUserBet", authMiddleware, BetController.saveUserBet);
+router.post("/getBetsByOperator", BetController.getBetsByOperator);
+router.get('/getoperators', BetController.getOperators);
+
+
 
 module.exports = router;

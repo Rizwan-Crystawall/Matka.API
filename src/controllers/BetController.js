@@ -48,9 +48,30 @@ const saveUserBet = async (req, res) => {
     });
   }
 };
+const getBetsByOperator = async (req, res) => {
+  try {
+    const operatorId = req.body.operator_id; 
+    const bets = await BetsService.fetchBetsByOperator(operatorId);
+    res.status(200).json({ success: true, data: bets });
+  } catch (err) {
+    console.error('Error fetching bets:', err);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};
+const getOperators = async (req, res) => {
+  try {
+    const operatorIds = await BetsService.fetchOperatorIds();
+    res.json({ operatorIds });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch operator ids' });
+  }
+};
 
 module.exports = {
   getBetsByMatchAndUser,
   getUserBets,
-  saveUserBet
+  saveUserBet,
+  getBetsByOperator,
+  getOperators
 };
