@@ -57,7 +57,8 @@ const getUserBetsByMatch = async (user_id, match_id) => {
 const getMatchMap = async (conn, match_id, type_id) => {
   const sql = "SELECT id FROM matches_type_mapping WHERE match_id = ? AND type_id = ?";
   const result = await conn.query(sql, [match_id, type_id]);
-  return result[0] || null;
+  console.log("getMatchMap result:", result[0][0]);
+  return result[0][0] || null;
 };
 
 const insertBet = async (conn, data) => {

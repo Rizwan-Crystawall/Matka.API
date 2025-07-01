@@ -26,7 +26,7 @@ const saveUserBet = async (data) => {
     }
     const betId = await BetsModal.insertBet(connection, {
       ...data,
-      match_map_id: matchMap[0].id,
+      match_map_id: matchMap.id,
     });
     if (!data.digit || data.digit.length === 0) {
       throw new Error("No digits provided for the bet.");
@@ -38,7 +38,7 @@ const saveUserBet = async (data) => {
     await BetsModal.insertBetDigits(connection, digitData);
     const existingDigits = await BetsModal.getExistingDigits(connection, {
       is_closed_type: data.is_closed_type,
-      match_map_id: matchMap[0].id,
+      match_map_id: matchMap.id,
       user_id: data.user_id,
     });
     for (const row of existingDigits[0] ) {
