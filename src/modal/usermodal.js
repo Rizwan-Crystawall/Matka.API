@@ -11,19 +11,19 @@ const getAdminDashboardUsers = async (data) => {
   return rows;
 };
 
-const findUserByEmail = async (email) => {
-  const query = "SELECT * FROM users WHERE email = ?";
-  return await execute(query, [email]);
+const findUserByEmail = async (username) => {
+  const query = "SELECT * FROM users WHERE username = ?";
+  return await execute(query, [username]);
 };
 
-const registerUser = async (email, name, password, phone, role_id, status, wallet_balance) => {  
+const registerUser = async (username, name, password, phone, role_id, status, wallet_balance) => {  
   const insertUserQuery = `
     INSERT INTO users 
-      (email, name, password, phone_number, role_id, is_active)
+      (username, name, password, phone_number, role_id, is_active)
     VALUES (?, ?, ?, ?, ?, ?)
   `;
   const userResult = await execute(insertUserQuery, [
-    email,
+    username,
     name,
     password,
     phone,
@@ -38,7 +38,7 @@ const registerUser = async (email, name, password, phone, role_id, status, walle
 
   return {
     user_id,
-    email,
+    username,
     name,
     phone,
     role_id,
@@ -52,14 +52,14 @@ const registerUser = async (email, name, password, phone, role_id, status, walle
 
 
 
-const updateUserFromAdmin = async ({ user_id, email, name, phone, role_id, status }) => {
+const updateUserFromAdmin = async ({ user_id, username, name, phone, role_id, status }) => {
   const updateQuery = `
     UPDATE users
-    SET email = ?, name = ?, phone_number = ?, role_id = ?, is_active = ?
+    SET username = ?, name = ?, phone_number = ?, role_id = ?, is_active = ?
     WHERE id = ?
   `;
   return await execute(updateQuery, [
-    email,
+    username,
     name,
     phone,
     role_id,
@@ -67,9 +67,9 @@ const updateUserFromAdmin = async ({ user_id, email, name, phone, role_id, statu
     user_id,
   ]);
 };
-const checkEmailUser = async (user_id, email) => {
-  const query = "SELECT * FROM users WHERE id != ? AND email = ?";
-  return await execute(query, [user_id, email]);
+const checkEmailUser = async (user_id, username) => {
+  const query = "SELECT * FROM users WHERE id != ? AND username = ?";
+  return await execute(query, [user_id, username]);
 };
 
 
