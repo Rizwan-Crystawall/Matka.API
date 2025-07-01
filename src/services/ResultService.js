@@ -36,15 +36,15 @@ const saveBetResults = async (data) => {
             profit: null,
           };
         }
-        acc[curr.user_id].total_stake = parseInt(acc[curr.user_id].total_stake) + parseInt(curr.total_stake_against_bet);
-        const amount=   parseInt(acc[curr.user_id].total_stake) + parseInt(curr.total_stake_against_bet);
+        acc[curr.user_id].total_stake = parseFloat(acc[curr.user_id].total_stake) + parseFloat(curr.total_stake_against_bet);
+        const amount=   parseFloat(acc[curr.user_id].total_stake) + parseFloat(curr.total_stake_against_bet);
         
         
         if (
           acc[curr.user_id].profit === null &&
           curr.winning_potential_profit !== null
         ) {
-          acc[curr.user_id].profit = parseInt(curr.winning_potential_profit);
+          acc[curr.user_id].profit = parseFloat(curr.winning_potential_profit);
         }
         return acc;
       }, {})

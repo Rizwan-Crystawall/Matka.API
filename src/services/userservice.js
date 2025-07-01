@@ -19,30 +19,30 @@ const deleteUserFromAdmin = async (data) => {
 
 const registerUser = async (data) => {
   
-  const { email, name, phone, role, status, password, wallet_balance} = data;
+  const { username, name, phone, role, status, password, wallet_balance} = data;
 
-  if (!email || !name || !phone || !password || status === undefined) {
+  if ( !username || !name || !phone || !password || status === undefined) {
     return {
       success: false,
-      message: "All fields are required.",
+      message: "All fields are requiredf.",
     };
   }
 
   const role_id = role === "user" ? 2 : 1;
 
   try {
-    const existing = await User.findUserByEmail(email);
+    const existing = await User.findUserByEmail(username);
     if (existing.length > 0) {
       return {
         success: false,
-        message: "User with this email already exists.",
+        message: "User with this username already exists.",
       };
     }
 
     const hashedPassword = await argon2.hash(password);
 
     const result = await User.registerUser(
-      email,
+      username,
       name,
       hashedPassword,
       phone,
@@ -69,22 +69,22 @@ const registerUser = async (data) => {
 
 
 const updateUserFromAdmin = async (data) => {
-  const { user_id, email, name, phone, role, status } = data;
+  const { user_id, username, name, phone, role, status } = data;
 
-  if (!user_id || !email || !name || !phone || !role || status === undefined) {
+  if (!user_id || !username || !name || !phone || !role || status === undefined) {
     throw new Error("All fields are required.");
   }
 
-  // Email format validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    throw new Error("Invalid email format.");
-  }
+  // username format validation
+  // const usernameRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // if (!usernameRegex.test(username)) {
+  //   throw new Error("Invalid username format.");
+  // }
 
-  // Check for duplicate email
-  const existing = await User.checkEmailUser(user_id, email);
+  // Check for duplicate username
+  const existing = await User.checkEmailUser(user_id, username);
   if (existing.length > 0) {
-    throw new Error("User with this email already exists.");
+    throw new Error("User with this username already exists.");
   }
 
   // Convert role
@@ -93,7 +93,7 @@ const updateUserFromAdmin = async (data) => {
   // Proceed to update
   const result = await User.updateUserFromAdmin({
     user_id,
-    email,
+    username,
     name,
     phone,
     role_id,
