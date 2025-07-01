@@ -54,19 +54,20 @@ const getUserBetsByMatch = async (user_id, match_id) => {
   const rows = await execute(sql, [user_id, match_id]);
   return rows;
 };
-const getMatchMap = async (match_id, type_id) => {
+const getMatchMap = async (conn, match_id, type_id) => {
   const sql = "SELECT id FROM matches_type_mapping WHERE match_id = ? AND type_id = ?";
-  const result = await execute(sql, [match_id, type_id]);
+  const result = await conn.query(sql, [match_id, type_id]);
   return result[0] || null;
 };
 
-const insertBet = async (data) => {
+const insertBet = async (conn, data) => {
+  // console.log("insertBet data:", data);
   const betSql = `
     INSERT INTO bets (user_id, match_map_id, stake, rate, status_id, ip, is_closed_type)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
-  const betResult = await execute(betSql, [
+  const betResult = await conn.query(betSql, [
     data.user_id,
     data.match_map_id,
     data.stake,
@@ -76,10 +77,13 @@ const insertBet = async (data) => {
     data.is_closed_type || 0,
   ]);
 
-  return betResult.insertId;
+  // console.log("insertBet result:", betResult);
+
+  return betResult[0].insertId;
 };
 
-const insertBetDigits = async (digitData) => {
+const insertBetDigits = async (conn, digitData) => {
+  // console.log("insertBetDigits data:", digitData);
   const formatted = digitData.map(d => [d.digit, d.bet_id, d.potential_profit]);
 
   const placeholders = formatted.map(() => `(?, ?, ?)`).join(", ");
@@ -90,30 +94,31 @@ const insertBetDigits = async (digitData) => {
     VALUES ${placeholders}
   `;
 
-  const result = await execute(sql, flatValues);
-  return result.insertId;
+  const result = await conn.query(sql, flatValues);
+  // console.log("insertBetDigits result:", result);
+  return result[0].insertId;
 };
 
-const getExistingDigits = async ({ is_closed_type, match_map_id, user_id }) => {
+const getExistingDigits = async (conn, { is_closed_type, match_map_id, user_id }) => {
   const sql = `
     SELECT bd.id, bd.digit, bd.potential_profit
     FROM bet_digits bd
     JOIN bets b ON b.id = bd.bet_id
     WHERE b.is_closed_type = ? AND b.match_map_id = ? AND b.user_id = ?`;
-  return await execute(sql, [is_closed_type, match_map_id, user_id]);
+  return await conn.query(sql, [is_closed_type, match_map_id, user_id]);
 };
 
-const updateDigitProfit = async (id, profit) => {
+const updateDigitProfit = async (conn, id, profit) => {
   const sql = "UPDATE bet_digits SET potential_profit = ? WHERE id = ?";
-  await execute(sql, [profit, id]);
+  return await conn.query(sql, [profit, id]);
 };
 
-const updateWallet = async (user_id, amount) => {
+const updateWallet = async (conn, user_id, amount) => {
   const sql = `
     UPDATE wallet
     SET exposure = exposure + ?, wallet_balance = wallet_balance - ?
     WHERE user_id = ?`;
-  await execute(sql, [amount, amount, user_id]);
+  return await conn.query(sql, [amount, amount, user_id]);
 };
 const getBetsByOperatorId = async (operatorId) => {
   const sql = `
