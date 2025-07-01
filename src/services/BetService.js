@@ -32,7 +32,7 @@ const saveUserBet = async (data) => {
   }  
 
   const digitData = data.digit.map((digit) => {
-    const profit = data.results[digit] ?? 0;
+    const profit = parseFloat(data.results[digit]) ?? 0;
     return { digit, bet_id: betId, potential_profit: profit };
   });
 
@@ -49,7 +49,8 @@ const saveUserBet = async (data) => {
   for (const row of existingDigits) {
     const digit = row.digit.toString();
     if (digit in data.results) {
-      const profit = parseInt(data.results[digit]);
+      // const profit = parseInt(data.results[digit]);
+      const profit = parseFloat(data.results[digit]);
       await BetsModal.updateDigitProfit(row.id, profit);
     }
   }
