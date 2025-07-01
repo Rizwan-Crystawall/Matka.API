@@ -58,9 +58,11 @@ const saveUserBet = async (data) => {
 
   return { bet_id: betId };
 };
-const fetchBetsByOperator = async (operatorId) => {
-  return await BetsModal.getBetsByOperatorId(operatorId);
+const fetchBetsByOperator = async () => {
+  const bets =  await BetsModal.getBetsByOperatorId();
+  return bets || [];
 };
+
 const fetchOperatorIds = async () => {
   const operators = await BetsModal.getOperatorIds();
       return operators;
