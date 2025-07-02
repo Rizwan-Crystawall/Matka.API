@@ -93,7 +93,12 @@ const rollBackBetResult = async (data) => {
     const { mmid, isClosedType, digit } = data;
     const bets = await ResultModel.fetchRollbackBets(connection, digit, mmid, isClosedType);
     if (!bets || bets.length === 0) {
-      return { success: false, message: "No bets found to rollback.", };
+      await ResultModel.clearResult(connection, mmid, isClosedType);
+      await db.commit(connection);
+      return {
+      success: true,
+      message: "Bet result rolled back successfully.",
+    };
     }
     const grouped = ResultModel.groupBetsByUser(bets);
     const winners = grouped.filter((u) => u.profit !== null);
