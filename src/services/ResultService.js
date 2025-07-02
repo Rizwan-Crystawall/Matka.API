@@ -1,119 +1,125 @@
+const db = require("../utils/dbHelper");
 const ResultModel = require("../modal/ResultModal");
 
 const saveBetResults = async (data) => {
-  
+  const connection = await db.beginTransaction();
+  try {
     if (!data || !Array.isArray(data.payload)) {
-    throw new Error("Invalid data: payload must be an array.");
-  }
-
-  if (!Array.isArray(data.result)) {
-    throw new Error("Invalid data: result must be an array.");
-  }
-  const values = data.payload.map((r) => [
-    r.mmid,
-    r.open_result,
-    r.close_result,
-    data.user_id,
-  ]);
-
-  await ResultModel.insertOrUpdateResults(values);
-  
-
-  for (const item of data.result) {
-    const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
-    const digit = item.open_result ?? item.close_result;
-    const mmid = item.mmid;
-
-    const bets = await ResultModel.fetchBets(digit, mmid, isClosedType);
-    
-
-    const grouped = Object.values(
-      bets.reduce((acc, curr) => {
-        if (!acc[curr.user_id]) {
-          acc[curr.user_id] = {
-            user_id: curr.user_id,
-            total_stake: 0,
-            profit: null,
-          };
-        }
-        acc[curr.user_id].total_stake = parseFloat(acc[curr.user_id].total_stake) + parseFloat(curr.total_stake_against_bet);
-        const amount=   parseFloat(acc[curr.user_id].total_stake) + parseFloat(curr.total_stake_against_bet);
-        
-        
-        if (
-          acc[curr.user_id].profit === null &&
-          curr.winning_potential_profit !== null
-        ) {
-          acc[curr.user_id].profit = parseFloat(curr.winning_potential_profit);
-        }
-        return acc;
-      }, {})
-    );
-
-    const winners = grouped.filter((entry) => entry.profit !== null);
-    const losers = grouped.filter((entry) => entry.profit === null);
-
-
-
-
-    for (const row of winners) {
-      const { user_id, total_stake, profit } = row;
-      const totalProfit = profit + total_stake;
-      await ResultModel.updateWinnerWallet(user_id, totalProfit, total_stake);
+      throw new Error("Invalid data: payload must be an array.");
     }
-
-    for (const row of losers) {
-      const { user_id, total_stake } = row;
-      await ResultModel.updateLoserWallet(user_id, total_stake);
+    if (!Array.isArray(data.result)) {
+      throw new Error("Invalid data: result must be an array.");
     }
-
-    await ResultModel.updateBetsStatus(mmid, isClosedType);
+    const values = data.payload.map((r) => [
+      r.mmid,
+      r.open_result,
+      r.close_result,
+      data.user_id,
+    ]);
+    await ResultModel.insertOrUpdateResults(connection, values);
+    for (const item of data.result) {
+      const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
+      const digit = item.open_result ?? item.close_result;
+      const mmid = item.mmid;
+      const bets = await ResultModel.fetchBets(
+        connection,
+        digit,
+        mmid,
+        isClosedType
+      );
+      const grouped = Object.values(
+        bets.reduce((acc, curr) => {
+          if (!acc[curr.user_id]) {
+            acc[curr.user_id] = {
+              user_id: curr.user_id,
+              total_stake: 0,
+              profit: null,
+            };
+          }
+          acc[curr.user_id].total_stake =
+            parseFloat(acc[curr.user_id].total_stake) +
+            parseFloat(curr.total_stake_against_bet);
+          const amount =
+            parseFloat(acc[curr.user_id].total_stake) +
+            parseFloat(curr.total_stake_against_bet);
+          if (
+            acc[curr.user_id].profit === null &&
+            curr.winning_potential_profit !== null
+          ) {
+            acc[curr.user_id].profit = parseFloat(
+              curr.winning_potential_profit
+            );
+          }
+          return acc;
+        }, {})
+      );
+      const winners = grouped.filter((entry) => entry.profit !== null);
+      const losers = grouped.filter((entry) => entry.profit === null);
+      for (const row of winners) {
+        const { user_id, total_stake, profit } = row;
+        const totalProfit = profit + total_stake;
+        await ResultModel.updateWinnerWallet(
+          connection,
+          user_id,
+          totalProfit,
+          total_stake
+        );
+      }
+      for (const row of losers) {
+        const { user_id, total_stake } = row;
+        await ResultModel.updateLoserWallet(connection, user_id, total_stake);
+      }
+      await ResultModel.updateBetsStatus(connection, mmid, isClosedType);
+    }
+    await db.commit(connection);
+    return {
+      success: true,
+      message: "Bet results saved successfully.",
+    };
+  } catch (error) {
+    await db.rollback(connection);
+    console.error("Error saving bet results:", error);
+    return {
+      success: false,
+      message: "Failed to save bet results.",
+      error: error.message,
+    };
   }
 };
 
 const rollBackBetResult = async (data) => {
-  const { mmid, isClosedType, digit } = data;
-
+  const connection = await db.beginTransaction();
   try {
-    const bets = await ResultModel.fetchRollbackBets(digit, mmid, isClosedType);
-
+    const { mmid, isClosedType, digit } = data;
+    const bets = await ResultModel.fetchRollbackBets(connection, digit, mmid, isClosedType);
     if (!bets || bets.length === 0) {
-      return {
-        success: false,
-        message: "No bets found to rollback.",
-      };
+      return { success: false, message: "No bets found to rollback.", };
     }
-
     const grouped = ResultModel.groupBetsByUser(bets);
     const winners = grouped.filter((u) => u.profit !== null);
     const losers = grouped.filter((u) => u.profit === null);
-
     for (const { user_id, total_stake, profit } of winners) {
       const rollbackAmount = profit + total_stake;
-      await ResultModel.rollbackWinner(user_id, rollbackAmount, total_stake);
+      await ResultModel.rollbackWinner(connection, user_id, rollbackAmount, total_stake);
     }
-
     for (const { user_id, total_stake } of losers) {
-      await ResultModel.rollbackLoser(user_id, total_stake);
+      await ResultModel.rollbackLoser(connection, user_id, total_stake);
     }
-
-    await ResultModel.resetBetStatus(mmid, isClosedType);
-    await ResultModel.clearResult(mmid, isClosedType);
-
+    await ResultModel.resetBetStatus(connection, mmid, isClosedType);
+    await ResultModel.clearResult(connection, mmid, isClosedType);
+    await db.commit(connection);
     return {
       success: true,
       message: "Bet result rolled back successfully.",
     };
   } catch (err) {
+    await db.rollback(connection);
     console.error("Rollback error:", err);
     return {
-      success: false,
-      message: "Failed to rollback bet result.",
-      error: err.message,
+      success: false, message: "Failed to rollback bet result.", error: err.message,
     };
   }
 };
-
 
 const getAllResults = async () => {
   const results = await ResultModel.getAllResults();
@@ -125,8 +131,8 @@ const getAllResults = async () => {
   return results;
 };
 const getResultById = async (result_id) => {
-  // console.log("From service - result_id:", result_id); 
-  
+  // console.log("From service - result_id:", result_id);
+
   // Validation
   if (!result_id || isNaN(result_id)) {
     return {
@@ -168,21 +174,27 @@ const getActiveMatchesWithMarket = async () => {
 };
 const fetchMatchTypeData = async (matchId) => {
   if (!matchId || isNaN(matchId)) {
-    throw new Error('Invalid or missing match_id');
+    throw new Error("Invalid or missing match_id");
   }
 
-  const rows= await ResultModel.fetchMatchTypeData(matchId);
+  const rows = await ResultModel.fetchMatchTypeData(matchId);
   return rows;
 };
 const getMatchTypeId = async (match_id) => {
   if (!match_id || isNaN(match_id)) {
-    throw new Error('Invalid match_id');
+    throw new Error("Invalid match_id");
   }
 
   const result = await ResultModel.getMatchTypeResults(match_id);
   return result;
 };
 
-
-
-module.exports = { saveBetResults,rollBackBetResult,getAllResults,getResultById,getActiveMatchesWithMarket,fetchMatchTypeData,getMatchTypeId };
+module.exports = {
+  saveBetResults,
+  rollBackBetResult,
+  getAllResults,
+  getResultById,
+  getActiveMatchesWithMarket,
+  fetchMatchTypeData,
+  getMatchTypeId,
+};
