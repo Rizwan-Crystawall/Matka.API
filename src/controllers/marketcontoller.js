@@ -104,11 +104,35 @@ const getActiveMatchMappings = async (req, res) => {
     });
   }
 };
+
+const getMarketsByOperator = async (req, res) => {
+  try {
+    const { username } = req.body;
+    if (!username) {
+      return res.status(400).json({
+        success: false,
+        message: "username is required",
+      });
+    }
+    let iframeSrc = `http://localhost:3000/user/home/api/${username}`;
+    res.send(
+      `<iframe src="${iframeSrc}" height="800px" width="1500px"></iframe>`
+    );
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllMarkets,
   addMarket,
   getMarket,
   updateMarket,
   deleteMarket,
-  getActiveMatchMappings
+  getActiveMatchMappings,
+  getMarketsByOperator,
 };

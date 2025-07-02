@@ -1,4 +1,5 @@
 const User = require('../modal/usermodal');
+const { getSignedToken } = require('../utils/jwt');
 const argon2 = require('argon2');
 
 
@@ -108,7 +109,41 @@ const updateUserFromAdmin = async (data) => {
 };
 
 
-
+const verifyUser = async (username) => {
+  if (!username) {
+    return {
+      success: false,
+      message: "username is required.",
+    };
+  } 
+  try {
+    const result = await User.verifyUser(username);
+    if (result.success=== true) {
+      const token = await getSignedToken(result.data);
+      return {
+        success: true,
+        message: "User verified successfully.",
+        data: {
+          username: result.data.username,
+          name: result.data.name,
+          role: result.data.role_id,
+          token: token,
+          uid: result.data.id,
+        },
+      };
+    } else {
+      return {
+        success: false,
+        message: "User not found or already verified.",
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: "Failed to verify user.",
+    };
+  }
+}
 
 
 
@@ -117,5 +152,6 @@ module.exports = {
   fetchAdminDashboardUsers,
   updateUserFromAdmin,
   deleteUserFromAdmin,
-  registerUser
+  registerUser,
+verifyUser,
 };

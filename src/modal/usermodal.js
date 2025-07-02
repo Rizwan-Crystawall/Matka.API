@@ -87,6 +87,18 @@ const deleteUserFromAdmin = async (data) => {
   return rows;
 };
 
+const verifyUser = async (username) => {
+  const query = "SELECT * FROM users WHERE username = ?";
+  const result = await execute(query, [username]);
+  if (result.length === 0) {
+    throw new Error("User not found");
+  }
+  return {
+    success: true,
+    message: "User verified successfully",
+    data: result[0],
+  };
+};
 
 module.exports = {
   getAdminDashboardUsers,
@@ -95,6 +107,5 @@ module.exports = {
   registerUser,
   findUserByEmail,
   checkEmailUser,
-
-  
+  verifyUser,
 };
