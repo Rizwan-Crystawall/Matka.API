@@ -39,7 +39,7 @@ const getBetTypeDistribution = async () => {
 
 const getRecentMatches = async (data) => {
   const _sql = `
-    SELECT m.id, m.name, m.draw_date, m.open_time, m.close_time, m.is_active, m.open_suspend, m.close_suspend
+    SELECT m.id, m.name, DATE_FORMAT(m.draw_date,"%d-%M-%Y") as draw_date, m.open_time, m.close_time, m.is_active, m.open_suspend, m.close_suspend
     FROM matches m
     WHERE m.is_active = 1
     AND m.is_deleted = 0
