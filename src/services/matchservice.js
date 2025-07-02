@@ -36,7 +36,7 @@ const createMatch = async ({
     is_active,
     open_suspend,
     close_suspend,
-    match_types, // <-- pass it to the insertMatch function
+    match_types, 
   });
 };
 const getMatchById = async (matchId) => {

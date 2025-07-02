@@ -11,7 +11,7 @@ const
 
 const getMarket = async () => {
   const _sql = `
-    SELECT m.id, m.name, m.is_active as status, m.created_on, m.modified_on
+    SELECT m.id, m.name, m.is_active as status, m.is_deleted as deleted,m.created_on, m.modified_on
     FROM markets m 
     WHERE is_deleted = 0
   `;

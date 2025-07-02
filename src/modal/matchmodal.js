@@ -44,7 +44,6 @@ const insertMatch = async ({
   match_types,
 }) => {
   try {
-    // ✅ Step 1: Check if an exact same match exists
     const checkSQL = `
       SELECT id FROM matches
       WHERE name = ? AND draw_date = ? AND open_time = ? AND close_time = ?
@@ -63,7 +62,6 @@ const insertMatch = async ({
       };
     }
 
-    // ✅ Step 2: Insert match
     const insertMatchSQL = `
       INSERT INTO matches (
         market_id, name, draw_date, open_time, close_time,
@@ -199,7 +197,6 @@ const fetchMatchById = async (matchId) => {
 const deleteMatch = async (id) => {
   try {
 
-    // Soft delete the match
     const matchSql = `UPDATE matches SET is_deleted = 1 WHERE id = ?`;
     const matchResult = await execute(matchSql, [id]);
 

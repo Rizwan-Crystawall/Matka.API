@@ -34,7 +34,7 @@ const addMatch = async (req, res) => {
       is_active,
       open_suspend,
       close_suspend,
-      match_types, // Accept match types array from request body
+      match_types,
     } = req.body;
 
     // Call service to create match

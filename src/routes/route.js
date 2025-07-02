@@ -16,6 +16,8 @@ const authMiddleware = require("../middleware/middleware");
 //Login
 router.post("/user/login", loginController.login);
 router.post("/register", registerController.register);
+
+//User
 router.post("/admin/getusers", usercontroller.getAdminDashboardUsers);
 router.post("/admin/add/user", usercontroller.registerUser);
 router.post("/admin/update/user", usercontroller.updateUserController);
@@ -29,7 +31,7 @@ router.post("/matches", matchcontroller.getMatchById);
 router.delete("/deletematch/:id", authMiddleware, matchcontroller.deleteMatch);
 router.post("/matchDetails", matchcontroller.getMatchTypes);
 
-//MArket
+//Market
 router.post("/getmarket", authMiddleware, marketcontoller.getAllMarkets);
 router.post("/getmarkets", authMiddleware, marketcontoller.getMarket);
 router.post("/addmarket", authMiddleware, marketcontoller.addMarket);
