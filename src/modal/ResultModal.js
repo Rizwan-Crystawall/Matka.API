@@ -71,7 +71,7 @@ const fetchResultByMatchId = async (result_id) => {
   return rows;
 };
 const fetchMarketByMatchId = async () => {
-  const sql = `SELECT m.market_id, mkt.name as marketname, m.id as match_id, m.name as matchname, DATE_FORMAT(m.draw_date,"%d-%m-%Y") as draw_date FROM matches m, markets mkt WHERE mkt.id=m.market_id AND m.is_active=1 AND m.is_deleted=0 AND mkt.is_active=1 ORDER BY m.market_id,m.id`;
+  const sql = `SELECT m.market_id, mkt.name as marketname, m.id as match_id, m.name as matchname, DATE_FORMAT(m.draw_date,"%d-%m-%Y") as draw_date FROM matches m, markets mkt WHERE mkt.id=m.market_id AND m.is_active=1 AND m.is_deleted=0 AND mkt.is_active=1 AND mkt.is_deleted=0 ORDER BY m.market_id,m.id`;
 
   const rows = await execute(sql);
   return rows;

@@ -19,7 +19,7 @@ const getMarket = async () => {
     return rows;
 };
 const checkMarketExists = async (name) => {
-  const sql = `SELECT id FROM markets WHERE name = ? and is_active=1`;
+  const sql = `SELECT id FROM markets WHERE name = ? and is_active=1 AND is_deleted=0`;
   return await execute(sql, [name]);
 };
 const addMarket = async (name) => {
