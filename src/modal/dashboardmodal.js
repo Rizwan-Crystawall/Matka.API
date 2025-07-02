@@ -1,6 +1,5 @@
 const { execute } = require("../utils/dbHelper");
 
-
 const getDashboardStats = async () => {
   const _sql = `
     SELECT
@@ -9,9 +8,8 @@ const getDashboardStats = async () => {
       (SELECT COUNT(*) FROM matches WHERE is_deleted = 0) AS totalMatches
   `;
   const rows = await execute(_sql);
-  return rows[0]; 
+  return rows[0];
 };
-
 
 const getDashboardDataMarketwise = async () => {
   const _sql = `
@@ -19,9 +17,10 @@ const getDashboardDataMarketwise = async () => {
     FROM matches m
     JOIN markets mkt ON mkt.id = m.market_id
     WHERE m.is_active = 1
+    AND m.is_deleted = 0
     GROUP BY m.market_id
   `;
-  const rows = await execute (_sql);
+  const rows = await execute(_sql);
   return rows;
 };
 
@@ -38,21 +37,23 @@ const getBetTypeDistribution = async () => {
   return rows;
 };
 
-
 const getRecentMatches = async (data) => {
   const _sql = `
     SELECT m.id, m.name, m.draw_date, m.open_time, m.close_time, m.is_active, m.open_suspend, m.close_suspend
     FROM matches m
     WHERE m.is_active = 1
+    AND m.is_deleted = 0
     ORDER BY m.id DESC
     LIMIT 3
   `;
- 
-   const rows = await execute(_sql);
+
+  const rows = await execute(_sql);
   return rows;
 };
 
-
-module.exports = { getDashboardStats,getDashboardDataMarketwise,getBetTypeDistribution,getRecentMatches };
-
- 
+module.exports = {
+  getDashboardStats,
+  getDashboardDataMarketwise,
+  getBetTypeDistribution,
+  getRecentMatches,
+};

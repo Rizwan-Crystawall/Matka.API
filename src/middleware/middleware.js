@@ -15,7 +15,7 @@ const authenticateToken = (req, res, next) => {
 
   jwt.verify(token, common.SHRI_JWT_SECRET, (err, user) => {
     if (err) {
-      console.error("JWT Verify Error:", err);
+      // console.error("JWT Verify Error:", err);
 
       return res.status(403).json({
         success: false,
