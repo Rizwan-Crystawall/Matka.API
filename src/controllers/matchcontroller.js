@@ -85,8 +85,8 @@ const getMatchById = async (req, res) => {
   }
 };
 const updateMatch = async (req, res) => {
+  
   try {
-    // const matchId = req.params.id; // extract match ID from URL
     
     const {
       id,

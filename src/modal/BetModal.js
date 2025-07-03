@@ -135,9 +135,9 @@ const getBetsByOperatorId = async () => {
   b.created_on,
   b.operator_id,
   op.operator_id AS operator_name
-FROM bets b, operators op, users u
-WHERE op.id = b.operator_id AND u.id = b.user_id;
-
+FROM bets b 
+LEFT JOIN operators op ON op.id = b.operator_id
+LEFT JOIN users u ON u.id = b.user_id
   `;
   return await execute(sql);
 };

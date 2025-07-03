@@ -138,7 +138,17 @@ const updateMatch = async ({
     close_suspend,
     id,
   ]);
+  const newTypeIds = match_types.map((type) => type.type_id);
+  const deleteSQL = `
+    DELETE FROM matches_type_mapping
+    WHERE match_id = ? AND type_id NOT IN (${newTypeIds.map(() => '?').join(',')})
+  `;
 
+  if (newTypeIds.length > 0) {
+    await execute(deleteSQL, [id, ...newTypeIds]);
+  } else {
+    await execute(`DELETE FROM matches_type_mapping WHERE match_id = ?`, [id]);
+  }
   const upsertMappingSQL = `
   INSERT INTO matches_type_mapping (match_id, type_id, rate, max_stake, min_stake)
   VALUES (?, ?, ?, ?, ?)
@@ -147,8 +157,6 @@ const updateMatch = async ({
     max_stake = VALUES(max_stake),
     min_stake = VALUES(min_stake)
 `;
-
-
   for (const type of match_types) {
     await execute(upsertMappingSQL, [
       id,
