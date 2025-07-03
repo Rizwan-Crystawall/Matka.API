@@ -39,6 +39,10 @@ router.post("/updatemarket", authMiddleware, marketcontoller.updateMarket);
 router.post("/deletemarket", authMiddleware, marketcontoller.deleteMarket);
 router.post("/activeMatchMmappings", authMiddleware,marketcontoller.getActiveMatchMappings);
 
+// Market for Operator API
+router.post("/get-markets", marketcontoller.getMarketsByOperator);
+router.post("/verify-user", usercontroller.verifyUser);
+
 
 //Dashboard
 router.post("/totaldata", authMiddleware, dashboardcontroller.getDashboardData);
