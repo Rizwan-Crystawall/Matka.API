@@ -9,6 +9,7 @@ const dashboardcontroller = require("../controllers/dashboardcontroller");
 const ResultController = require("../controllers/ResultController");
 const WalletController = require("../controllers/WalletController");
 const BetController = require("../controllers/BetController");
+const TokenController = require("../controllers/TokenController");
 
 //Middlware
 const authMiddleware = require("../middleware/middleware");
@@ -42,6 +43,7 @@ router.post("/activeMatchMmappings", authMiddleware,marketcontoller.getActiveMat
 // Market for Operator API
 router.post("/get-markets", marketcontoller.getMarketsByOperator);
 router.post("/verify-user", usercontroller.verifyUser);
+router.post("/auth-token", TokenController.authToken);
 
 
 //Dashboard
