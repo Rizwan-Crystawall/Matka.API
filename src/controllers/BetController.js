@@ -48,6 +48,22 @@ const saveUserBet = async (req, res) => {
     });
   }
 };
+const saveUserBetAPI = async (req, res) => {
+  try {
+    const result = await BetsService.saveUserBetAPI(req.body);
+
+    res.status(200).json({
+      success: true,
+      message: "Bet saved successfully",
+      data: result,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 const getBetsByOperator = async (req, res) => {
   try {
     const bets = await BetsService.fetchBetsByOperator();
@@ -72,6 +88,7 @@ module.exports = {
   getBetsByMatchAndUser,
   getUserBets,
   saveUserBet,
+  saveUserBetAPI,
   getBetsByOperator,
   getOperators
 };

@@ -47,9 +47,12 @@ const verifyAuth = async (req) => {
     if (result.length > 0) {
       const secret = result[0].shared_secret;
       const signature = generateSignature(userId, secret);
-      console.log("Signatures:\n From Token : \n"+signature_from_token + " From OUR SIDE: \n"+signature);
-    }
-    else {
+      if (signature_from_token === signature) {
+        return {success: true};
+      } else {
+        return { success: false, message: "Invalid Signature" };
+      }
+    } else {
       return { success: false, message: "Operator details Not Found" };
     }
   } catch (error) {

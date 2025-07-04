@@ -150,11 +150,35 @@ const getOperatorIds = async () => {
   console.log("Operator rows:", rows);
   return rows.map(row => row.id); 
 };
+
+const insertBetAPI = async (conn, data) => {
+  // console.log("insertBet data:", data);
+  const betSql = `
+    INSERT INTO bets (user_id, operator_id, match_map_id, stake, rate, status_id, ip, is_closed_type)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  const betResult = await conn.query(betSql, [
+    data.user_id,
+    data.operator_id,
+    data.match_map_id,
+    data.stake,
+    data.rate,
+    data.status_id,
+    data.ip,
+    data.is_closed_type || 0,
+  ]);
+
+  // console.log("insertBet result:", betResult);
+
+  return betResult[0].insertId;
+};
 module.exports = {
   getBetsByMatchAndUser,
   getUserBetsByMatch,
   getMatchMap,
   insertBet,
+  insertBetAPI,
   insertBetDigits,
   getExistingDigits,
   updateDigitProfit,
