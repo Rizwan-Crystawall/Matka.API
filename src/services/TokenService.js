@@ -2,38 +2,62 @@ const TokenModal = require("../modal/TokenModal");
 const { generateSignature } = require("./../utils/security");
 const jwt = require("jsonwebtoken");
 
-const authToken = async (data) => {
+const authToken = async (req) => {
   try {
-    if(!data.body.operator_id||!data.body.user_id)
-      return { success: false, message: "Operator ID / User ID missing" };  
-    const result = await TokenModal.verifyOperator(data.body.operator_id);
-    if (result.length>0) {
-        if(!data.headers[result[0].api_key])
-            return { success: false, message: "API key Not Found" };
-        if(result[0].api_secret!==data.headers[result[0].api_key])
-            return { success: false, message: "Incorrect API secret" };
-       const secret = result[0].shared_secret;
-       const userId = data.body.user_id;
-       const payload = {
+    const api_secret = req.headers["api-key"];
+    if (!req.body.operator_id || !req.body.user_id || !api_secret)
+      return { success: false, message: "Invalid Parameters" };
+    const result = await TokenModal.verifyOperator(
+      req.body.operator_id,
+      api_secret
+    );
+    if (result.length > 0) {
+      const secret = result[0].shared_secret;
+      const operatorId = req.body.operator_id;
+      const userId = req.body.user_id;
+      const payload = {
+        operatorId,
         userId,
         signature: generateSignature(userId, secret),
         iat: Math.floor(Date.now() / 1000),
-        // eat: expiry,
       };
       const token = jwt.sign(payload, secret, {
         algorithm: "HS256",
         expiresIn: "1h",
       });
-      return { success: true, message: "Token Generated Successfully", token: token };
+      return {
+        success: true,
+        message: "Token Generated Successfully",
+        token: token,
+      };
     } else {
       return { success: false, message: "Operator Not Found" };
     }
   } catch (error) {
-    console.error("Token verification error:", error);
     return { success: false, message: "Internal server error" };
   }
-}
+};
+
+const verifyAuth = async (req) => {
+  try {
+    const operatorId = req.user.operatorId;
+    const userId = req.user.userId;
+    const signature_from_token = req.user.signature;
+    const result = await TokenModal.getOperatorDetails(operatorId);
+    if (result.length > 0) {
+      const secret = result[0].shared_secret;
+      const signature = generateSignature(userId, secret);
+      console.log("Signatures:\n From Token : \n"+signature_from_token + " From OUR SIDE: \n"+signature);
+    }
+    else {
+      return { success: false, message: "Operator details Not Found" };
+    }
+  } catch (error) {
+    return { success: false, message: "Internal server error" };
+  }
+};
 
 module.exports = {
   authToken,
+  verifyAuth,
 };

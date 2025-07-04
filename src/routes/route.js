@@ -14,6 +14,9 @@ const TokenController = require("../controllers/TokenController");
 //Middlware
 const authMiddleware = require("../middleware/middleware");
 
+// API Middleware
+const authAPIMiddleware = require("../middleware/apiMiddleware");
+
 //Login
 router.post("/user/login", loginController.login);
 router.post("/register", registerController.register);
@@ -40,10 +43,13 @@ router.post("/updatemarket", authMiddleware, marketcontoller.updateMarket);
 router.post("/deletemarket", authMiddleware, marketcontoller.deleteMarket);
 router.post("/activeMatchMmappings", authMiddleware,marketcontoller.getActiveMatchMappings);
 
-// Market for Operator API
+// Market for Operator API Internal
 router.post("/get-markets", marketcontoller.getMarketsByOperator);
 router.post("/verify-user", usercontroller.verifyUser);
+
+// Market for Operator API External
 router.post("/auth-token", TokenController.authToken);
+router.post("/verify-auth", authAPIMiddleware, TokenController.verifyAuth);
 
 
 //Dashboard
