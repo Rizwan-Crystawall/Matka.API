@@ -50,10 +50,10 @@ router.post("/verify-user", usercontroller.verifyUser);
 // Market for Operator API External
 router.post("/auth-token", TokenController.authToken);
 router.post("/verify-auth", authAPIMiddleware, TokenController.verifyAuth);
-router.post("/op/activeMatchMmappings", marketcontoller.getActiveMatchMappingsAPI);
+router.post("/op/activeMatchMmappings", marketcontoller.getActiveMatchMappings);
 router.post("/op/saveUserBet", BetController.saveUserBetAPI);
-router.post("/op/betUsers", BetController.getBetsByMatchAndUserAPI);
-router.post("/op/betsUserLog", BetController.getUserBetsAPI);
+router.post("/op/betUsers", BetController.getBetsByMatchAndUser);
+router.post("/op/betsUserLog", BetController.getUserBets);
 
 
 //Dashboard
