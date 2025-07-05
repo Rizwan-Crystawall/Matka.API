@@ -9,9 +9,13 @@ const dashboardcontroller = require("../controllers/dashboardcontroller");
 const ResultController = require("../controllers/ResultController");
 const WalletController = require("../controllers/WalletController");
 const BetController = require("../controllers/BetController");
+const TokenController = require("../controllers/TokenController");
 
 //Middlware
 const authMiddleware = require("../middleware/middleware");
+
+// API Middleware
+const authAPIMiddleware = require("../middleware/apiMiddleware");
 
 //Login
 router.post("/user/login", loginController.login);
@@ -41,9 +45,17 @@ router.post("/updatemarket", authMiddleware, marketcontoller.updateMarket);
 router.post("/deletemarket", authMiddleware, marketcontoller.deleteMarket);
 router.post("/activeMatchMmappings", authMiddleware,marketcontoller.getActiveMatchMappings);
 
-// Market for Operator API
+// Market for Operator API Internal
 router.post("/get-markets", marketcontoller.getMarketsByOperator);
 router.post("/verify-user", usercontroller.verifyUser);
+
+// Market for Operator API External
+router.post("/auth-token", TokenController.authToken);
+router.post("/verify-auth", authAPIMiddleware, TokenController.verifyAuth);
+router.post("/op/activeMatchMmappings", marketcontoller.getActiveMatchMappings);
+router.post("/op/saveUserBet", BetController.saveUserBetAPI);
+router.post("/op/betUsers", BetController.getBetsByMatchAndUser);
+router.post("/op/betsUserLog", BetController.getUserBets);
 
 
 //Dashboard
