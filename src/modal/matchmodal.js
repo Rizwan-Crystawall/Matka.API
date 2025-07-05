@@ -240,8 +240,14 @@ const getMatchTypesByMatchId = async (matchId) => {
   return rows;
 };
 
+const getAllMatchTypes = async () => {
+  const rows = await execute("SELECT id,name FROM match_types");
+  return rows;
+};
+
 module.exports = {
   getAllMatches,
+  getAllMatchTypes,
   insertMatch,
   updateMatch,
   deleteMatch,

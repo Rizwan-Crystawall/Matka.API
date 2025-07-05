@@ -70,8 +70,13 @@ const fetchMatchTypesByMatchId = async (matchId) => {
   return data;
 };
 
+const fetchAllMatchTypes = async () => {
+  return await Match.getAllMatchTypes();
+};
+
 module.exports = {
   getAllMatches,
+  fetchAllMatchTypes,
   createMatch,
   updateMatch,
   deleteMatch,

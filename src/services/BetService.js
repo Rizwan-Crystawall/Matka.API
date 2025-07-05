@@ -104,11 +104,27 @@ const saveUserBetAPI = async (data) => {
     throw error;
   }
 };
+
+const getDigitStatsByMatchType = async (matchTypeId) => {
+  return await BetsModal.fetchDigitStats(matchTypeId);
+};
+
+const getUniqueClients = async (digit) => {
+  return await BetsModal.getUniqueClients(digit);
+}
+
+const getTotalNumberOfBets = async (digit) => {
+  return await BetsModal.getTotalNumberOfBets(digit);
+}
+
 module.exports = {
   fetchBetsByMatchAndUser,
+  getDigitStatsByMatchType,
   fetchUserBets,
   saveUserBet,
   saveUserBetAPI,
   fetchBetsByOperator,
   fetchOperatorIds,
+  getUniqueClients,
+  getTotalNumberOfBets,
 };

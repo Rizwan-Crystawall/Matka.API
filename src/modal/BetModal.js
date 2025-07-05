@@ -1,5 +1,4 @@
-const { execute } = require('../utils/dbHelper');
-
+const { execute } = require("../utils/dbHelper");
 
 const getBetsByMatchAndUser = async (matchId, userId) => {
   const sql = `
@@ -55,7 +54,8 @@ const getUserBetsByMatch = async (user_id, match_id) => {
   return rows;
 };
 const getMatchMap = async (conn, match_id, type_id) => {
-  const sql = "SELECT id FROM matches_type_mapping WHERE match_id = ? AND type_id = ?";
+  const sql =
+    "SELECT id FROM matches_type_mapping WHERE match_id = ? AND type_id = ?";
   const result = await conn.query(sql, [match_id, type_id]);
   // console.log("getMatchMap result:", result[0][0]);
   return result[0][0] || null;
@@ -85,7 +85,11 @@ const insertBet = async (conn, data) => {
 
 const insertBetDigits = async (conn, digitData) => {
   // console.log("insertBetDigits data:", digitData);
-  const formatted = digitData.map(d => [d.digit, d.bet_id, d.potential_profit]);
+  const formatted = digitData.map((d) => [
+    d.digit,
+    d.bet_id,
+    d.potential_profit,
+  ]);
 
   const placeholders = formatted.map(() => `(?, ?, ?)`).join(", ");
   const flatValues = formatted.flat();
@@ -100,7 +104,10 @@ const insertBetDigits = async (conn, digitData) => {
   return result[0].insertId;
 };
 
-const getExistingDigits = async (conn, { is_closed_type, match_map_id, user_id }) => {
+const getExistingDigits = async (
+  conn,
+  { is_closed_type, match_map_id, user_id }
+) => {
   const sql = `
     SELECT bd.id, bd.digit, bd.potential_profit
     FROM bet_digits bd
@@ -142,13 +149,11 @@ const getBetsByOperatorId = async () => {
   return await execute(sql);
 };
 
-
-
 const getOperatorIds = async () => {
-  const sql = 'SELECT id FROM operators';
+  const sql = "SELECT id FROM operators";
   const rows = await execute(sql);
   console.log("Operator rows:", rows);
-  return rows.map(row => row.id); 
+  return rows.map((row) => row.id);
 };
 
 const insertBetAPI = async (conn, data) => {
@@ -173,8 +178,34 @@ const insertBetAPI = async (conn, data) => {
 
   return betResult[0].insertId;
 };
+
+const fetchDigitStats = async (matchTypeId) => {
+  const sql = `
+    SELECT bd.digit, COUNT(bd.bet_id) AS total_bets_on_digit, COUNT(DISTINCT b.user_id) AS unique_users_on_digit FROM bet_digits bd JOIN bets b ON bd.bet_id = b.id JOIN matches_type_mapping mtm ON b.match_map_id=mtm.id JOIN match_types mt ON mtm.type_id=mt.id WHERE mt.id = ? GROUP BY bd.digit;;
+  `;
+
+  return await execute(sql, [matchTypeId]);
+};
+
+const getUniqueClients = async (digit) => {
+  const sql = `
+  SELECT u.name, u.username FROM bet_digits bd JOIN bets b ON bd.bet_id = b.id JOIN users u ON b.user_id = u.id WHERE bd.digit = ?;
+  `;
+  return await execute(sql, [digit]);
+};
+
+const getTotalNumberOfBets = async (digit) => {
+  const sql = `
+  SELECT b.id,b.stake,bd.bet_id,b.user_id FROM bet_digits bd
+  JOIN bets b ON bd.bet_id = b.id
+  WHERE  bd.digit = ?;
+  `;
+  return await execute(sql, [digit]);
+};
+
 module.exports = {
   getBetsByMatchAndUser,
+  fetchDigitStats,
   getUserBetsByMatch,
   getMatchMap,
   insertBet,
@@ -184,5 +215,7 @@ module.exports = {
   updateDigitProfit,
   updateWallet,
   getBetsByOperatorId,
-  getOperatorIds
+  getOperatorIds,
+  getUniqueClients,
+  getTotalNumberOfBets,
 };
