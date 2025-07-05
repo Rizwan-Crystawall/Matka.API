@@ -23,12 +23,17 @@ const getAllMatches = async () => {
       match_types mt ON mtm.type_id = mt.id
     WHERE 
       m.is_deleted = 0
+       AND mar.is_deleted = 0
     GROUP BY 
       m.id, m.name, m.market_id, m.draw_date, m.is_active, m.is_deleted, mar.name
       ORDER BY 
     m.draw_date DESC;
   `;
   const rows = await execute(sql);
+  return rows;
+};
+const getAllMatchTypes = async () => {
+  const rows = await execute("SELECT id,name FROM match_types");
   return rows;
 };
 
@@ -246,5 +251,6 @@ module.exports = {
   updateMatch,
   deleteMatch,
   fetchMatchById,
-  getMatchTypesByMatchId
+  getMatchTypesByMatchId,
+  getAllMatchTypes
 };

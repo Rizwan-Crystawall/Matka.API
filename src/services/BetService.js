@@ -65,7 +65,15 @@ const fetchOperatorIds = async () => {
   const operators = await BetsModal.getOperatorIds();
   return operators;
 };
+// const fetchDigitBetStats = async () => {
+//   return await BetsModal.getDigitBetStats();
+// };
+
+const getDigitStatsByMatchType = async (matchTypeId) => {
+  return await BetsModal.fetchDigitStats(matchTypeId);
+};
 module.exports = {
+  getDigitStatsByMatchType,
   fetchBetsByMatchAndUser,
   fetchUserBets,
   saveUserBet,
