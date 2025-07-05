@@ -189,14 +189,18 @@ const fetchDigitStats = async (matchTypeId) => {
 
 const getUniqueClients = async (digit) => {
   const sql = `
-  SELECT u.name, u.username FROM bet_digits bd JOIN bets b ON bd.bet_id = b.id JOIN users u ON b.user_id = u.id WHERE bd.digit = ?;
+  SELECT u.name, u.username, u.phone_number FROM bet_digits bd JOIN bets b ON bd.bet_id = b.id JOIN users u ON b.user_id = u.id WHERE bd.digit = ?;
   `;
   return await execute(sql, [digit]);
 };
 
 const getTotalNumberOfBets = async (digit) => {
   const sql = `
-  SELECT b.id,b.stake,bd.bet_id,b.user_id FROM bet_digits bd
+  SELECT b.id,b.stake,bd.bet_id,b.user_id,b.rate,b.bet_time,b.ip,CASE 
+    WHEN b.is_closed_type = 0 THEN 'OPEN'
+    WHEN b.is_closed_type = 1 THEN 'CLOSE'
+    ELSE 'UNKNOWN'
+  END AS bet_type FROM bet_digits bd
   JOIN bets b ON bd.bet_id = b.id
   WHERE  bd.digit = ?;
   `;
