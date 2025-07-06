@@ -22,7 +22,7 @@ const getAllMatches = async () => {
     LEFT JOIN 
       match_types mt ON mtm.type_id = mt.id
     WHERE 
-      m.is_deleted = 0
+      m.is_deleted = 0 AND mar.is_deleted = 0
     GROUP BY 
       m.id, m.name, m.market_id, m.draw_date, m.is_active, m.is_deleted, mar.name
       ORDER BY 
