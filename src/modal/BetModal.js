@@ -132,19 +132,25 @@ const updateWallet = async (conn, user_id, amount) => {
 const getBetsByOperatorId = async () => {
   const sql = `
   SELECT 
-  b.id AS bet_id,
-  b.match_map_id,
-  u.name AS user_id,
-  b.stake,
-  b.rate,
-  b.status_id,
-  b.is_closed_type,
-  b.created_on,
-  b.operator_id,
-  op.operator_id AS operator_name
-  FROM bets b
-  LEFT JOIN operators op ON op.id = b.operator_id 
-  LEFT JOIN users u ON u.id = b.user_id;
+   mt.name as match_map_id,
+   u.name AS user_id,
+   b.stake,
+   b.rate,
+   st.name as status_id,
+   CASE 
+    WHEN b.is_closed_type = 0 THEN 'OPEN'
+    WHEN b.is_closed_type = 1 THEN 'CLOSE'
+    ELSE 'UNKNOWN'
+   END as is_closed_type,
+   b.created_on,
+   b.operator_id,
+   op.operator_id as operator_name
+   FROM bets b
+   LEFT JOIN operators op ON op.id = b.operator_id 
+   LEFT JOIN users u ON u.id = b.user_id
+   JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id
+   JOIN match_types mt ON mtm.type_id=mt.id
+   JOIN status st ON st.id=b.status_id;
   `;
   return await execute(sql);
 };
