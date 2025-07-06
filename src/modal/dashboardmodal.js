@@ -5,7 +5,7 @@ const getDashboardStats = async () => {
     SELECT
       (SELECT COUNT(*) FROM users WHERE is_deleted = 0) AS activeUsers,
       (SELECT COUNT(*) FROM markets WHERE is_deleted = 0) AS totalMarkets,
-      (SELECT COUNT(*) FROM matches WHERE is_deleted = 0) AS totalMatches
+      (SELECT COUNT(*) FROM matches m, markets mkt WHERE m.market_id = mkt.id AND mkt.is_deleted = 0 AND m.is_deleted = 0) AS totalMatches
   `;
   const rows = await execute(_sql);
   return rows[0];
@@ -18,6 +18,7 @@ const getDashboardDataMarketwise = async () => {
     JOIN markets mkt ON mkt.id = m.market_id
     WHERE m.is_active = 1
     AND m.is_deleted = 0
+    AND mkt.is_deleted = 0
     GROUP BY m.market_id
   `;
   const rows = await execute(_sql);
@@ -41,8 +42,10 @@ const getRecentMatches = async (data) => {
   const _sql = `
     SELECT m.id, m.name, DATE_FORMAT(m.draw_date,"%d-%M-%Y") as draw_date, m.open_time, m.close_time, m.is_active, m.open_suspend, m.close_suspend
     FROM matches m
+    JOIN markets mkt ON mkt.id = m.market_id
     WHERE m.is_active = 1
     AND m.is_deleted = 0
+    AND mkt.is_deleted = 0
     ORDER BY m.id DESC
     LIMIT 3
   `;
