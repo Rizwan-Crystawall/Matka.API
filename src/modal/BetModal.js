@@ -4,7 +4,6 @@ const getBetsByMatchAndUser = async (matchId, userId) => {
   const sql = `
     SELECT 
       bd.digit, 
-      b.stake, 
       b.rate, 
       mtm.type_id as type, 
       CASE 
