@@ -36,7 +36,6 @@ const getUserBetsByMatch = async (user_id, match_id) => {
       mtm.type_id AS match_map_id,
       b.is_closed_type,
       bd.digit,
-      b.stake,
       b.rate,
       b.created_on
     FROM 
@@ -64,14 +63,14 @@ const getMatchMap = async (conn, match_id, type_id) => {
 const insertBet = async (conn, data) => {
   // console.log("insertBet data:", data);
   const betSql = `
-    INSERT INTO bets (user_id, match_map_id, stake, rate, status_id, ip, is_closed_type)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO bets (user_id, match_map_id, rate, status_id, ip, is_closed_type)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
 
   const betResult = await conn.query(betSql, [
     data.user_id,
     data.match_map_id,
-    data.stake,
+    // data.stake,
     data.rate,
     data.status_id,
     data.ip,
@@ -85,23 +84,41 @@ const insertBet = async (conn, data) => {
 
 const insertBetDigits = async (conn, digitData) => {
   // console.log("insertBetDigits data:", digitData);
-  const formatted = digitData.map((d) => [
-    d.digit,
-    d.bet_id,
-    d.potential_profit,
-  ]);
+  // const formatted = digitData.map((d) => [
+  //   d.digit,
+  //   d.bet_id,
+  //   d.stake,
+  //   d.potential_profit,
+  // ]);
 
-  const placeholders = formatted.map(() => `(?, ?, ?)`).join(", ");
-  const flatValues = formatted.flat();
+  // const placeholders = formatted.map(() => `(?, ?, ?, ?)`).join(", ");
+  // const flatValues = formatted.flat();
+  // console.log(flatValues)
+  
 
-  const sql = `
-    INSERT INTO bet_digits (digit, bet_id, potential_profit)
-    VALUES ${placeholders}
-  `;
+  // const sql = `
+  //   INSERT INTO bet_digits (digit, bet_id, stake, potential_profit)
+  //   VALUES ${placeholders}
+  // `;
+  // // console.log(sql);
 
-  const result = await conn.query(sql, flatValues);
+  // const result = await conn.query(sql, flatValues);
   // console.log("insertBetDigits result:", result);
-  return result[0].insertId;
+  // return result[0].insertId;
+  const formatted = digitData.map((d) => [
+  d.digit,
+  d.bet_id,
+  d.stake,
+  d.potential_profit,
+]);
+
+const sql = `
+  INSERT INTO bet_digits (digit, bet_id, stake, potential_profit)
+  VALUES ?
+`;
+
+const result = await conn.query(sql, [formatted]);
+console.log("Result " + result)
 };
 
 const getExistingDigits = async (

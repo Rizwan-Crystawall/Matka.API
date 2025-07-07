@@ -4,7 +4,7 @@ const common = {
   MYSQL_HOST: 'localhost',
   MYSQL_USER: 'root',
   MYSQL_PASSWORD: '',
-  MYSQL_DATABASE: 'matka',
+  MYSQL_DATABASE: 'matka_version_2',
 };
 
 module.exports = common;
