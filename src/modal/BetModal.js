@@ -1,11 +1,9 @@
-const { execute } = require('../utils/dbHelper');
-
+const { execute } = require("../utils/dbHelper");
 
 const getBetsByMatchAndUser = async (matchId, userId) => {
   const sql = `
     SELECT 
       bd.digit, 
-      b.stake, 
       b.rate, 
       mtm.type_id as type, 
       CASE 
@@ -37,7 +35,6 @@ const getUserBetsByMatch = async (user_id, match_id) => {
       mtm.type_id AS match_map_id,
       b.is_closed_type,
       bd.digit,
-      b.stake,
       b.rate,
       b.created_on
     FROM 
@@ -55,7 +52,8 @@ const getUserBetsByMatch = async (user_id, match_id) => {
   return rows;
 };
 const getMatchMap = async (conn, match_id, type_id) => {
-  const sql = "SELECT id FROM matches_type_mapping WHERE match_id = ? AND type_id = ?";
+  const sql =
+    "SELECT id FROM matches_type_mapping WHERE match_id = ? AND type_id = ?";
   const result = await conn.query(sql, [match_id, type_id]);
   // console.log("getMatchMap result:", result[0][0]);
   return result[0][0] || null;
@@ -64,14 +62,14 @@ const getMatchMap = async (conn, match_id, type_id) => {
 const insertBet = async (conn, data) => {
   // console.log("insertBet data:", data);
   const betSql = `
-    INSERT INTO bets (user_id, match_map_id, stake, rate, status_id, ip, is_closed_type)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO bets (user_id, match_map_id, rate, status_id, ip, is_closed_type)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
 
   const betResult = await conn.query(betSql, [
     data.user_id,
     data.match_map_id,
-    data.stake,
+    // data.stake,
     data.rate,
     data.status_id,
     data.ip,
@@ -85,22 +83,47 @@ const insertBet = async (conn, data) => {
 
 const insertBetDigits = async (conn, digitData) => {
   // console.log("insertBetDigits data:", digitData);
-  const formatted = digitData.map(d => [d.digit, d.bet_id, d.potential_profit]);
+  // const formatted = digitData.map((d) => [
+  //   d.digit,
+  //   d.bet_id,
+  //   d.stake,
+  //   d.potential_profit,
+  // ]);
 
-  const placeholders = formatted.map(() => `(?, ?, ?)`).join(", ");
-  const flatValues = formatted.flat();
+  // const placeholders = formatted.map(() => `(?, ?, ?, ?)`).join(", ");
+  // const flatValues = formatted.flat();
+  // console.log(flatValues)
+  
 
-  const sql = `
-    INSERT INTO bet_digits (digit, bet_id, potential_profit)
-    VALUES ${placeholders}
-  `;
+  // const sql = `
+  //   INSERT INTO bet_digits (digit, bet_id, stake, potential_profit)
+  //   VALUES ${placeholders}
+  // `;
+  // // console.log(sql);
 
-  const result = await conn.query(sql, flatValues);
+  // const result = await conn.query(sql, flatValues);
   // console.log("insertBetDigits result:", result);
-  return result[0].insertId;
+  // return result[0].insertId;
+  const formatted = digitData.map((d) => [
+  d.digit,
+  d.bet_id,
+  d.stake,
+  d.potential_profit,
+]);
+
+const sql = `
+  INSERT INTO bet_digits (digit, bet_id, stake, potential_profit)
+  VALUES ?
+`;
+
+const result = await conn.query(sql, [formatted]);
+console.log("Result " + result)
 };
 
-const getExistingDigits = async (conn, { is_closed_type, match_map_id, user_id }) => {
+const getExistingDigits = async (
+  conn,
+  { is_closed_type, match_map_id, user_id }
+) => {
   const sql = `
     SELECT bd.id, bd.digit, bd.potential_profit
     FROM bet_digits bd
@@ -125,30 +148,34 @@ const updateWallet = async (conn, user_id, amount) => {
 const getBetsByOperatorId = async () => {
   const sql = `
   SELECT 
-  b.id AS bet_id,
-  b.match_map_id,
-  u.name AS user_id,
-  b.stake,
-  b.rate,
-  b.status_id,
-  b.is_closed_type,
-  b.created_on,
-  b.operator_id,
-  op.operator_id AS operator_name
-  FROM bets b
-  LEFT JOIN operators op ON op.id = b.operator_id 
-  LEFT JOIN users u ON u.id = b.user_id;
+   mt.name as match_map_id,
+   u.name AS user_id,
+   b.stake,
+   b.rate,
+   st.name as status_id,
+   CASE 
+    WHEN b.is_closed_type = 0 THEN 'OPEN'
+    WHEN b.is_closed_type = 1 THEN 'CLOSE'
+    ELSE 'UNKNOWN'
+   END as is_closed_type,
+   b.created_on,
+   b.operator_id,
+   op.operator_id as operator_name
+   FROM bets b
+   LEFT JOIN operators op ON op.id = b.operator_id 
+   LEFT JOIN users u ON u.id = b.user_id
+   JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id
+   JOIN match_types mt ON mtm.type_id=mt.id
+   JOIN status st ON st.id=b.status_id;
   `;
   return await execute(sql);
 };
 
-
-
 const getOperatorIds = async () => {
-  const sql = 'SELECT id FROM operators';
+  const sql = "SELECT id FROM operators";
   const rows = await execute(sql);
   console.log("Operator rows:", rows);
-  return rows.map(row => row.id); 
+  return rows.map((row) => row.id);
 };
 const fetchDigitStats  = async (matchTypeId) => {
   const sql = `
@@ -179,9 +206,39 @@ const insertBetAPI = async (conn, data) => {
 
   return betResult[0].insertId;
 };
+
+const fetchDigitStats = async (matchTypeId) => {
+  const sql = `
+    SELECT bd.digit, COUNT(bd.bet_id) AS total_bets_on_digit, COUNT(DISTINCT b.user_id) AS unique_users_on_digit FROM bet_digits bd JOIN bets b ON bd.bet_id = b.id JOIN matches_type_mapping mtm ON b.match_map_id=mtm.id JOIN match_types mt ON mtm.type_id=mt.id WHERE mt.id = ? GROUP BY bd.digit;;
+  `;
+
+  return await execute(sql, [matchTypeId]);
+};
+
+const getUniqueClients = async (digit) => {
+  const sql = `
+  SELECT u.name, u.username, u.phone_number FROM bet_digits bd JOIN bets b ON bd.bet_id = b.id JOIN users u ON b.user_id = u.id WHERE bd.digit = ?;
+  `;
+  return await execute(sql, [digit]);
+};
+
+const getTotalNumberOfBets = async (digit) => {
+  const sql = `
+  SELECT b.id,b.stake,bd.bet_id,b.user_id,b.rate,b.bet_time,b.ip,CASE 
+    WHEN b.is_closed_type = 0 THEN 'OPEN'
+    WHEN b.is_closed_type = 1 THEN 'CLOSE'
+    ELSE 'UNKNOWN'
+  END AS bet_type FROM bet_digits bd
+  JOIN bets b ON bd.bet_id = b.id
+  WHERE  bd.digit = ?;
+  `;
+  return await execute(sql, [digit]);
+};
+
 module.exports = {
   fetchDigitStats,
   getBetsByMatchAndUser,
+  fetchDigitStats,
   getUserBetsByMatch,
   getMatchMap,
   insertBet,
@@ -191,5 +248,7 @@ module.exports = {
   updateDigitProfit,
   updateWallet,
   getBetsByOperatorId,
-  getOperatorIds
+  getOperatorIds,
+  getUniqueClients,
+  getTotalNumberOfBets,
 };

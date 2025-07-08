@@ -1,5 +1,5 @@
 // src/controller/betsController.js
-const BetsService = require('../services/BetService');
+const BetsService = require("../services/BetService");
 
 const getBetsByMatchAndUser = async (req, res) => {
   try {
@@ -9,27 +9,27 @@ const getBetsByMatchAndUser = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Bets fetched successfully',
+      message: "Bets fetched successfully",
       data: result,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message || 'Something went wrong',
+      message: error.message || "Something went wrong",
     });
   }
 };
 const getUserBets = async (req, res) => {
   try {
-    const { match_id,user_id } = req.body;
-
-   
+    const { match_id, user_id } = req.body;
 
     const bets = await BetsService.fetchUserBets(user_id, match_id);
     return res.status(200).json({ success: true, data: bets });
   } catch (err) {
-    console.error('Error fetching user bets:', err);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error("Error fetching user bets:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 const saveUserBet = async (req, res) => {
@@ -69,8 +69,8 @@ const getBetsByOperator = async (req, res) => {
     const bets = await BetsService.fetchBetsByOperator();
     res.status(200).json({ success: true, data: bets });
   } catch (err) {
-    console.error('Error fetching bets:', err);
-    res.status(500).json({ success: false, message: 'Server Error' });
+    console.error("Error fetching bets:", err);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
@@ -80,7 +80,44 @@ const getOperators = async (req, res) => {
     res.json({ operatorIds });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch operator ids' });
+    res.status(500).json({ error: "Failed to fetch operator ids" });
+  }
+};
+
+const getDigitBetStats = async (req, res) => {
+  try {
+    const { matchTypeId } = req.query;
+    // console.log("Received matchTypeId:", matchTypeId); // log to check value
+
+    if (!matchTypeId) {
+      return res.status(400).json({ error: "matchTypeId is required" });
+    }
+
+    const data = await BetsService.getDigitStatsByMatchType(matchTypeId);
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error("Error fetching digit stats:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const getUniqueClients = async (req, res) => {
+  try {
+    const clients = await BetsService.getUniqueClients(req.body.digit);
+    res.json({ success: true, data: clients });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch operator ids" });
+  }
+};
+
+const getTotalNumberOfBets = async (req, res) => {
+  try {
+    const clients = await BetsService.getTotalNumberOfBets(req.body.digit);
+    res.json({ success: true, data: clients });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch operator ids" });
   }
 };
 // const getDigitBetStats = async (req, res) => {
@@ -115,5 +152,8 @@ module.exports = {
   saveUserBet,
   saveUserBetAPI,
   getBetsByOperator,
-  getOperators
+  getOperators,
+  getDigitBetStats,
+  getUniqueClients,
+  getTotalNumberOfBets,
 };

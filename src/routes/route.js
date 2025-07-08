@@ -36,7 +36,6 @@ router.delete("/deletematch/:id", authMiddleware, matchcontroller.deleteMatch);
 router.post("/matchDetails", matchcontroller.getMatchTypes);
 router.get("/matchTypes", matchcontroller.getAllMatchTypes);
 
-
 //Market
 router.post("/getmarket", authMiddleware, marketcontoller.getAllMarkets);
 router.post("/getmarkets", authMiddleware, marketcontoller.getMarket);
@@ -87,6 +86,10 @@ router.post("/saveUserBet", authMiddleware, BetController.saveUserBet);
 router.get("/getBetsByOperator", BetController.getBetsByOperator);
 router.get('/getoperators', BetController.getOperators);
 router.get("/digit-stats", BetController.getDigitBetStats);
+router.post("/getUniqueClients", BetController.getUniqueClients);
+router.post("/getTotalNumberOfBets", BetController.getTotalNumberOfBets);
+
+
 
 
 
