@@ -18,7 +18,7 @@ const fetchUserBets = async (user_id, match_id) => {
   return await BetsModal.getUserBetsByMatch(user_id, match_id);
 };
 const saveUserBet = async (data) => {
-  console.log(data.digit);
+  // console.log(data);
   const connection = await db.beginTransaction();
   try {
     const matchMap = await BetsModal.getMatchMap(
@@ -26,7 +26,7 @@ const saveUserBet = async (data) => {
       data.match_id,
       data.type_id
     );
-    console.log(matchMap.id);
+    // console.log(matchMap.id);
     if (!matchMap) {
       throw new Error("Match type mapping not found.");
     }
@@ -34,8 +34,8 @@ const saveUserBet = async (data) => {
       ...data,
       match_map_id: matchMap.id,
     });
-    console.log(betId);
-    console.log(data.results);
+    // console.log(betId);
+    // console.log(data.results);
     if (!data.digit || data.digit.length === 0) {
       throw new Error("No digits provided for the bet.");
     }
@@ -50,7 +50,7 @@ const saveUserBet = async (data) => {
       return { digit, bet_id: betId, stake, potential_profit: profit };
     });
 
-    console.log("53 " + digitData);
+    // console.log("53 " + digitData);
 
     await BetsModal.insertBetDigits(connection, digitData);
     const existingDigits = await BetsModal.getExistingDigits(connection, {
@@ -58,7 +58,7 @@ const saveUserBet = async (data) => {
       match_map_id: matchMap.id,
       user_id: data.user_id,
     });
-    console.log("Existing Digits: " + existingDigits)
+    // console.log("Existing Digits: " + existingDigits)
     for (const row of existingDigits[0]) {
       const digit = row.digit.toString();
       if (digit in data.results) {

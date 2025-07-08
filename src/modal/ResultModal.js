@@ -17,17 +17,19 @@ const insertOrUpdateResults = async (conn, values) => {
 };
 
 const fetchBets = async (conn, digit, mmid, isClosedType) => {
-  const rows = await conn.query(
-    `SELECT b.id AS bet_id, b.user_id, b.stake, COUNT(bd_all.id) AS digit_count,
-            b.stake * COUNT(bd_all.id) AS total_stake_against_bet,
-            bd_win.potential_profit AS winning_potential_profit
-     FROM bets b
-     JOIN bet_digits bd_all ON b.id = bd_all.bet_id
-     LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ?
-     WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 1
-     GROUP BY b.id, b.user_id, b.stake, bd_win.potential_profit`,
-    [digit, mmid, isClosedType]
-  );
+  // const rows = await conn.query(
+  //   `SELECT b.id AS bet_id, b.user_id, b.stake, COUNT(bd_all.id) AS digit_count,
+  //           b.stake * COUNT(bd_all.id) AS total_stake_against_bet,
+  //           bd_win.potential_profit AS winning_potential_profit
+  //    FROM bets b
+  //    JOIN bet_digits bd_all ON b.id = bd_all.bet_id
+  //    LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ?
+  //    WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 1
+  //    GROUP BY b.id, b.user_id, b.stake, bd_win.potential_profit`,
+  //   [digit, mmid, isClosedType]
+  // );
+// console.log("Fetch Bets");
+  const rows = await conn.query(`SELECT b.user_id, b.id AS bet_id, bd_all.id as bet_digits_id, bd_all.digit, bd_all.stake, bd_win.potential_profit as winning_potential_profit FROM bets b JOIN bet_digits bd_all ON b.id = bd_all.bet_id LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ? WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 1;`,[digit, mmid, isClosedType]);
 
   return rows[0] || [];
 };
@@ -122,19 +124,21 @@ const getMatchTypeResults = async (match_id) => {
   return rows;
 };
 const fetchRollbackBets = async (conn, digit, mmid, isClosedType) => {
-  const sql = `
-    SELECT b.id AS bet_id, b.user_id, b.stake,
-           COUNT(bd_all.id) AS digit_count,
-           b.stake * COUNT(bd_all.id) AS total_stake_against_bet,
-           bd_win.potential_profit AS winning_potential_profit
-    FROM bets b
-    JOIN bet_digits bd_all ON b.id = bd_all.bet_id
-    LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ?
-    WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 2
-    GROUP BY b.id, b.user_id, b.stake, bd_win.potential_profit
-  `;
+  // const sql = `
+  //   SELECT b.id AS bet_id, b.user_id, b.stake,
+  //          COUNT(bd_all.id) AS digit_count,
+  //          b.stake * COUNT(bd_all.id) AS total_stake_against_bet,
+  //          bd_win.potential_profit AS winning_potential_profit
+  //   FROM bets b
+  //   JOIN bet_digits bd_all ON b.id = bd_all.bet_id
+  //   LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ?
+  //   WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 2
+  //   GROUP BY b.id, b.user_id, b.stake, bd_win.potential_profit
+  // `;
 
-  const rows = await conn.query(sql, [digit, mmid, isClosedType]);
+  const rows = await conn.query(`SELECT b.user_id, b.id AS bet_id, bd_all.id as bet_digits_id, bd_all.digit, bd_all.stake, bd_win.potential_profit as winning_potential_profit FROM bets b JOIN bet_digits bd_all ON b.id = bd_all.bet_id LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ? WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 2;`,[digit, mmid, isClosedType]);
+
+  // const rows = await conn.query(sql, [digit, mmid, isClosedType]);
   return Array.isArray(rows) ? rows[0] : []; // <-- Ensure always array
 };
 const groupBetsByUser = (bets) => {
@@ -144,30 +148,52 @@ const groupBetsByUser = (bets) => {
     message: "No bets found to rollback.",
   };
 }
-  return Object.values(
-    bets.reduce((acc, curr) => {
-      if (!acc[curr.user_id]) {
-        acc[curr.user_id] = {
-          user_id: curr.user_id,
-          total_stake: 0,
-          profit: null,
-        };
-      }
+  // return Object.values(
+  //   bets.reduce((acc, curr) => {
+  //     if (!acc[curr.user_id]) {
+  //       acc[curr.user_id] = {
+  //         user_id: curr.user_id,
+  //         total_stake: 0,
+  //         profit: null,
+  //       };
+  //     }
 
-      acc[curr.user_id].total_stake += parseFloat(
-        curr.total_stake_against_bet || 0
-      );
+  //     acc[curr.user_id].total_stake += parseFloat(
+  //       curr.total_stake_against_bet || 0
+  //     );
 
-      if (
-        acc[curr.user_id].profit === null &&
-        curr.winning_potential_profit !== null
-      ) {
-        acc[curr.user_id].profit = parseFloat(curr.winning_potential_profit);
-      }
+  //     if (
+  //       acc[curr.user_id].profit === null &&
+  //       curr.winning_potential_profit !== null
+  //     ) {
+  //       acc[curr.user_id].profit = parseFloat(curr.winning_potential_profit);
+  //     }
 
-      return acc;
-    }, {})
-  );
+  //     return acc;
+  //   }, {})
+  // );
+  return Object.values(bets.reduce((acc, curr) => {
+        const userId = curr.user_id;
+
+        if (!acc[userId]) {
+          acc[userId] = {
+            user_id: userId,
+            total_stake: 0,
+            profit: null,
+          };
+        }
+
+        acc[userId].total_stake += parseFloat(curr.stake);
+
+        if (
+          acc[userId].profit === null &&
+          curr.winning_potential_profit !== null
+        ) {
+          acc[userId].profit = parseFloat(curr.winning_potential_profit);
+        }
+
+        return acc;
+      }, {}));
 };
 const rollbackWinner = async (conn, user_id, total, stake) => {
   await  conn.query(

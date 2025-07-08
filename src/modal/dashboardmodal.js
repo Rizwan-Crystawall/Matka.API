@@ -3,7 +3,7 @@ const { execute } = require("../utils/dbHelper");
 const getDashboardStats = async () => {
   const _sql = `
     SELECT
-      (SELECT COUNT(*) FROM users WHERE is_deleted = 0) AS activeUsers,
+      (SELECT COUNT(*) FROM users u, wallet w WHERE u.id = w.user_id AND u.is_deleted = 0 ) AS activeUsers,
       (SELECT COUNT(*) FROM markets WHERE is_deleted = 0) AS totalMarkets,
       (SELECT COUNT(*) FROM matches m, markets mkt WHERE m.market_id = mkt.id AND mkt.is_deleted = 0 AND m.is_deleted = 0) AS totalMatches
   `;
