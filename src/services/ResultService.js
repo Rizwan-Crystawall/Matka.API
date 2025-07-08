@@ -27,34 +27,34 @@ const saveBetResults = async (data) => {
         mmid,
         isClosedType
       );
-      const grouped = Object.values(
-        bets.reduce((acc, curr) => {
-          if (!acc[curr.user_id]) {
-            acc[curr.user_id] = {
-              user_id: curr.user_id,
-              total_stake: 0,
-              profit: null,
-            };
-          }
-          acc[curr.user_id].total_stake =
-            parseFloat(acc[curr.user_id].total_stake) +
-            parseFloat(curr.total_stake_against_bet);
-          const amount =
-            parseFloat(acc[curr.user_id].total_stake) +
-            parseFloat(curr.total_stake_against_bet);
-          if (
-            acc[curr.user_id].profit === null &&
-            curr.winning_potential_profit !== null
-          ) {
-            acc[curr.user_id].profit = parseFloat(
-              curr.winning_potential_profit
-            );
-          }
-          return acc;
-        }, {})
-      );
-      const winners = grouped.filter((entry) => entry.profit !== null);
-      const losers = grouped.filter((entry) => entry.profit === null);
+
+      const summaryByUser = bets.reduce((acc, curr) => {
+        const userId = curr.user_id;
+
+        if (!acc[userId]) {
+          acc[userId] = {
+            user_id: userId,
+            total_stake: 0,
+            profit: null, // Only one profit value per user
+          };
+        }
+
+        acc[userId].total_stake += parseFloat(curr.stake);
+
+        if (
+          acc[userId].profit === null &&
+          curr.winning_potential_profit !== null
+        ) {
+          acc[userId].profit = parseFloat(curr.winning_potential_profit);
+        }
+
+        return acc;
+      }, {});
+
+      const grouped = Object.values(summaryByUser);
+      const winners = grouped.filter((user) => user.profit !== null);
+      const losers = grouped.filter((user) => user.profit === null);
+
       for (const row of winners) {
         const { user_id, total_stake, profit } = row;
         const totalProfit = profit + total_stake;
@@ -91,21 +91,31 @@ const rollBackBetResult = async (data) => {
   const connection = await db.beginTransaction();
   try {
     const { mmid, isClosedType, digit } = data;
-    const bets = await ResultModel.fetchRollbackBets(connection, digit, mmid, isClosedType);
+    const bets = await ResultModel.fetchRollbackBets(
+      connection,
+      digit,
+      mmid,
+      isClosedType
+    );
     if (!bets || bets.length === 0) {
       await ResultModel.clearResult(connection, mmid, isClosedType);
       await db.commit(connection);
       return {
-      success: true,
-      message: "Bet result rolled back successfully.",
-    };
+        success: true,
+        message: "Bet result rolled back successfully.",
+      };
     }
     const grouped = ResultModel.groupBetsByUser(bets);
     const winners = grouped.filter((u) => u.profit !== null);
     const losers = grouped.filter((u) => u.profit === null);
     for (const { user_id, total_stake, profit } of winners) {
       const rollbackAmount = profit + total_stake;
-      await ResultModel.rollbackWinner(connection, user_id, rollbackAmount, total_stake);
+      await ResultModel.rollbackWinner(
+        connection,
+        user_id,
+        rollbackAmount,
+        total_stake
+      );
     }
     for (const { user_id, total_stake } of losers) {
       await ResultModel.rollbackLoser(connection, user_id, total_stake);
@@ -121,7 +131,9 @@ const rollBackBetResult = async (data) => {
     await db.rollback(connection);
     console.error("Rollback error:", err);
     return {
-      success: false, message: "Failed to rollback bet result.", error: err.message,
+      success: false,
+      message: "Failed to rollback bet result.",
+      error: err.message,
     };
   }
 };
