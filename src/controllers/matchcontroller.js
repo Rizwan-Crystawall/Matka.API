@@ -22,25 +22,7 @@ const getAllMatches = async (req, res, next) => {
     next(error);
   }
 };
-const getAllMatchTypes = async (req, res, next) => {
-  try {
-    const matches = await MatchService.fetchAllMatchTypes();
-    // console.log(res.status);
 
-    if (!matches || matches.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found or no matches available",
-      });
-    }
-
-    // If matches are found
-   return response.success(res, "Matches retrieved successfully", matches);
-  } catch (error) {
-    console.error("Error fetching matches:", error);
-    next(error);
-  }
-};
 
 const addMatch = async (req, res) => {
   try {
@@ -212,7 +194,6 @@ const getAllMatchTypes = async (req, res, next) => {
 
 
 module.exports = {
-  getAllMatchTypes,
   getAllMatches,
   addMatch,
   updateMatch,

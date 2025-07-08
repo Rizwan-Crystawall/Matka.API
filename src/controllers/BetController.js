@@ -129,24 +129,8 @@ const getTotalNumberOfBets = async (req, res) => {
 //     res.status(500).json({ success: false, message: "Server error" });
 //   }
 // };
-const getDigitBetStats = async (req, res) => {
-  try {
-    const { matchTypeId } = req.query;
-    console.log("Received matchTypeId:", matchTypeId); // log to check value
 
-    if (!matchTypeId) {
-      return res.status(400).json({ error: "matchTypeId is required" });
-    }
-
-    const data = await BetsService.getDigitStatsByMatchType(matchTypeId);
-    res.json({ success: true, data });
-  } catch (err) {
-    console.error("Error fetching digit stats:", err);
-    res.status(500).json({ error: err.message });
-  }
-};
 module.exports = {
-  getDigitBetStats,
   getBetsByMatchAndUser,
   getUserBets,
   saveUserBet,

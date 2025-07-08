@@ -177,13 +177,7 @@ const getOperatorIds = async () => {
   console.log("Operator rows:", rows);
   return rows.map((row) => row.id);
 };
-const fetchDigitStats  = async (matchTypeId) => {
-  const sql = `
-    SELECT bd.digit, COUNT(bd.bet_id) AS total_bets_on_digit, COUNT(DISTINCT b.user_id) AS unique_users_on_digit FROM bet_digits bd JOIN bets b ON bd.bet_id = b.id JOIN matches_type_mapping mtm ON b.match_map_id=mtm.id JOIN match_types mt ON mtm.type_id=mt.id WHERE mt.id = ? GROUP BY bd.digit;;
-  `;
 
-  return await execute(sql, [matchTypeId]);
-};
 const insertBetAPI = async (conn, data) => {
   // console.log("insertBet data:", data);
   const betSql = `
@@ -236,7 +230,6 @@ const getTotalNumberOfBets = async (digit) => {
 };
 
 module.exports = {
-  fetchDigitStats,
   getBetsByMatchAndUser,
   fetchDigitStats,
   getUserBetsByMatch,
