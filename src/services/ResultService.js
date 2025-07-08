@@ -35,7 +35,7 @@ const saveBetResults = async (data) => {
           acc[userId] = {
             user_id: userId,
             total_stake: 0,
-            profit: null, // Only one profit value per user
+            profit: null,
           };
         }
 
