@@ -3,7 +3,9 @@ const { execute } = require("../utils/dbHelper");
 const getBetsByMatchAndUser = async (matchId, userId) => {
   const sql = `
     SELECT 
-      bd.digit, 
+      b.id,
+      bd.digit,
+      bd.stake,
       b.rate, 
       mtm.type_id as type, 
       CASE 
@@ -35,6 +37,7 @@ const getUserBetsByMatch = async (user_id, match_id) => {
       mtm.type_id AS match_map_id,
       b.is_closed_type,
       bd.digit,
+      bd.stake,
       b.rate,
       b.created_on
     FROM 
@@ -82,42 +85,17 @@ const insertBet = async (conn, data) => {
 };
 
 const insertBetDigits = async (conn, digitData) => {
-  // console.log("insertBetDigits data:", digitData);
-  // const formatted = digitData.map((d) => [
-  //   d.digit,
-  //   d.bet_id,
-  //   d.stake,
-  //   d.potential_profit,
-  // ]);
-
-  // const placeholders = formatted.map(() => `(?, ?, ?, ?)`).join(", ");
-  // const flatValues = formatted.flat();
-  // console.log(flatValues)
-  
-
-  // const sql = `
-  //   INSERT INTO bet_digits (digit, bet_id, stake, potential_profit)
-  //   VALUES ${placeholders}
-  // `;
-  // // console.log(sql);
-
-  // const result = await conn.query(sql, flatValues);
-  // console.log("insertBetDigits result:", result);
-  // return result[0].insertId;
   const formatted = digitData.map((d) => [
-  d.digit,
-  d.bet_id,
-  d.stake,
-  d.potential_profit,
-]);
-
-const sql = `
+    d.digit,
+    d.bet_id,
+    d.stake,
+    d.potential_profit,
+  ]);
+  const sql = `
   INSERT INTO bet_digits (digit, bet_id, stake, potential_profit)
   VALUES ?
 `;
-
-const result = await conn.query(sql, [formatted]);
-console.log("Result " + result)
+  const result = await conn.query(sql, [formatted]);
 };
 
 const getExistingDigits = async (
