@@ -147,26 +147,29 @@ const updateWallet = async (conn, user_id, amount) => {
 
 const getBetsByOperatorId = async () => {
   const sql = `
-  SELECT 
-   mt.name as match_map_id,
-   u.name AS user_id,
-   b.stake,
-   b.rate,
-   st.name as status_id,
-   CASE 
+ SELECT 
+  mt.name AS match_map_id,
+  u.name AS user_id,
+  b.rate,
+  st.name AS status_id,
+  CASE 
     WHEN b.is_closed_type = 0 THEN 'OPEN'
     WHEN b.is_closed_type = 1 THEN 'CLOSE'
     ELSE 'UNKNOWN'
-   END as is_closed_type,
-   b.created_on,
-   b.operator_id,
-   op.operator_id as operator_name
-   FROM bets b
-   LEFT JOIN operators op ON op.id = b.operator_id 
-   LEFT JOIN users u ON u.id = b.user_id
-   JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id
-   JOIN match_types mt ON mtm.type_id=mt.id
-   JOIN status st ON st.id=b.status_id;
+  END AS is_closed_type,
+  b.created_on,
+  b.operator_id,
+  op.operator_id AS operator_name,
+  bd.digit,
+  bd.stake
+FROM bets b
+LEFT JOIN bet_digits bd ON bd.bet_id = b.id
+LEFT JOIN operators op ON op.id = b.operator_id 
+LEFT JOIN users u ON u.id = b.user_id
+JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id
+JOIN match_types mt ON mtm.type_id = mt.id
+JOIN status st ON st.id = b.status_id;
+;
   `;
   return await execute(sql);
 };
@@ -203,8 +206,7 @@ const insertBetAPI = async (conn, data) => {
 
 const fetchDigitStats = async (matchTypeId) => {
   const sql = `
-    SELECT bd.digit, COUNT(bd.bet_id) AS total_bets_on_digit, COUNT(DISTINCT b.user_id) AS unique_users_on_digit FROM bet_digits bd JOIN bets b ON bd.bet_id = b.id JOIN matches_type_mapping mtm ON b.match_map_id=mtm.id JOIN match_types mt ON mtm.type_id=mt.id WHERE mt.id = ? GROUP BY bd.digit;;
-  `;
+SELECT bd.digit, COUNT(bd.bet_id) AS total_bets_on_digit, COUNT(DISTINCT b.user_id) AS unique_users_on_digit, SUM(bd.stake) AS total_stake_on_digit FROM bet_digits bd JOIN bets b ON bd.bet_id = b.id JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id JOIN match_types mt ON mtm.type_id = mt.id WHERE mt.id = ? GROUP BY bd.digit;  `;
 
   return await execute(sql, [matchTypeId]);
 };
