@@ -40,12 +40,14 @@ const createWalletSnapshot = async (req, res) => {
 const placeBet = async (req, res) => {
   try {
     const result = await TransationService.placeBet(req);
-    return res.status(200).json({
-      success: false,
-      message: "Bet Placed Successfully",
-    });
+    if (result.success === true) {
+      return res.status(200).json({
+        success: true,
+        message: "Bet Placed Successfully",
+      });
+    }
   } catch (error) {
-    console.log("ALL ROLLBACK");
+    // console.log("ALL ROLLBACK");
     return res.status(500).json({
       success: false,
       message: "Internal server error",

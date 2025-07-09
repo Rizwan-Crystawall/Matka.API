@@ -85,10 +85,10 @@ const fetchOperatorIds = async () => {
 };
 const saveUserBetAPI = async (data) => {
   // console.log(data);
-  const connection = await db.beginTransaction();
+  const connection2 = await db.beginTransaction();
   try {
     const matchMap = await BetsModal.getMatchMap(
-      connection,
+      connection2,
       data.match_id,
       data.type_id
     );
@@ -96,7 +96,7 @@ const saveUserBetAPI = async (data) => {
     if (!matchMap) {
       throw new Error("Match type mapping not found.");
     }
-    const betId = await BetsModal.insertBet(connection, {
+    const betId = await BetsModal.insertBet(connection2, {
       ...data,
       match_map_id: matchMap.id,
     });
@@ -118,8 +118,8 @@ const saveUserBetAPI = async (data) => {
 
     // console.log("53 " + digitData);
 
-    await BetsModal.insertBetDigits(connection, digitData);
-    const existingDigits = await BetsModal.getExistingDigits(connection, {
+    await BetsModal.insertBetDigits(connection2, digitData);
+    const existingDigits = await BetsModal.getExistingDigits(connection2, {
       is_closed_type: data.is_closed_type,
       match_map_id: matchMap.id,
       user_id: data.user_id,
@@ -129,14 +129,14 @@ const saveUserBetAPI = async (data) => {
       const digit = row.digit.toString();
       if (digit in data.results) {
         const profit = parseFloat(data.results[digit]);
-        await BetsModal.updateDigitProfit(connection, row.id, profit);
+        await BetsModal.updateDigitProfit(connection2, row.id, profit);
       }
     }
     // await BetsModal.updateWallet(connection, data.user_id, data.amount);
-    await db.commit(connection);
-    return { bet_id: betId };
+    await db.commit(connection2);
+    return { success: 1 };
   } catch (error) {
-    await db.rollback(connection);
+    await db.rollback(connection2);
     throw error;
   }
 };
