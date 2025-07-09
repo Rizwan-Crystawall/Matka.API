@@ -57,6 +57,8 @@ router.post("/op/saveUserBet", BetController.saveUserBetAPI);
 router.post("/op/betUsers", BetController.getBetsByMatchAndUser);
 router.post("/op/betsUserLog", BetController.getUserBets);
 
+router.post("/isThisBetPlacable", authAPIMiddleware, BetController.isThisBetPlacable);
+
 
 //Dashboard
 router.post("/totaldata", authMiddleware, dashboardcontroller.getDashboardData);

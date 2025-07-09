@@ -45,7 +45,7 @@ const saveUserBet = async (data) => {
     //   return { digit, bet_id: betId,stake, potential_profit: profit };
     // });
 
-    const digitData = Object.entries(data.digit).map(([digit,stake]) => {
+    const digitData = Object.entries(data.digit).map(([digit, stake]) => {
       const profit = data.results[digit] ?? 0;
       return { digit, bet_id: betId, stake, potential_profit: profit };
     });
@@ -139,6 +139,20 @@ const getTotalNumberOfBets = async (digit) => {
   return await BetsModal.getTotalNumberOfBets(digit);
 };
 
+const isThisBetPlacable = async (data) => {
+  if (data.debit_amount < 1000) {
+    return {
+      success: true,
+      data: { can_place_bet: true, balance: 1000, exposure: 200, bet_id: 15 },
+    };
+  } else {
+    return {
+      success: false,
+      data: { can_place_bet: false, message: "Insufficient Fund" },
+    };
+  }
+};
+
 module.exports = {
   fetchBetsByMatchAndUser,
   getDigitStatsByMatchType,
@@ -149,4 +163,5 @@ module.exports = {
   fetchOperatorIds,
   getUniqueClients,
   getTotalNumberOfBets,
+  isThisBetPlacable,
 };

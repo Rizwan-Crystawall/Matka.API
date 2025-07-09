@@ -121,6 +121,23 @@ const getTotalNumberOfBets = async (req, res) => {
   }
 };
 
+const isThisBetPlacable = async (req, res) => {
+  try {
+    const betsPlace = await BetsService.isThisBetPlacable(req.body);
+    if (betsPlace.success)
+      res.status(200).json({ success: true, data: betsPlace.data });
+    else res.status(404).json({ success: false, data: betsPlace.data });
+  } catch (err) {
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Unable to place this Bet",
+        error: "Unable to place this Bet",
+      });
+  }
+};
+
 module.exports = {
   getBetsByMatchAndUser,
   getUserBets,
@@ -131,4 +148,5 @@ module.exports = {
   getDigitBetStats,
   getUniqueClients,
   getTotalNumberOfBets,
+  isThisBetPlacable,
 };
