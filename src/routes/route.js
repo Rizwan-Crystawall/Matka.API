@@ -48,42 +48,23 @@ router.post("/activeMatchMmappings", authMiddleware,marketcontoller.getActiveMat
 router.post("/get-markets", marketcontoller.getMarketsByOperator);
 router.post("/verify-user", usercontroller.verifyUser);
 
-// Market for Operator API External
-// router.post("/auth-token", TokenController.authToken);
-router.post("/auth/token", TokenController.authToken);
-router.post("/verify-auth", authAPIMiddleware, TokenController.verifyAuth);
-router.post("/op/activeMatchMmappings", marketcontoller.getActiveMatchMappings);
-router.post("/op/saveUserBet", BetController.saveUserBetAPI);
-router.post("/op/betUsers", BetController.getBetsByMatchAndUser);
-router.post("/op/betsUserLog", BetController.getUserBets);
-
-router.post("/isThisBetPlacable", authAPIMiddleware, BetController.isThisBetPlacable);
-
-
 //Dashboard
 router.post("/totaldata", authMiddleware, dashboardcontroller.getDashboardData);
 router.post("/dashboard/marketwise",authMiddleware,dashboardcontroller.getMarketwiseDashboardData);
 router.post("/dashboard/bettype",authMiddleware,dashboardcontroller.getBetTypeDistribution);
 router.post("/recent/matches",authMiddleware,dashboardcontroller.getRecentMatches);
 
-
 //Results
 router.post("/saveResults", authMiddleware, ResultController.saveBetResults);
-
- router.post("/rollbackResults",ResultController.rollbackBetResults);
-
-
+router.post("/rollbackResults",ResultController.rollbackBetResults);
 router.post("/getAllResults", authMiddleware, ResultController.getAllResults);
 router.post("/getResultById", authMiddleware, ResultController.getResultById);
 router.post("/getMarketById", authMiddleware, ResultController.getMarketById);
 router.post("/getMatchTypeResults",authMiddleware,ResultController.getMatchTypeResults); 
 router.post("/getMatchTypeId", authMiddleware, ResultController.getMatchTypeId);
 
-
-
 //Wallet
 router.post("/wallet", authMiddleware,WalletController.getWalletDetails);
-
 
 //BetUsers
 router.post("/betUsers", authMiddleware, BetController.getBetsByMatchAndUser);
@@ -94,9 +75,5 @@ router.get('/getoperators', BetController.getOperators);
 router.get("/digit-stats", BetController.getDigitBetStats);
 router.post("/getUniqueClients", BetController.getUniqueClients);
 router.post("/getTotalNumberOfBets", BetController.getTotalNumberOfBets);
-
-
-
-
 
 module.exports = router;
