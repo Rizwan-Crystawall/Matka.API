@@ -49,7 +49,8 @@ router.post("/get-markets", marketcontoller.getMarketsByOperator);
 router.post("/verify-user", usercontroller.verifyUser);
 
 // Market for Operator API External
-router.post("/auth-token", TokenController.authToken);
+// router.post("/auth-token", TokenController.authToken);
+router.post("/auth/token", TokenController.authToken);
 router.post("/verify-auth", authAPIMiddleware, TokenController.verifyAuth);
 router.post("/op/activeMatchMmappings", marketcontoller.getActiveMatchMappings);
 router.post("/op/saveUserBet", BetController.saveUserBetAPI);
