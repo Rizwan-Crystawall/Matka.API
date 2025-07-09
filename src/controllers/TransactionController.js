@@ -1,0 +1,60 @@
+const TransationService = require("../services/TransactionService");
+const { success } = require("../utils/response");
+
+const createTransaction = async (req, res) => {
+  try {
+    const result = await TransationService.createTransaction(req);
+    // console.log("Transaction Controller");
+    // console.log(result);
+    if (result) {
+      return res.status(200).json({ success: true, data: result });
+    } else {
+      return res.status(404).json(result);
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+const createWalletSnapshot = async (req, res) => {
+  try {
+    const result = await TransationService.createWalletSnapshot(req);
+    // console.log("Transaction Controller");
+    // console.log(result);
+    if (result) {
+      return res.status(200).json({ success: true, data: result });
+    } else {
+      return res.status(404).json(result);
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+const placeBet = async (req, res) => {
+  try {
+    const result = await TransationService.placeBet(req);
+    return res.status(200).json({
+      success: false,
+      message: "Bet Placed Successfully",
+    });
+  } catch (error) {
+    console.log("ALL ROLLBACK");
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+module.exports = {
+  createTransaction,
+  createWalletSnapshot,
+  placeBet,
+};

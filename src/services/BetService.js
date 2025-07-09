@@ -84,6 +84,7 @@ const fetchOperatorIds = async () => {
   return operators;
 };
 const saveUserBetAPI = async (data) => {
+  // console.log(data);
   const connection = await db.beginTransaction();
   try {
     const matchMap = await BetsModal.getMatchMap(
@@ -91,26 +92,39 @@ const saveUserBetAPI = async (data) => {
       data.match_id,
       data.type_id
     );
+    // console.log(matchMap.id);
     if (!matchMap) {
       throw new Error("Match type mapping not found.");
     }
-    const betId = await BetsModal.insertBetAPI(connection, {
+    const betId = await BetsModal.insertBet(connection, {
       ...data,
       match_map_id: matchMap.id,
     });
+    // console.log(betId);
+    // console.log(data.results);
     if (!data.digit || data.digit.length === 0) {
       throw new Error("No digits provided for the bet.");
     }
-    const digitData = data.digit.map((digit) => {
-      const profit = parseFloat(data.results[digit]) ?? 0;
-      return { digit, bet_id: betId, potential_profit: profit };
+
+    // const digitData = data.digit.map((digit,stake) => {
+    //   const profit = parseFloat(data.results[digit]) ?? 0;
+    //   return { digit, bet_id: betId,stake, potential_profit: profit };
+    // });
+
+    const digitData = Object.entries(data.digit).map(([digit, stake]) => {
+      const profit = data.results[digit] ?? 0;
+      return { digit, bet_id: betId, stake, potential_profit: profit };
     });
+
+    // console.log("53 " + digitData);
+
     await BetsModal.insertBetDigits(connection, digitData);
     const existingDigits = await BetsModal.getExistingDigits(connection, {
       is_closed_type: data.is_closed_type,
       match_map_id: matchMap.id,
       user_id: data.user_id,
     });
+    // console.log("Existing Digits: " + existingDigits)
     for (const row of existingDigits[0]) {
       const digit = row.digit.toString();
       if (digit in data.results) {
@@ -118,7 +132,7 @@ const saveUserBetAPI = async (data) => {
         await BetsModal.updateDigitProfit(connection, row.id, profit);
       }
     }
-    await BetsModal.updateWallet(connection, data.user_id, data.amount);
+    // await BetsModal.updateWallet(connection, data.user_id, data.amount);
     await db.commit(connection);
     return { bet_id: betId };
   } catch (error) {

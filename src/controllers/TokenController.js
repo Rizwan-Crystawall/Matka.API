@@ -6,8 +6,8 @@ const authToken = async (req, res) => {
     if (result.success===true) {
     const operatorId = req.body.operator_id;
     const userId = req.body.user_id;
-      // const iframeSrc = "http://localhost:3000/user/home/api/"+operatorId+"/"+userId+"?token="+result.token;
-      const iframeSrc = "http://100.28.41.166:9002/user/home/api/"+operatorId+"/"+userId+"?token="+result.token;
+      const iframeSrc = "http://localhost:3000/user/home/api/"+operatorId+"/"+userId+"?token="+result.token;
+      // const iframeSrc = "http://100.28.41.166:9002/user/home/api/"+operatorId+"/"+userId+"?token="+result.token;
       return res.status(200).json({ token: result.token, iframe: iframeSrc });
     } else {
       return res.status(404).json(result);
