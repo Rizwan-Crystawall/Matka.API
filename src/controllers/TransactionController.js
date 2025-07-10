@@ -54,7 +54,7 @@ const placeBet = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Internal server 1 error",
     });
   }
 };

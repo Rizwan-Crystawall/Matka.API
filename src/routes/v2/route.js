@@ -22,6 +22,6 @@ router.post("/isThisBetPlacable", BetController.isThisBetPlacable);
 router.post("/createTransaction", TransactionController.createTransaction);
 router.post("/createWalletSnapshot", TransactionController.createWalletSnapshot);
 router.post("/placebet", authAPIMiddleware, TransactionController.placeBet);
-router.post("/publish/results", authAPIMiddleware, ResultController.publishResults);
+router.post("/resultpublish", authAPIMiddleware, ResultController.publishResults);
 
 module.exports = router;

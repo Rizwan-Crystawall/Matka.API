@@ -29,7 +29,9 @@ const placeBet = async (req) => {
           betPlacable.data.balance
         );
         if (walletSnapshot === 1) {
-          const result = await BetsService.saveUserBetAPI(req.body);
+          // console.log("Bet Placable");
+          // console.log(betPlacable.data.bet_id);
+          const result = await BetsService.saveUserBetAPI(req.body, betPlacable.data.bet_id);
           if (result.success === 1) {
             return { success: true };
           }

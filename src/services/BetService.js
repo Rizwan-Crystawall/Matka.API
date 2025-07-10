@@ -109,7 +109,7 @@ const fetchOperatorIds = async () => {
   const operators = await BetsModal.getOperatorIds();
   return operators;
 };
-const saveUserBetAPI = async (data) => {
+const saveUserBetAPI = async (data, client_bet_id) => {
   // console.log(data);
   const connection2 = await db.beginTransaction();
   try {
@@ -118,14 +118,18 @@ const saveUserBetAPI = async (data) => {
       data.match_id,
       data.type_id
     );
+    // console.log("matchMap.id");
     // console.log(matchMap.id);
     if (!matchMap) {
       throw new Error("Match type mapping not found.");
     }
-    const betId = await BetsModal.insertBet(connection2, {
+    const betId = await BetsModal.insertBetAPI(connection2, {
       ...data,
       match_map_id: matchMap.id,
+      client_bet_id: client_bet_id
     });
+    // console.log("BET ID IN SET");
+    
     // console.log(betId);
     // console.log(data.results);
     if (!data.digit || data.digit.length === 0) {

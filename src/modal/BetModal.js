@@ -220,20 +220,22 @@ const getOperatorIds = async () => {
 };
 
 const insertBetAPI = async (conn, data) => {
-  // console.log("insertBet data:", data);
+  console.log("insertBet API data:", data);
   const betSql = `
-    INSERT INTO bets (user_id, operator_id, match_map_id, stake, rate, status_id, ip, is_closed_type)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO bets (user_id, operator_id, match_map_id, rate, status_id, ip, transaction_id, client_bet_id, is_closed_type)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const betResult = await conn.query(betSql, [
     data.user_id,
     data.operator_id,
     data.match_map_id,
-    data.stake,
+    // data.stake,
     data.rate,
     data.status_id,
     data.ip,
+    data.transaction_id,
+    data.client_bet_id,
     data.is_closed_type || 0,
   ]);
 
