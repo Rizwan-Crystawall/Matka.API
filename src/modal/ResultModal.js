@@ -29,7 +29,7 @@ const fetchBets = async (conn, digit, mmid, isClosedType) => {
   //   [digit, mmid, isClosedType]
   // );
 // console.log("Fetch Bets");
-  const rows = await conn.query(`SELECT b.user_id, b.id AS bet_id, bd_all.id as bet_digits_id, bd_all.digit, bd_all.stake, bd_win.potential_profit as winning_potential_profit FROM bets b JOIN bet_digits bd_all ON b.id = bd_all.bet_id LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ? WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 1;`,[digit, mmid, isClosedType]);
+  const rows = await conn.query(`SELECT b.operator_id, b.user_id, b.id AS bet_id, bd_all.id as bet_digits_id, bd_all.digit, bd_all.stake, bd_win.potential_profit as winning_potential_profit FROM bets b JOIN bet_digits bd_all ON b.id = bd_all.bet_id LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ? WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 1;`,[digit, mmid, isClosedType]);
 
   return rows[0] || [];
 };
@@ -223,6 +223,11 @@ const clearResult = async (conn, mmid, isClosedType) => {
   );
 };
 
+const getOperatorUrls = async () => {
+  const rows = await execute("SELECT id, operator_id, callback_url FROM operators");
+  return Object.fromEntries(rows.map(row => [row.id.toString(), row.callback_url]));
+}
+
 module.exports = {
   getAllResults,
   fetchResultByMatchId,
@@ -240,4 +245,5 @@ module.exports = {
   rollbackLoser,
   resetBetStatus,
   clearResult,
+  getOperatorUrls,
 };

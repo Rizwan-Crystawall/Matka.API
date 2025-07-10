@@ -15,10 +15,18 @@ const placeBet = async (req) => {
   try {
     const transction = await TransactionModal.createTransaction(req.body);
     if (transction === 1) {
-      const betPlacable = await BetsService.isThisBetPlacable(req.body);
+      let data = {
+        transaction_id: req.body.transaction_id,
+        request_id: req.body.request_id,
+        debit_amount: req.body.debit_amount,
+        user_id: req.body.user_id
+      }
+      // console.log(data);return;
+      const betPlacable = await BetsService.isThisBetPlacable(data);
       if (betPlacable.success === true) {
         const walletSnapshot = await TransactionModal.createWalletSnapshot(
-          req.body
+          req.body,
+          betPlacable.data.balance
         );
         if (walletSnapshot === 1) {
           const result = await BetsService.saveUserBetAPI(req.body);

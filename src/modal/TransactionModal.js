@@ -11,12 +11,12 @@ const createTransaction = async (data) => {
     data.request_id,
     data.operator_id,
     data.trans_type,
-    data.amount,
+    data.debit_amount,
   ]);
   return result.affectedRows;
 };
 
-const createWalletSnapshot = async (data) => {
+const createWalletSnapshot = async (data, balance) => {
   const sql = `
    INSERT INTO wallet_snapshots (user_id, transaction_id, request_id, request_type, balance)
    VALUES (?, ?, ?, ?, ?)
@@ -26,14 +26,14 @@ const createWalletSnapshot = async (data) => {
     data.transaction_id,
     data.request_id,
     data.request_type,
-    data.balance,
+    balance,
   ]);
   return result.affectedRows;
 };
 
 const updateTransaction = async (data) => {
   const sql = `
-   UPDATE transactions SET status = "Deleted" WHERE transaction_id = ?
+   UPDATE transactions SET status = "Deleted", rollback_reason="Can Bet False" WHERE transaction_id = ?
   `;
   const result = await execute(sql, [data.transaction_id]);
   return result.affectedRows;

@@ -11,12 +11,38 @@ const fetchBetsByMatchAndUser = async (matchId, userId) => {
 
   return await BetsModal.getBetsByMatchAndUser(matchId, userId);
 };
+
+// For Operator API
+
+const fetchBetsByMatchAndUserAPI = async (matchId, userId, operatorId) => {
+  if (!matchId || isNaN(matchId)) {
+    // throw new Error("Invalid match ID");
+  }
+  if (!userId || isNaN(userId)) {
+    // throw new Error("Invalid user ID");
+  }
+  if (!operatorId || isNaN(operatorId)) {
+    // throw new Error("Invalid Operator ID");
+  }
+  return await BetsModal.getBetsByMatchAndUserAPI(matchId, userId, operatorId) ;
+};
+
 const fetchUserBets = async (user_id, match_id) => {
   if (isNaN(user_id) || isNaN(match_id)) {
     // throw new Error("Invalid IDs");
   }
   return await BetsModal.getUserBetsByMatch(user_id, match_id);
 };
+
+// For Operator API
+
+const fetchUserBetsAPI = async (user_id, match_id, operator_id) => {
+  if (isNaN(user_id) || isNaN(match_id) || isNaN(operator_id)) {
+    // throw new Error("Invalid IDs");
+  }
+  return await BetsModal.getUserBetsByMatchAPI(user_id, match_id, operator_id);
+};
+
 const saveUserBet = async (data) => {
   // console.log(data);
   const connection = await db.beginTransaction();
@@ -157,7 +183,7 @@ const isThisBetPlacable = async (data) => {
   if (data.debit_amount < 1000) {
     return {
       success: true,
-      data: { can_place_bet: true, balance: 1000, exposure: 200, bet_id: 15 },
+      data: { can_place_bet: true, balance: 1500, exposure: 200, bet_id: 15 },
     };
   } else {
     return {
@@ -178,4 +204,6 @@ module.exports = {
   getUniqueClients,
   getTotalNumberOfBets,
   isThisBetPlacable,
+  fetchBetsByMatchAndUserAPI,
+  fetchUserBetsAPI,
 };

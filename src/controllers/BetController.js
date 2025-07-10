@@ -19,6 +19,30 @@ const getBetsByMatchAndUser = async (req, res) => {
     });
   }
 };
+
+// 
+
+// For Operator API
+
+const getBetsByMatchAndUserAPI = async (req, res) => {
+  try {
+    const { match_id, user_id, operator_id } = req.body;
+
+    const result = await BetsService.fetchBetsByMatchAndUserAPI(match_id, user_id, operator_id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Bets fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Something went wrong",
+    });
+  }
+};
+
 const getUserBets = async (req, res) => {
   try {
     const { match_id, user_id } = req.body;
@@ -32,6 +56,23 @@ const getUserBets = async (req, res) => {
       .json({ success: false, message: "Internal server error" });
   }
 };
+
+// For Operator API
+
+const getUserBetsAPI = async (req, res) => {
+  try {
+    const { match_id, user_id, operator_id } = req.body;
+
+    const bets = await BetsService.fetchUserBetsAPI(user_id, match_id, operator_id);
+    return res.status(200).json({ success: true, data: bets });
+  } catch (err) {
+    console.error("Error fetching user bets:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
 const saveUserBet = async (req, res) => {
   try {
     const result = await BetsService.saveUserBet(req.body);
@@ -48,6 +89,9 @@ const saveUserBet = async (req, res) => {
     });
   }
 };
+
+// For Operator API
+
 const saveUserBetAPI = async (req, res) => {
   try {
     const result = await BetsService.saveUserBetAPI(req.body);
@@ -149,4 +193,6 @@ module.exports = {
   getUniqueClients,
   getTotalNumberOfBets,
   isThisBetPlacable,
+  getBetsByMatchAndUserAPI,
+  getUserBetsAPI,
 };
