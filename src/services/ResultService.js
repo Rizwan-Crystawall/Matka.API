@@ -315,14 +315,13 @@ const publishResults = async (data) => {
 
       const OperatorUrls = await ResultModel.getOperatorUrls();
 
-      // const finalOutput = [
-      //   /* your data here */
-      // ];
+      // console.log(OperatorUrls);
 
       finalOutput.forEach((operator) => {
         console.log(`Operator ID: ${operator.operatorId}`);
         console.log(`Token: ${operator.token}`);
         console.log(`Transaction ID: ${operator.transactionId}`);
+        console.log(`Callback URL: ${OperatorUrls[operator.operatorId]}`)
 
         // Winners
         console.log("Winners:");
