@@ -45,9 +45,13 @@ const placeBet = async (req, res) => {
         success: true,
         message: "Bet Placed Successfully",
       });
+    }else{
+        return res.status(200).json({
+        success: false,
+        message: "Unable to Place Bet",
+      });
     }
   } catch (error) {
-    // console.log("ALL ROLLBACK");
     return res.status(500).json({
       success: false,
       message: "Internal server error",

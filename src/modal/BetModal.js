@@ -65,8 +65,8 @@ const getMatchMap = async (conn, match_id, type_id) => {
 const insertBet = async (conn, data) => {
   // console.log("insertBet data:", data);
   const betSql = `
-    INSERT INTO bets (user_id, match_map_id, rate, status_id, ip, is_closed_type)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO bets (user_id, match_map_id, rate, status_id, ip, transaction_id, is_closed_type)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
   const betResult = await conn.query(betSql, [
@@ -76,6 +76,7 @@ const insertBet = async (conn, data) => {
     data.rate,
     data.status_id,
     data.ip,
+    data.transaction_id,
     data.is_closed_type || 0,
   ]);
 
