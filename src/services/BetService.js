@@ -112,7 +112,7 @@ const saveUserBetAPI = async (data) => {
     // });
 
     const digitData = Object.entries(data.digit).map(([digit, stake]) => {
-      const profit = data.results[digit] ?? 0;
+      const profit = data.pp[digit] ?? 0;
       return { digit, bet_id: betId, stake, potential_profit: profit };
     });
 
@@ -127,8 +127,8 @@ const saveUserBetAPI = async (data) => {
     // console.log("Existing Digits: " + existingDigits)
     for (const row of existingDigits[0]) {
       const digit = row.digit.toString();
-      if (digit in data.results) {
-        const profit = parseFloat(data.results[digit]);
+      if (digit in data.pp) {
+        const profit = parseFloat(data.pp[digit]);
         await BetsModal.updateDigitProfit(connection2, row.id, profit);
       }
     }
