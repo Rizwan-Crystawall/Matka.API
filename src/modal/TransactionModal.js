@@ -31,9 +31,9 @@ const createWalletSnapshot = async (data) => {
   return result.affectedRows;
 };
 
-const deleteTransaction = async (data) => {
+const updateTransaction = async (data) => {
   const sql = `
-   DELETE FROM transactions WHERE transaction_id = ?
+   UPDATE transactions SET status = "Deleted" WHERE transaction_id = ?
   `;
   const result = await execute(sql, [data.transaction_id]);
   return result.affectedRows;
@@ -42,5 +42,5 @@ const deleteTransaction = async (data) => {
 module.exports = {
   createTransaction,
   createWalletSnapshot,
-  deleteTransaction,
+  updateTransaction,
 };

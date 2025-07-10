@@ -22,16 +22,14 @@ const placeBet = async (req) => {
         );
         if (walletSnapshot === 1) {
           const result = await BetsService.saveUserBetAPI(req.body);
-          if (result.success===1) {
-            return {success: true};
+          if (result.success === 1) {
+            return { success: true };
           }
         }
       } else {
-        const transction = await TransactionModal.deleteTransaction(req.body);
-        console.log("Transction Deletion");
-        console.log(transction);
-        if(transction===1){
-            return {success: false};
+        const transction = await TransactionModal.updateTransaction(req.body);
+        if (transction === 1) {
+          return { success: false };
         }
       }
     }
