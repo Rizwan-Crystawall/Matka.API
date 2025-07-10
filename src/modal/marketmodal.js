@@ -72,10 +72,14 @@ const fetchActiveMatchMappings = async () => {
       m.close_time, 
       m.is_active, 
       m.open_suspend, 
-      m.close_suspend
+      m.close_suspend,
+      res.open_result,
+      res.close_result,
+       mtm.id
     FROM matches m
     JOIN matches_type_mapping mtm ON mtm.match_id = m.id
     JOIN markets mkt ON m.market_id = mkt.id
+    LEFT JOIN results res ON res.match_map_id = mtm.id
     WHERE 
       mkt.is_active = 1 AND 
       m.is_active = 1 AND 
