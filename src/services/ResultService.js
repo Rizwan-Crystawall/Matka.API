@@ -246,7 +246,7 @@ const publishResults = async (data) => {
       for (const bet of bets) {
         const opId = bet.operator_id;
         const userId = bet.user_id;
-        const betId = bet.bet_id;
+        const betId = bet.client_bet_id;
 
         if (!operatorsMap[opId]) {
           operatorsMap[opId] = {};
