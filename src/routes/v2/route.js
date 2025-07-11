@@ -23,5 +23,6 @@ router.post("/createTransaction", TransactionController.createTransaction);
 router.post("/createWalletSnapshot", TransactionController.createWalletSnapshot);
 router.post("/placebet", authAPIMiddleware, TransactionController.placeBet);
 router.post("/resultpublish", authAPIMiddleware, ResultController.publishResults);
+router.post("/resultrollback", authAPIMiddleware, ResultController.publishResults);
 
 module.exports = router;
