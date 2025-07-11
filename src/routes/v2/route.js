@@ -29,6 +29,6 @@ router.post("/placebet", authAPIMiddleware, TransactionController.placeBet);
 router.post("/resultpublish", authAPIMiddleware, ResultController.publishResults);
 router.post("/settlebetoperator", ResultController.settleBet)
 
-router.post("/rollbackrequest", authAPIMiddleware, ResultController.rollbackResults);
+router.post("/rollbackrequest", ResultController.rollbackResults);
 
 module.exports = router;
