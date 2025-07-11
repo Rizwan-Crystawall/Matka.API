@@ -21,7 +21,6 @@ const placeBet = async (req) => {
         debit_amount: req.body.debit_amount,
         user_id: req.body.user_id
       }
-      // console.log(data);return;
       const betPlacable = await BetsService.isThisBetPlacable(data);
       if (betPlacable.success === true) {
         const walletSnapshot = await TransactionModal.createWalletSnapshot(
@@ -29,8 +28,6 @@ const placeBet = async (req) => {
           betPlacable.data.balance
         );
         if (walletSnapshot === 1) {
-          // console.log("Bet Placable");
-          // console.log(betPlacable.data.bet_id);
           const result = await BetsService.saveUserBetAPI(req.body, betPlacable.data.bet_id);
           if (result.success === 1) {
             return { success: true };
@@ -44,7 +41,7 @@ const placeBet = async (req) => {
       }
     }
   } catch (error) {
-    console.log("Rollbacked ALL!!!");
+    // console.log("Rollbacked ALL!!!");
     throw error;
   }
 };
