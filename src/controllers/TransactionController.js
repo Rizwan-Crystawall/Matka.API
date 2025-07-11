@@ -4,8 +4,6 @@ const { success } = require("../utils/response");
 const createTransaction = async (req, res) => {
   try {
     const result = await TransationService.createTransaction(req);
-    // console.log("Transaction Controller");
-    // console.log(result);
     if (result) {
       return res.status(200).json({ success: true, data: result });
     } else {
@@ -22,8 +20,6 @@ const createTransaction = async (req, res) => {
 const createWalletSnapshot = async (req, res) => {
   try {
     const result = await TransationService.createWalletSnapshot(req);
-    // console.log("Transaction Controller");
-    // console.log(result);
     if (result) {
       return res.status(200).json({ success: true, data: result });
     } else {
