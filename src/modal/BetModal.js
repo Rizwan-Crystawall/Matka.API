@@ -127,8 +127,12 @@ const getBetsByOperatorId = async () => {
   const sql = `
  SELECT 
   mt.name AS match_map_id,
-  u.name AS user_id,
+  mth.id AS match_id, 
+  mth.name AS match_name,  
+  DATE_FORMAT(mth.draw_date, '%d-%m-%Y') AS match_date,
+  b.user_id AS user_id,
   b.rate,
+  b.id as bet_id,
   st.name AS status_id,
   CASE 
     WHEN b.is_closed_type = 0 THEN 'OPEN'
@@ -146,7 +150,9 @@ LEFT JOIN operators op ON op.id = b.operator_id
 LEFT JOIN users u ON u.id = b.user_id
 JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id
 JOIN match_types mt ON mtm.type_id = mt.id
-JOIN status st ON st.id = b.status_id;
+JOIN matches mth ON mtm.match_id = mth.id
+JOIN status st ON st.id = b.status_id
+ORDER BY b.created_on DESC;
 ;
   `;
   return await execute(sql);
@@ -198,7 +204,7 @@ const getUniqueClients = async (digit) => {
 
 const getTotalNumberOfBets = async (digit) => {
   const sql = `
-  SELECT b.id,b.stake,bd.bet_id,b.user_id,b.rate,b.bet_time,b.ip,CASE 
+  SELECT b.id,bd.stake,bd.bet_id,b.user_id,b.rate,b.bet_time,b.ip,CASE 
     WHEN b.is_closed_type = 0 THEN 'OPEN'
     WHEN b.is_closed_type = 1 THEN 'CLOSE'
     ELSE 'UNKNOWN'
