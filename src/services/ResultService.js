@@ -89,7 +89,6 @@ const saveBetResults = async (data) => {
     };
   }
 };
-
 const rollBackBetResult = async (data) => {
   const connection = await db.beginTransaction();
   try {
@@ -140,7 +139,6 @@ const rollBackBetResult = async (data) => {
     };
   }
 };
-
 const getAllResults = async () => {
   const results = await ResultModel.getAllResults();
 
@@ -180,7 +178,6 @@ const getResultById = async (result_id) => {
     };
   }
 };
-
 const getActiveMatchesWithMarket = async () => {
   try {
     const result = await ResultModel.fetchMarketByMatchId();
@@ -237,6 +234,8 @@ const publishResults = async (data) => {
         mmid,
         isClosedType
       );
+
+      // console.log(bets);return;
 
       // const token = "f562a685-a160-4d17-876d-ab3363db331c";
       // const requestId = "583c985f-fee6-4c0e-bbf5-308aad6265af";
@@ -319,36 +318,7 @@ const publishResults = async (data) => {
       let finalReports = JSON.stringify(finalOutput, null, 2);
       const OperatorUrls = await ResultModel.getOperatorUrls();
 
-      // console.log(OperatorUrls);
-
-      // finalOutput.forEach((operator) => {
-      //   console.log(`Operator ID: ${operator.operatorId}`);
-      //   console.log(`Token: ${operator.token}`);
-      //   console.log(`Transaction ID: ${operator.transactionId}`);
-      //   console.log(`Callback URL: ${OperatorUrls[operator.operatorId]}`);
-
-      //   // Winners
-      //   console.log("Winners:");
-      //   operator.bets.winners.forEach((winner) => {
-      //     console.log(
-      //       `  User: ${winner.userId}, Stake: ${winner.stake}, Credit Amount: ${
-      //         winner.creditAmount
-      //       }, Bets: ${winner.bet_ids.join(", ")}`
-      //     );
-      //   });
-
-      //   // Losers
-      //   console.log("Losers:");
-      //   operator.bets.Loosers.forEach((loser) => {
-      //     console.log(
-      //       `  User: ${loser.userId}, Stake: ${
-      //         loser.stake
-      //       }, Bets: ${loser.bet_ids.join(", ")}`
-      //     );
-      //   });
-
-      //   console.log("-------------------------");
-      // });
+      console.log(finalReports);
 
       const transactionId = "txn_" + uuidv4();
 
@@ -400,7 +370,6 @@ const publishResults = async (data) => {
           },
         };
 
-        // console.log(payload);
         console.log(JSON.stringify(payload, null, 2));
 
         const callbackUrl = OperatorUrls[operator.operatorId];
@@ -424,68 +393,266 @@ const publishResults = async (data) => {
         console.log("-------------------------");
       }
 
-      // console.log("OPERATOR URLs");
-      // console.log(OperatorUrls);
+      // Step 1: Group all items by bet_id
+      const groupedByBetId = {};
+      bets.forEach((item) => {
+        if (!groupedByBetId[item.bet_id]) {
+          groupedByBetId[item.bet_id] = [];
+        }
+        groupedByBetId[item.bet_id].push(item);
+      });
 
-      // await sendReportsToOperators(JSON.stringify(finalOutput, null, 2), OperatorUrls);
+      // Step 2: Separate into winning and losing bet_ids
+      const winningBets = [];
+      const losingBets = [];
 
-      // async function sendReportsToOperators(reports, OperatorUrls) {
-      //   for (const report of reports) {
-      //     console.log("Report")
-      //     console.log(report)
-      //     const callbackUrl = OperatorUrls[report.operatorId];
+      for (const betId in groupedByBetId) {
+        const entries = groupedByBetId[betId];
 
-      //     console.log(callbackUrl);
+        const hasWinning = entries.some(
+          (entry) => entry.winning_potential_profit !== null
+        );
+        if (hasWinning) {
+          winningBets.push(parseInt(betId));
+        } else {
+          losingBets.push(parseInt(betId));
+        }
+      }
+      console.log("Winning Bet IDs:", winningBets);
+      console.log("Losing Bet IDs:", losingBets);
+      await ResultModel.updateBetsStatusAPI(connection, winningBets, losingBets);
+    }
+    await db.commit(connection);
+    return {
+      success: true,
+      message: "Bet results saved successfully.",
+    };
+  } catch (error) {
+    await db.rollback(connection);
+    console.error("Error saving bet results:", error);
+    return {
+      success: false,
+      message: "Failed to save bet results.",
+      error: error.message,
+    };
+  }
+};
 
-      //     if (!callbackUrl) {
-      //       console.warn(
-      //         `⚠️ No callback URL for operator ${report.operatorId}`
-      //       );
-      //       continue;
-      //     }
+// For Operator API
 
-      //     try {
-      //       const res = await fetch(callbackUrl, {
-      //         method: "POST",
-      //         headers: {
-      //           "Content-Type": "application/json",
-      //           Authorization: `Bearer ${report.token}`, // optional if required by operator
-      //         },
-      //         body: JSON.stringify(report),
-      //       });
+const rollbackResults = async (data) => {
+  const connection = await db.beginTransaction();
+  try {
+    if (!data || !Array.isArray(data.payload)) {
+      throw new Error("Invalid data: payload must be an array.");
+    }
+    if (!Array.isArray(data.result)) {
+      throw new Error("Invalid data: result must be an array.");
+    }
+    const values = data.payload.map((r) => [
+      r.mmid,
+      r.open_result,
+      r.close_result,
+      data.user_id,
+    ]);
+    // await ResultModel.insertOrUpdateResults(connection, values);
+    for (const item of data.result) {
+      const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
+      const digit = item.open_result ?? item.close_result;
+      const mmid = item.mmid;
+      const bets = await ResultModel.fetchBetsAPIForROllback(
+        connection,
+        digit,
+        mmid,
+        isClosedType
+      );
 
-      //       const result = await res.text(); // could also be .json()
-      //       console.log(
-      //         `✅ Sent to operator ${report.operatorId}: ${res.status} - ${result}`
-      //       );
-      //     } catch (error) {
-      //       console.error(
-      //         `❌ Failed to send to operator ${report.operatorId}:`,
-      //         error.message
-      //       );
-      //     }
-      //   }
-      // }
+      // console.log(bets);return;
 
-      // const grouped = Object.values(summaryByUser);
-      // const winners = grouped.filter((user) => user.profit !== null);
-      // const losers = grouped.filter((user) => user.profit === null);
+      // const token = "f562a685-a160-4d17-876d-ab3363db331c";
+      // const requestId = "583c985f-fee6-4c0e-bbf5-308aad6265af";
+      // const transactionId = "tx-16d2dcfe-b89e-11e7-854a-58404eea6d16";
 
-      // for (const row of winners) {
-      //   const { user_id, total_stake, profit } = row;
-      //   const totalProfit = profit + total_stake;
-      //   await ResultModel.updateWinnerWallet(
-      //     connection,
-      //     user_id,
-      //     totalProfit,
-      //     total_stake
-      //   );
-      // }
-      // for (const row of losers) {
-      //   const { user_id, total_stake } = row;
-      //   await ResultModel.updateLoserWallet(connection, user_id, total_stake);
-      // }
-      // await ResultModel.updateBetsStatus(connection, mmid, isClosedType);
+      // Step 1: Group by operator_id → user_id
+      const operatorsMap = {};
+
+      for (const bet of bets) {
+        const opId = bet.operator_id;
+        const userId = bet.user_id;
+        const betId = bet.client_bet_id;
+
+        if (!operatorsMap[opId]) {
+          operatorsMap[opId] = {};
+        }
+
+        if (!operatorsMap[opId][userId]) {
+          operatorsMap[opId][userId] = {
+            stake: 0,
+            profit: null,
+            bet_ids: new Set(),
+            hasWin: false,
+          };
+        }
+
+        const user = operatorsMap[opId][userId];
+
+        user.stake += parseFloat(bet.stake);
+        user.bet_ids.add(betId);
+
+        if (user.profit === null && bet.winning_potential_profit !== null) {
+          user.profit = parseFloat(bet.winning_potential_profit);
+          user.hasWin = true;
+        }
+      }
+
+      // Step 2: Build final grouped array per operator
+
+      const finalOutput = Object.entries(operatorsMap).map(
+        ([opId, usersMap]) => {
+          const winners = [];
+          const losers = [];
+
+          for (const [userId, user] of Object.entries(usersMap)) {
+            const bet_ids = [...user.bet_ids].map(Number); // Convert Set to array of numbers
+
+            if (user.hasWin) {
+              const creditAmount = user.profit + user.stake;
+
+              winners.push({
+                userId,
+                profit: user.profit,
+                stake: user.stake,
+                creditAmount,
+                bet_ids,
+              });
+            } else {
+              losers.push({
+                userId,
+                stake: user.stake,
+                bet_ids,
+              });
+            }
+          }
+
+          return {
+            operatorId: opId,
+            // token,
+            // requestId,
+            // transactionId,
+            bets: {
+              winners,
+              Loosers: losers,
+            },
+          };
+        }
+      );
+
+      let finalReports = JSON.stringify(finalOutput, null, 2);
+      const OperatorUrls = await ResultModel.getOperatorUrls();
+
+      console.log(finalReports);
+
+      const transactionId = "txn_" + uuidv4();
+
+      // 2. Loop through each operator and send the request
+      for (const operator of finalOutput) {
+        const requestId = uuidv4(); // unique per operator
+        const timestamp = new Date().toISOString();
+
+        // Winners: keep as one object per user, with array of bet_ids
+        const formattedWinners = operator.bets.winners.map((winner) => ({
+          userId: winner.userId,
+          creditAmount: winner.creditAmount,
+          totalstake: winner.stake,
+          client_bet_id: winner.bet_ids, // already an array of integers
+        }));
+
+        // Losers
+        const formattedLosers = operator.bets.Loosers.map((loser) => ({
+          userId: loser.userId,
+          totalstake: loser.stake,
+          client_bet_id: loser.bet_ids, // already an array of integers
+        }));
+
+        // const formattedWinners = operator.bets.winners.flatMap((winner) =>
+        //   winner.bet_ids.map((betId) => ({
+        //     userId: winner.userId,
+        //     creditAmount: winner.creditAmount,
+        //     client_bet_id: betId,
+        //   }))
+        // );
+
+        // const formattedLosers = operator.bets.Loosers.flatMap((loser) =>
+        //   loser.bet_ids.map((betId) => ({
+        //     userId: loser.userId,
+        //     totalstake: loser.stake,
+        //     client_bet_id: betId,
+        //   }))
+        // );
+
+        const payload = {
+          operatorId: operator.operatorId,
+          token: operator.token,
+          requestId,
+          transactionId,
+          timestamp,
+          bets: {
+            winners: formattedWinners,
+            losers: formattedLosers,
+          },
+        };
+
+        console.log(JSON.stringify(payload, null, 2));
+
+        const callbackUrl = OperatorUrls[operator.operatorId];
+
+        try {
+          console.log(`Sending to ${callbackUrl}`);
+          const response = await fetch(callbackUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await response.text();
+          console.log(`Response from ${callbackUrl}:`, result);
+        } catch (error) {
+          console.error(`Failed to send to ${callbackUrl}:`, error.message);
+        }
+
+        console.log("-------------------------");
+      }
+
+      // Step 1: Group all items by bet_id
+      const groupedByBetId = {};
+      bets.forEach((item) => {
+        if (!groupedByBetId[item.bet_id]) {
+          groupedByBetId[item.bet_id] = [];
+        }
+        groupedByBetId[item.bet_id].push(item);
+      });
+
+      // Step 2: Separate into winning and losing bet_ids
+      const winningBets = [];
+      const losingBets = [];
+
+      for (const betId in groupedByBetId) {
+        const entries = groupedByBetId[betId];
+
+        const hasWinning = entries.some(
+          (entry) => entry.winning_potential_profit !== null
+        );
+        if (hasWinning) {
+          winningBets.push(parseInt(betId));
+        } else {
+          losingBets.push(parseInt(betId));
+        }
+      }
+      console.log("Winning Bet IDs:", winningBets);
+      console.log("Losing Bet IDs:", losingBets);
+      await ResultModel.updateBetsStatusAPI(connection, winningBets, losingBets);
     }
     await db.commit(connection);
     return {
@@ -526,5 +693,6 @@ module.exports = {
   fetchMatchTypeData,
   getMatchTypeId,
   publishResults,
+  rollbackResults,
   settleBet,
 };

@@ -141,6 +141,19 @@ const publishResults = async (req, res) => {
   }
 };
 
+const rollbackResults = async (req, res) => {
+  try {
+    const result = await ResultService.rollbackResults(req.body);
+    res.status(result.success ? 200 : 400).json(result);
+  } catch (error) {
+    console.error("Rollback Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
 const settleBet = async (req, res) => {
   try {
     const settlebet = await ResultService.settleBet(req.body);
@@ -165,5 +178,6 @@ module.exports = {
   getMatchTypeResults,
   getMatchTypeId,
   publishResults,
+  rollbackResults,
   settleBet,
 };

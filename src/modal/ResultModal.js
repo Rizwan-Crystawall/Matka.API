@@ -28,8 +28,11 @@ const fetchBets = async (conn, digit, mmid, isClosedType) => {
   //    GROUP BY b.id, b.user_id, b.stake, bd_win.potential_profit`,
   //   [digit, mmid, isClosedType]
   // );
-// console.log("Fetch Bets");
-  const rows = await conn.query(`SELECT b.operator_id, b.user_id, b.id AS bet_id,b.client_bet_id, bd_all.id as bet_digits_id, bd_all.digit, bd_all.stake, bd_win.potential_profit as winning_potential_profit FROM bets b JOIN bet_digits bd_all ON b.id = bd_all.bet_id LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ? WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 1;`,[digit, mmid, isClosedType]);
+  // console.log("Fetch Bets");
+  const rows = await conn.query(
+    `SELECT b.operator_id, b.user_id, b.id AS bet_id,b.client_bet_id, bd_all.id as bet_digits_id, bd_all.digit, bd_all.stake, bd_win.potential_profit as winning_potential_profit FROM bets b JOIN bet_digits bd_all ON b.id = bd_all.bet_id LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ? WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 1;`,
+    [digit, mmid, isClosedType]
+  );
 
   return rows[0] || [];
 };
@@ -46,9 +49,20 @@ const fetchBetsAPI = async (conn, digit, mmid, isClosedType) => {
   //    GROUP BY b.id, b.user_id, b.stake, bd_win.potential_profit`,
   //   [digit, mmid, isClosedType]
   // );
-// console.log("Fetch Bets");
-  const rows = await conn.query(`SELECT b.operator_id, b.user_id, b.id AS bet_id,b.client_bet_id, bd_all.id as bet_digits_id, bd_all.digit, bd_all.stake, bd_win.potential_profit as winning_potential_profit FROM bets b JOIN bet_digits bd_all ON b.id = bd_all.bet_id LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ? WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 1 AND b.operator_id;`,[digit, mmid, isClosedType]);
+  // console.log("Fetch Bets");
+  const rows = await conn.query(
+    `SELECT b.operator_id, b.user_id, b.id AS bet_id,b.client_bet_id, bd_all.id as bet_digits_id, bd_all.digit, bd_all.stake, bd_win.potential_profit as winning_potential_profit FROM bets b JOIN bet_digits bd_all ON b.id = bd_all.bet_id LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ? WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 1 AND b.operator_id;`,
+    [digit, mmid, isClosedType]
+  );
 
+  return rows[0] || [];
+};
+
+const fetchBetsAPIForROllback = async (conn, digit, mmid, isClosedType) => {
+  const rows = await conn.query(
+    `SELECT b.operator_id, b.user_id, b.id AS bet_id,b.client_bet_id, bd_all.id as bet_digits_id, bd_all.digit, bd_all.stake, bd_win.potential_profit as winning_potential_profit FROM bets b JOIN bet_digits bd_all ON b.id = bd_all.bet_id LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ? WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id IN (2,3) AND b.operator_id;`,
+    [digit, mmid, isClosedType]
+  );
   return rows[0] || [];
 };
 
@@ -62,10 +76,10 @@ const updateWinnerWallet = async (conn, user_id, totalProfit, total_stake) => {
 };
 
 const updateLoserWallet = async (conn, user_id, total_stake) => {
-  await conn.query(`UPDATE wallet SET exposure = exposure - ? WHERE user_id = ?`, [
-    total_stake,
-    user_id,
-  ]);
+  await conn.query(
+    `UPDATE wallet SET exposure = exposure - ? WHERE user_id = ?`,
+    [total_stake, user_id]
+  );
 };
 
 const updateBetsStatus = async (conn, mmid, isClosedType) => {
@@ -73,6 +87,28 @@ const updateBetsStatus = async (conn, mmid, isClosedType) => {
     `UPDATE bets SET status_id = 2 WHERE match_map_id = ? AND is_closed_type = ?`,
     [mmid, isClosedType]
   );
+};
+
+const updateBetsStatusAPI = async (conn, winningBets, losingBets) => {
+  try {
+    if (winningBets.length > 0) {
+      const [res1] = await conn.query(
+        `UPDATE bets SET status_id = 2 WHERE id IN (?)`,
+        [winningBets]
+      );
+      console.log("Winning bets updated:", res1.affectedRows);
+    }
+
+    if (losingBets.length > 0) {
+      const [res2] = await conn.query(
+        `UPDATE bets SET status_id = 3 WHERE id IN (?)`,
+        [losingBets]
+      );
+      console.log("Losing bets updated:", res2.affectedRows);
+    }
+  } catch (err) {
+    console.error("Error updating bets:", err);
+  }
 };
 
 const getAllResults = async () => {
@@ -154,18 +190,21 @@ const fetchRollbackBets = async (conn, digit, mmid, isClosedType) => {
   //   GROUP BY b.id, b.user_id, b.stake, bd_win.potential_profit
   // `;
 
-  const rows = await conn.query(`SELECT b.user_id, b.id AS bet_id, bd_all.id as bet_digits_id, bd_all.digit, bd_all.stake, bd_win.potential_profit as winning_potential_profit FROM bets b JOIN bet_digits bd_all ON b.id = bd_all.bet_id LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ? WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 2;`,[digit, mmid, isClosedType]);
+  const rows = await conn.query(
+    `SELECT b.user_id, b.id AS bet_id, bd_all.id as bet_digits_id, bd_all.digit, bd_all.stake, bd_win.potential_profit as winning_potential_profit FROM bets b JOIN bet_digits bd_all ON b.id = bd_all.bet_id LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ? WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 2;`,
+    [digit, mmid, isClosedType]
+  );
 
   // const rows = await conn.query(sql, [digit, mmid, isClosedType]);
   return Array.isArray(rows) ? rows[0] : []; // <-- Ensure always array
 };
 const groupBetsByUser = (bets) => {
   if (!Array.isArray(bets) || bets.length === 0) {
-  return {
-    success: false,
-    message: "No bets found to rollback.",
-  };
-}
+    return {
+      success: false,
+      message: "No bets found to rollback.",
+    };
+  }
   // return Object.values(
   //   bets.reduce((acc, curr) => {
   //     if (!acc[curr.user_id]) {
@@ -190,44 +229,46 @@ const groupBetsByUser = (bets) => {
   //     return acc;
   //   }, {})
   // );
-  return Object.values(bets.reduce((acc, curr) => {
-        const userId = curr.user_id;
+  return Object.values(
+    bets.reduce((acc, curr) => {
+      const userId = curr.user_id;
 
-        if (!acc[userId]) {
-          acc[userId] = {
-            user_id: userId,
-            total_stake: 0,
-            profit: null,
-          };
-        }
+      if (!acc[userId]) {
+        acc[userId] = {
+          user_id: userId,
+          total_stake: 0,
+          profit: null,
+        };
+      }
 
-        acc[userId].total_stake += parseFloat(curr.stake);
+      acc[userId].total_stake += parseFloat(curr.stake);
 
-        if (
-          acc[userId].profit === null &&
-          curr.winning_potential_profit !== null
-        ) {
-          acc[userId].profit = parseFloat(curr.winning_potential_profit);
-        }
+      if (
+        acc[userId].profit === null &&
+        curr.winning_potential_profit !== null
+      ) {
+        acc[userId].profit = parseFloat(curr.winning_potential_profit);
+      }
 
-        return acc;
-      }, {}));
+      return acc;
+    }, {})
+  );
 };
 const rollbackWinner = async (conn, user_id, total, stake) => {
-  await  conn.query(
+  await conn.query(
     `UPDATE wallet SET wallet_balance = wallet_balance - ?, exposure = exposure + ? WHERE user_id = ?`,
     [total, stake, user_id]
   );
 };
 const rollbackLoser = async (conn, user_id, stake) => {
-  await  conn.query(
+  await conn.query(
     `UPDATE wallet SET exposure = exposure + ? WHERE user_id = ?`,
     [stake, user_id]
   );
 };
 
 const resetBetStatus = async (conn, mmid, isClosedType) => {
-  await  conn.query(
+  await conn.query(
     `UPDATE bets SET status_id = 1 WHERE match_map_id = ? AND is_closed_type = ?`,
     [mmid, isClosedType]
   );
@@ -235,16 +276,20 @@ const resetBetStatus = async (conn, mmid, isClosedType) => {
 
 const clearResult = async (conn, mmid, isClosedType) => {
   const field = isClosedType === 0 ? "open_result" : "close_result";
-  await  conn.query(
+  await conn.query(
     `UPDATE results SET ${field} = NULL WHERE match_map_id = ?`,
     [mmid]
   );
 };
 
 const getOperatorUrls = async () => {
-  const rows = await execute("SELECT id, operator_id, callback_url FROM operators");
-  return Object.fromEntries(rows.map(row => [row.id.toString(), row.callback_url]));
-}
+  const rows = await execute(
+    "SELECT id, operator_id, callback_url FROM operators"
+  );
+  return Object.fromEntries(
+    rows.map((row) => [row.id.toString(), row.callback_url])
+  );
+};
 
 module.exports = {
   getAllResults,
@@ -265,4 +310,6 @@ module.exports = {
   clearResult,
   getOperatorUrls,
   fetchBetsAPI,
+  updateBetsStatusAPI,
+  fetchBetsAPIForROllback,
 };
