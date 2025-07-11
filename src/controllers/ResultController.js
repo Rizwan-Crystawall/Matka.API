@@ -141,6 +141,21 @@ const publishResults = async (req, res) => {
   }
 };
 
+const settleBet = async (req, res) => {
+  try {
+    const settlebet = await ResultService.settleBet(req.body);
+    if (settlebet.success)
+      res.status(200).json({ success: true, data: settlebet.data });
+    else res.status(404).json({ success: false, data: settlebet.data });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Unable to settle this Bet",
+      error: "Unable to settle this Bet",
+    });
+  }
+};
+
 module.exports = {
   saveBetResults,
   rollbackBetResults,
@@ -150,4 +165,5 @@ module.exports = {
   getMatchTypeResults,
   getMatchTypeId,
   publishResults,
+  settleBet,
 };

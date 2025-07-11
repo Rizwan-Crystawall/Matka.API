@@ -1,3 +1,6 @@
+const { v4: uuidv4 } = require("uuid");
+// const fetch = require("node-fetch");
+
 const db = require("../utils/dbHelper");
 const ResultModel = require("../modal/ResultModal");
 
@@ -228,17 +231,16 @@ const publishResults = async (data) => {
       const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
       const digit = item.open_result ?? item.close_result;
       const mmid = item.mmid;
-      const bets = await ResultModel.fetchBets(
+      const bets = await ResultModel.fetchBetsAPI(
         connection,
         digit,
         mmid,
         isClosedType
       );
 
-      // UUID values for each response
-      const token = "f562a685-a160-4d17-876d-ab3363db331c";
-      const requestId = "583c985f-fee6-4c0e-bbf5-308aad6265af";
-      const transactionId = "tx-16d2dcfe-b89e-11e7-854a-58404eea6d16";
+      // const token = "f562a685-a160-4d17-876d-ab3363db331c";
+      // const requestId = "583c985f-fee6-4c0e-bbf5-308aad6265af";
+      // const transactionId = "tx-16d2dcfe-b89e-11e7-854a-58404eea6d16";
 
       // Step 1: Group by operator_id → user_id
       const operatorsMap = {};
@@ -273,35 +275,39 @@ const publishResults = async (data) => {
       }
 
       // Step 2: Build final grouped array per operator
+
       const finalOutput = Object.entries(operatorsMap).map(
         ([opId, usersMap]) => {
           const winners = [];
           const losers = [];
 
           for (const [userId, user] of Object.entries(usersMap)) {
-            const bet_id = [...user.bet_ids].join(",");
+            const bet_ids = [...user.bet_ids].map(Number); // Convert Set to array of numbers
 
             if (user.hasWin) {
+              const creditAmount = user.profit + user.stake;
+
               winners.push({
                 userId,
                 profit: user.profit,
                 stake: user.stake,
-                bet_id,
+                creditAmount,
+                bet_ids,
               });
             } else {
               losers.push({
                 userId,
                 stake: user.stake,
-                bet_id,
+                bet_ids,
               });
             }
           }
 
           return {
             operatorId: opId,
-            token,
-            requestId,
-            transactionId,
+            // token,
+            // requestId,
+            // transactionId,
             bets: {
               winners,
               Loosers: losers,
@@ -309,38 +315,114 @@ const publishResults = async (data) => {
           };
         }
       );
-      // console.log("RESULTS");
-      let finalReports = JSON.stringify(finalOutput, null, 2);
-      // console.log(finalReports);
 
+      let finalReports = JSON.stringify(finalOutput, null, 2);
       const OperatorUrls = await ResultModel.getOperatorUrls();
 
       // console.log(OperatorUrls);
 
-      finalOutput.forEach((operator) => {
-        console.log(`Operator ID: ${operator.operatorId}`);
-        console.log(`Token: ${operator.token}`);
-        console.log(`Transaction ID: ${operator.transactionId}`);
-        console.log(`Callback URL: ${OperatorUrls[operator.operatorId]}`)
+      // finalOutput.forEach((operator) => {
+      //   console.log(`Operator ID: ${operator.operatorId}`);
+      //   console.log(`Token: ${operator.token}`);
+      //   console.log(`Transaction ID: ${operator.transactionId}`);
+      //   console.log(`Callback URL: ${OperatorUrls[operator.operatorId]}`);
 
-        // Winners
-        console.log("Winners:");
-        operator.bets.winners.forEach((winner) => {
-          console.log(
-            `  User: ${winner.userId}, Profit: ${winner.profit}, Stake: ${winner.stake}, Bets: ${winner.bet_id}`
-          );
-        });
+      //   // Winners
+      //   console.log("Winners:");
+      //   operator.bets.winners.forEach((winner) => {
+      //     console.log(
+      //       `  User: ${winner.userId}, Stake: ${winner.stake}, Credit Amount: ${
+      //         winner.creditAmount
+      //       }, Bets: ${winner.bet_ids.join(", ")}`
+      //     );
+      //   });
+
+      //   // Losers
+      //   console.log("Losers:");
+      //   operator.bets.Loosers.forEach((loser) => {
+      //     console.log(
+      //       `  User: ${loser.userId}, Stake: ${
+      //         loser.stake
+      //       }, Bets: ${loser.bet_ids.join(", ")}`
+      //     );
+      //   });
+
+      //   console.log("-------------------------");
+      // });
+
+      const transactionId = "txn_" + uuidv4();
+
+      // 2. Loop through each operator and send the request
+      for (const operator of finalOutput) {
+        const requestId = uuidv4(); // unique per operator
+        const timestamp = new Date().toISOString();
+
+        // Winners: keep as one object per user, with array of bet_ids
+        const formattedWinners = operator.bets.winners.map((winner) => ({
+          userId: winner.userId,
+          creditAmount: winner.creditAmount,
+          totalstake: winner.stake,
+          client_bet_id: winner.bet_ids, // already an array of integers
+        }));
 
         // Losers
-        console.log("Losers:");
-        operator.bets.Loosers.forEach((loser) => {
-          console.log(
-            `  User: ${loser.userId}, Stake: ${loser.stake}, Bets: ${loser.bet_id}`
-          );
-        });
+        const formattedLosers = operator.bets.Loosers.map((loser) => ({
+          userId: loser.userId,
+          totalstake: loser.stake,
+          client_bet_id: loser.bet_ids, // already an array of integers
+        }));
+
+        // const formattedWinners = operator.bets.winners.flatMap((winner) =>
+        //   winner.bet_ids.map((betId) => ({
+        //     userId: winner.userId,
+        //     creditAmount: winner.creditAmount,
+        //     client_bet_id: betId,
+        //   }))
+        // );
+
+        // const formattedLosers = operator.bets.Loosers.flatMap((loser) =>
+        //   loser.bet_ids.map((betId) => ({
+        //     userId: loser.userId,
+        //     totalstake: loser.stake,
+        //     client_bet_id: betId,
+        //   }))
+        // );
+
+        const payload = {
+          operatorId: operator.operatorId,
+          token: operator.token,
+          requestId,
+          transactionId,
+          timestamp,
+          bets: {
+            winners: formattedWinners,
+            losers: formattedLosers,
+          },
+        };
+
+        // console.log(payload);
+        console.log(JSON.stringify(payload, null, 2));
+
+        const callbackUrl = OperatorUrls[operator.operatorId];
+
+        try {
+          console.log(`Sending to ${callbackUrl}`);
+          const response = await fetch(callbackUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await response.text();
+          console.log(`Response from ${callbackUrl}:`, result);
+        } catch (error) {
+          console.error(`Failed to send to ${callbackUrl}:`, error.message);
+        }
 
         console.log("-------------------------");
-      });
+      }
 
       // console.log("OPERATOR URLs");
       // console.log(OperatorUrls);
@@ -421,6 +503,20 @@ const publishResults = async (data) => {
   }
 };
 
+const settleBet = async (data) => {
+  if (data.debit_amount < 1000) {
+    return {
+      success: true,
+      data: { can_place_bet: true, balance: 1500, exposure: 200, bet_id: 15 },
+    };
+  } else {
+    return {
+      success: false,
+      data: { can_place_bet: false, message: "Insufficient Fund" },
+    };
+  }
+};
+
 module.exports = {
   saveBetResults,
   rollBackBetResult,
@@ -430,4 +526,5 @@ module.exports = {
   fetchMatchTypeData,
   getMatchTypeId,
   publishResults,
+  settleBet,
 };
