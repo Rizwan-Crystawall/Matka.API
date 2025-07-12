@@ -197,7 +197,7 @@ SELECT bd.digit, COUNT(bd.bet_id) AS total_bets_on_digit, COUNT(DISTINCT b.user_
 
 const getUniqueClients = async (digit) => {
   const sql = `
-  SELECT u.name, u.username, u.phone_number FROM bet_digits bd JOIN bets b ON bd.bet_id = b.id JOIN users u ON b.user_id = u.id WHERE bd.digit = ?;
+SELECT b.operator_id,op.operator_id,b.user_id FROM bets b JOIN operators op ON op.id = b.operator_id;
   `;
   return await execute(sql, [digit]);
 };
