@@ -2,7 +2,7 @@ const axios = require('axios');                   // fixed import (no destructur
 const { Queue, Worker } = require('bullmq');
 const { v4: uuidv4 } = require('uuid');           // fixed uuid import
 const IORedis = require('ioredis');
-const { createBetSettlementsEntry } = require('../modal/BetModal');
+const { createBetSettlementsEntry, updateBetSettlementsRetryCount } = require('../modal/BetModal');
 
 // --- In-memory batch store (replace with DB in production) ---
 const batches = new Map();
@@ -23,9 +23,11 @@ const retryQueue = new Queue('retry-settlements', { connection });
 // No QueueScheduler needed anymore!
 const retryWorker = new Worker('retry-settlements', async job => {
   console.log("Job");
-  console.log(job);
+  console.log(job.data);
   const requestId = job.data.requestId;
   const batch = batches.get(requestId);
+  console.log("Batch");
+  console.log(batch);
   if (!batch) {
     console.log(`No batch found for retry with requestId ${requestId}`);
     return;
@@ -37,6 +39,7 @@ const retryWorker = new Worker('retry-settlements', async job => {
   }
 
   console.log(`Retry attempt #${batch.retryCount + 1} for batch ${requestId}`);
+  updateBetSettlementsRetryCount(requestId);
 
   const retryPayload = prepareRetryPayload(batch);
   if (
@@ -103,12 +106,12 @@ function handleResponse(response, batch) {
 
     if (response.bets?.winners) {
       response.bets.winners.forEach(bet => {
-        if (bet.bet_status !== 'settled') failedBets.push(...bet.bet_id);
+        if (bet.bet_status !== 'settled') failedBets.push(...bet.client_bet_id);
       });
     }
     if (response.bets?.losers) {
       response.bets.losers.forEach(bet => {
-        if (bet.bet_status !== 'settled') failedBets.push(...bet.bet_id);
+        if (bet.bet_status !== 'settled') failedBets.push(...bet.client_bet_id);
       });
     }
 
@@ -117,8 +120,8 @@ function handleResponse(response, batch) {
   } else {
     batch.status = 'failed';
     batch.failedBets = batch.payload.bets.winners
-      .flatMap(b => b.bet_id)
-      .concat(batch.payload.bets.losers.flatMap(b => b.bet_id));
+      .flatMap(b => b.client_bet_id)
+      .concat(batch.payload.bets.losers.flatMap(b => b.client_bet_id));
     console.log(`Batch ${batch.requestId} settlement failed completely.`);
   }
 }
@@ -127,11 +130,11 @@ function prepareRetryPayload(batch) {
   const filterBets = (bets, failedIds) =>
     bets
       .map(bet => {
-        const filteredIds = bet.bet_id.filter(id => failedIds.includes(id));
+        const filteredIds = bet.client_bet_id.filter(id => failedIds.includes(id));
         if (filteredIds.length === 0) return null;
         return {
           ...bet,
-          bet_id: filteredIds
+          client_bet_id: filteredIds
         };
       })
       .filter(Boolean);
