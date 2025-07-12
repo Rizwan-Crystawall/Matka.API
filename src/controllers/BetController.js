@@ -21,7 +21,7 @@ const getBetsByMatchAndUser = async (req, res) => {
 };
 const getUserBets = async (req, res) => {
   try {
-    const { match_id, user_id } = req.body;
+    const { match_id, user_id } = req.query;
 
     const bets = await BetsService.fetchUserBets(user_id, match_id);
     return res.status(200).json({ success: true, data: bets });

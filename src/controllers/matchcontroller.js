@@ -155,8 +155,7 @@ const deleteMatch = async (req, res) => {
 };
 const getMatchTypes = async (req, res) => {
   try {
-    const { match_id } = req.body;
-
+  const { match_id } = req.query; 
     const result = await MatchService.fetchMatchTypesByMatchId(match_id);
 
     return res.status(200).json({
