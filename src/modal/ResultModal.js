@@ -96,7 +96,7 @@ const updateBetsStatusAPI = async (conn, winningBets, losingBets) => {
         `UPDATE bets SET status_id = 2 WHERE id IN (?)`,
         [winningBets]
       );
-      console.log("Winning bets updated:", res1.affectedRows);
+      // console.log("Winning bets updated:", res1.affectedRows);
     }
 
     if (losingBets.length > 0) {
@@ -104,7 +104,7 @@ const updateBetsStatusAPI = async (conn, winningBets, losingBets) => {
         `UPDATE bets SET status_id = 3 WHERE id IN (?)`,
         [losingBets]
       );
-      console.log("Losing bets updated:", res2.affectedRows);
+      // console.log("Losing bets updated:", res2.affectedRows);
     }
   } catch (err) {
     console.error("Error updating bets:", err);

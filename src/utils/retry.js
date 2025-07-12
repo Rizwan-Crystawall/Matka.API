@@ -73,9 +73,9 @@ const retryWorker = new Worker('retry-settlements', async job => {
 
 // --- The rest of your code remains unchanged ---
 
-async function sendSettlement(payload) {
+async function sendSettlement(payload, callbackUrl) {
   try {
-    const response = await axios.post(OPERATOR_API_URL, payload, {
+    const response = await axios.post(callbackUrl, payload, {
       headers: {
         Authorization: `Bearer ${payload.token}`,
         'Content-Type': 'application/json',
@@ -145,7 +145,12 @@ function prepareRetryPayload(batch) {
   };
 }
 
-async function sendNewBatch(payload) {
+async function sendNewBatch(payload, callbackUrl) {
+
+    console.log("sendNewBatch");
+    console.log(payload);
+    console.log(callbackUrl)
+
   const requestId = uuidv4();
   payload.requestId = requestId;
 
@@ -159,7 +164,7 @@ async function sendNewBatch(payload) {
   });
 
   try {
-    const response = await sendSettlement(payload);
+    const response = await sendSettlement(payload, callbackUrl);
     const batch = batches.get(requestId);
     handleResponse(response, batch);
     batches.set(requestId, batch);
@@ -184,22 +189,25 @@ async function sendNewBatch(payload) {
 
 // --- Example usage ---
 
-const examplePayload = {
-  operatorId: "xyz",
-  token: "f562a685-a160-4d17-876d-ab3363db331c",
-  transactionId: "tx-16d2dcfe-b89e-11e7-854a-58404eea6d16",
-  bets: {
-    winners: [
-      { userId: "xyz_user_id", profit: 950, stake: 10, bet_id: ["1", "2", "3"] },
-      { userId: "xyz_user_id", profit: 950, stake: 10, bet_id: ["9"] }
-    ],
-    losers: [
-      { userId: "xyz_user_id", stake: 10, bet_id: ["6"] },
-      { userId: "xyz_user_id", stake: 10, bet_id: ["7"] }
-    ]
-  }
-};
+// const examplePayload = {
+//   operatorId: "xyz",
+//   token: "f562a685-a160-4d17-876d-ab3363db331c",
+//   transactionId: "tx-16d2dcfe-b89e-11e7-854a-58404eea6d16",
+//   bets: {
+//     winners: [
+//       { userId: "xyz_user_id", profit: 950, stake: 10, bet_id: ["1", "2", "3"] },
+//       { userId: "xyz_user_id", profit: 950, stake: 10, bet_id: ["9"] }
+//     ],
+//     losers: [
+//       { userId: "xyz_user_id", stake: 10, bet_id: ["6"] },
+//       { userId: "xyz_user_id", stake: 10, bet_id: ["7"] }
+//     ]
+//   }
+// };
 
-(async () => {
-  await sendNewBatch(examplePayload);
-})();
+// (async () => {
+//   await sendNewBatch(examplePayload);
+// })();
+module.exports ={
+    sendNewBatch
+}
