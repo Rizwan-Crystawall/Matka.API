@@ -12,7 +12,7 @@ const ResultController = require("../../controllers/ResultController");
 const authAPIMiddleware = require("../../middleware/apiMiddleware");
 
 // Market for Operator API External
-router.post("/auth/token", TokenController.authToken);
+router.post("/auth/login", TokenController.authToken);
 router.post("/verify-auth", authAPIMiddleware, TokenController.verifyAuth);
 
 router.post("/activeMatchMmappings", marketcontoller.getActiveMatchMappings);

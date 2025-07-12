@@ -1,10 +1,13 @@
 const { v4: uuidv4 } = require("uuid");
 // const fetch = require("node-fetch");
-const axios = require('axios');
-
+const axios = require("axios");
 const db = require("../utils/dbHelper");
 const ResultModel = require("../modal/ResultModal");
 const { sendNewBatch } = require("../utils/retry.js");
+const TokenModal = require("../modal/TokenModal");
+const { generateSignature } = require("./../utils/security");
+const jwt = require("jsonwebtoken");
+const { createTransaction } = require("../modal/TransactionModal.js");
 
 const saveBetResults = async (data) => {
   const connection = await db.beginTransaction();
@@ -322,6 +325,31 @@ const publishResults = async (data) => {
           totalstake: loser.stake,
           client_bet_id: loser.bet_ids, // already an array of integers
         }));
+        let userForToken = "";
+        if (formattedWinners.length > 0) {
+          userForToken = formattedWinners[0].userId;
+        }
+        if (formattedLosers.length > 0) {
+          userForToken = formattedWinners[0].userId;
+        }
+        const oid = operator.operatorId;
+        const opr = await TokenModal.getOperatorDetails(oid);
+        let secret = "";
+        if (opr.length > 0) {
+          secret = opr[0].shared_secret;
+        }
+        const payloadForToken = {
+          oid,
+          userForToken,
+          signature: generateSignature(userForToken, secret),
+          iat: Math.floor(Date.now() / 1000),
+        };
+        const token = jwt.sign(payloadForToken, secret, {
+          algorithm: "HS256",
+          expiresIn: "1h",
+        });
+        // console.log(token);
+        // console.log(formattedLosers[0].userId);
         // const formattedWinners = operator.bets.winners.flatMap((winner) =>
         //   winner.bet_ids.map((betId) => ({
         //     userId: winner.userId,
@@ -336,12 +364,23 @@ const publishResults = async (data) => {
         //     client_bet_id: betId,
         //   }))
         // );
+        let data = {
+          user_id: userForToken,
+          transaction_id: transactionId,
+          request_id: requestId,
+          operator_id: operator.operatorId,
+          trans_type: "Result",
+          debit_amount: 0,
+        };
+        createTransaction(data);
         const payload = {
           operatorId: operator.operatorId,
-          token: operator.token,
+          token: token,
+          userId: userForToken,
           requestId,
           transactionId,
           timestamp,
+          isClosedType: isClosedType,
           bets: {
             winners: formattedWinners,
             losers: formattedLosers,

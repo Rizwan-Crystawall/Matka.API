@@ -272,6 +272,27 @@ const getTotalNumberOfBets = async (digit) => {
   return await execute(sql, [digit]);
 };
 
+const createBetSettlementsEntry = async (data) => {
+  // console.log("HERE IN BET MODAL FOR INITIAL ENTRY");
+  // console.log(data);
+  
+  const sql = `
+   INSERT INTO bet_settlements (request_id, transaction_id, operator_id, status, payload, retry_count, is_closed_type)
+   VALUES (?,?,?,?,?,?,?)
+  `;
+  const result = await execute(sql, [
+    data.request_id,
+    data.transaction_id,
+    data.operator_id,
+    data.status,
+    JSON.stringify(data.payload),
+    data.retry_count,
+    // data.failed_bets,
+    data.is_closed_type,
+  ]);
+  return result.affectedRows;
+};
+
 module.exports = {
   getBetsByMatchAndUser,
   fetchDigitStats,
@@ -289,4 +310,5 @@ module.exports = {
   getTotalNumberOfBets,
   getBetsByMatchAndUserAPI,
   getUserBetsByMatchAPI,
+  createBetSettlementsEntry,
 };
