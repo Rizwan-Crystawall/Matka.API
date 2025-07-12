@@ -22,6 +22,8 @@ const retryQueue = new Queue('retry-settlements', { connection });
 // *** MAIN CHANGE: create a Worker with your processor callback ***
 // No QueueScheduler needed anymore!
 const retryWorker = new Worker('retry-settlements', async job => {
+  console.log("Job");
+  console.log(job);
   const requestId = job.data.requestId;
   const batch = batches.get(requestId);
   if (!batch) {
@@ -48,7 +50,7 @@ const retryWorker = new Worker('retry-settlements', async job => {
   }
 
   try {
-    const response = await sendSettlement(retryPayload);
+    const response = await sendSettlement(retryPayload, batch.callbackUrl);
     handleResponse(response, batch);
 
     batch.retryCount++;
@@ -147,26 +149,18 @@ function prepareRetryPayload(batch) {
 }
 
 async function sendNewBatch(payload, callbackUrl) {
-
-    // console.log("sendNewBatch");
-    // console.log(payload.requestId);
-    // console.log(callbackUrl)
-
-  // const requestId = uuidv4();
   const requestId = payload.requestId;
   const transactionId = payload.transactionId;
   const operatorId = payload.operatorId;
-  // payload.requestId = requestId;
   const isClosedType = payload.isClosedType;
-
-  console.log(payload);
-
+  // console.log(payload);
   batches.set(requestId, {
     requestId,
     operatorId,
     transactionId,
     isClosedType,
     payload,
+    callbackUrl,
     status: 'pending',
     retryCount: 0,
     lastAttempt: new Date(),
@@ -184,7 +178,6 @@ async function sendNewBatch(payload, callbackUrl) {
     }
   } catch (err) {
     console.error(`Initial settlement failed for batch ${requestId}:${transactionId}`, err.message);
-
     const batch = batches.get(requestId);
     batch.status = 'failed';
     batch.retryCount++;
@@ -193,9 +186,7 @@ async function sendNewBatch(payload, callbackUrl) {
       .flatMap(b => b.client_bet_id)
       .concat(payload.bets.losers.flatMap(b => b.client_bet_id));
     batches.set(requestId, batch);
-
-    console.log(batch.failedBets);
-
+    // console.log(batch.failedBets);
     let data ={
       request_id: requestId,
       transaction_id: transactionId,
@@ -206,13 +197,10 @@ async function sendNewBatch(payload, callbackUrl) {
       failed_bets: JSON.stringify(batch.failedBets),
       is_closed_type: isClosedType
     }
-
     createBetSettlementsEntry(data);
-
     await retryQueue.add('retry-settlement', { requestId }, { delay: RETRY_DELAY_BASE_MS });
   }
 }
-
 module.exports ={
     sendNewBatch
 }
