@@ -16,6 +16,9 @@ const getAllMatches = async () => {
   const match = await Match.getAllMatches(s_id);
   return match;
 };
+const fetchAllMatchTypes = async () => {
+  return await Match.getAllMatchTypes();
+};
 const createMatch = async ({
   market_id,
   name,
@@ -70,16 +73,14 @@ const fetchMatchTypesByMatchId = async (matchId) => {
   return data;
 };
 
-const fetchAllMatchTypes = async () => {
-  return await Match.getAllMatchTypes();
-};
+
 
 module.exports = {
   getAllMatches,
-  fetchAllMatchTypes,
   createMatch,
   updateMatch,
   deleteMatch,
   getMatchById,
-  fetchMatchTypesByMatchId
+  fetchMatchTypesByMatchId,
+  fetchAllMatchTypes
 };

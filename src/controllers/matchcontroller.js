@@ -23,6 +23,7 @@ const getAllMatches = async (req, res, next) => {
   }
 };
 
+
 const addMatch = async (req, res) => {
   try {
     const {
@@ -193,11 +194,11 @@ const getAllMatchTypes = async (req, res, next) => {
 
 
 module.exports = {
-  getAllMatchTypes,
   getAllMatches,
   addMatch,
   updateMatch,
   deleteMatch,
   getMatchById,
-  getMatchTypes
+  getMatchTypes,
+  getAllMatchTypes
 };

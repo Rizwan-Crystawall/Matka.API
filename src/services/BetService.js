@@ -140,8 +140,8 @@ const getTotalNumberOfBets = async (digit) => {
 };
 
 module.exports = {
-  fetchBetsByMatchAndUser,
   getDigitStatsByMatchType,
+  fetchBetsByMatchAndUser,
   fetchUserBets,
   saveUserBet,
   saveUserBetAPI,
