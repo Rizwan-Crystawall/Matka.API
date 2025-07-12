@@ -1,8 +1,10 @@
 const { v4: uuidv4 } = require("uuid");
 // const fetch = require("node-fetch");
+const axios = require('axios');
 
 const db = require("../utils/dbHelper");
 const ResultModel = require("../modal/ResultModal");
+const retryLogic = require("../utils/retry.js");
 
 const saveBetResults = async (data) => {
   const connection = await db.beginTransaction();
@@ -318,7 +320,7 @@ const publishResults = async (data) => {
       let finalReports = JSON.stringify(finalOutput, null, 2);
       const OperatorUrls = await ResultModel.getOperatorUrls();
 
-      console.log(finalReports);
+      // console.log(finalReports);
 
       const transactionId = "txn_" + uuidv4();
 
@@ -370,25 +372,27 @@ const publishResults = async (data) => {
           },
         };
 
-        console.log(JSON.stringify(payload, null, 2));
+        // console.log(JSON.stringify(payload, null, 2));
 
         const callbackUrl = OperatorUrls[operator.operatorId];
 
-        try {
-          console.log(`Sending to ${callbackUrl}`);
-          const response = await fetch(callbackUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-          });
+        retryLogic.sendNewBatch(payload, callbackUrl );
 
-          const result = await response.text();
-          console.log(`Response from ${callbackUrl}:`, result);
-        } catch (error) {
-          console.error(`Failed to send to ${callbackUrl}:`, error.message);
-        }
+        // try {
+        //   console.log(`Sending to ${callbackUrl}`);
+        //   const response = await fetch(callbackUrl, {
+        //     method: "POST",
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify(payload),
+        //   });
+
+        //   const result = await response.text();
+        //   console.log(`Response from ${callbackUrl}:`, result);
+        // } catch (error) {
+        //   console.error(`Failed to send to ${callbackUrl}:`, error.message);
+        // }
 
         console.log("-------------------------");
       }
@@ -418,8 +422,8 @@ const publishResults = async (data) => {
           losingBets.push(parseInt(betId));
         }
       }
-      console.log("Winning Bet IDs:", winningBets);
-      console.log("Losing Bet IDs:", losingBets);
+      // console.log("Winning Bet IDs:", winningBets);
+      // console.log("Losing Bet IDs:", losingBets);
       await ResultModel.updateBetsStatusAPI(
         connection,
         winningBets,

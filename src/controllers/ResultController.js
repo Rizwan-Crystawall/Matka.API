@@ -133,7 +133,7 @@ const publishResults = async (req, res) => {
     const result = await ResultService.publishResults(req.body);
     res.status(result.success ? 200 : 400).json(result);
   } catch (error) {
-    console.error("Rollback Error:", error);
+    console.error("Error saving bet results:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error.",
