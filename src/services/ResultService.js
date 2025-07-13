@@ -4,6 +4,7 @@ const axios = require("axios");
 const db = require("../utils/dbHelper");
 const ResultModel = require("../modal/ResultModal");
 const { sendNewBatch } = require("../utils/retry.js");
+const { sendNewBatchR } = require("../utils/retry_rollback");
 const TokenModal = require("../modal/TokenModal");
 const { generateSignature } = require("./../utils/security");
 const jwt = require("jsonwebtoken");
@@ -228,7 +229,7 @@ const publishResults = async (data) => {
       r.close_result,
       data.user_id,
     ]);
-    await ResultModel.insertOrUpdateResults(connection, values);
+    // await ResultModel.insertOrUpdateResults(connection, values);
     for (const item of data.result) {
       const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
       const digit = item.open_result ?? item.close_result;
@@ -239,10 +240,6 @@ const publishResults = async (data) => {
         mmid,
         isClosedType
       );
-      // console.log(bets);return;
-      // const token = "f562a685-a160-4d17-876d-ab3363db331c";
-      // const requestId = "583c985f-fee6-4c0e-bbf5-308aad6265af";
-      // const transactionId = "tx-16d2dcfe-b89e-11e7-854a-58404eea6d16";
       // Step 1: Group by operator_id → user_id
       const operatorsMap = {};
       for (const bet of bets) {
@@ -294,9 +291,6 @@ const publishResults = async (data) => {
           }
           return {
             operatorId: opId,
-            // token,
-            // requestId,
-            // transactionId,
             bets: {
               winners,
               Loosers: losers,
@@ -412,8 +406,6 @@ const publishResults = async (data) => {
           losingBets.push(parseInt(betId));
         }
       }
-      // console.log("Winning Bet IDs:", winningBets);
-      // console.log("Losing Bet IDs:", losingBets);
       // await ResultModel.updateBetsStatusAPI(
       //   connection,
       //   winningBets,
@@ -441,12 +433,6 @@ const publishResults = async (data) => {
 const rollbackResults = async (data) => {
   const connection = await db.beginTransaction();
   try {
-    // if (!data || !Array.isArray(data.payload)) {
-    //   // throw new Error("Invalid data: payload must be an array.");
-    // }
-    // if (!Array.isArray(data.result)) {
-    //   // throw new Error("Invalid data: result must be an array.");
-    // }
     const { mmid, isClosedType, digit } = data;
     const bets = await ResultModel.fetchBetsAPIForROllback(
       connection,
@@ -533,6 +519,29 @@ const rollbackResults = async (data) => {
         totalstake: loser.stake,
         client_bet_id: loser.bet_ids, // already an array of integers
       }));
+      let userForToken = "";
+      if (formattedWinners.length > 0) {
+        userForToken = formattedWinners[0].userId;
+      }
+      if (formattedLosers.length > 0) {
+        userForToken = formattedWinners[0].userId;
+      }
+      const oid = operator.operatorId;
+      const opr = await TokenModal.getOperatorDetails(oid);
+      let secret = "";
+      if (opr.length > 0) {
+        secret = opr[0].shared_secret;
+      }
+      const payloadForToken = {
+        oid,
+        userForToken,
+        signature: generateSignature(userForToken, secret),
+        iat: Math.floor(Date.now() / 1000),
+      };
+      const token = jwt.sign(payloadForToken, secret, {
+        algorithm: "HS256",
+        expiresIn: "1h",
+      });
       // const formattedWinners = operator.bets.winners.flatMap((winner) =>
       //   winner.bet_ids.map((betId) => ({
       //     userId: winner.userId,
@@ -547,35 +556,30 @@ const rollbackResults = async (data) => {
       //     client_bet_id: betId,
       //   }))
       // );
+      let data = {
+        user_id: userForToken,
+        transaction_id: transactionId,
+        request_id: requestId,
+        operator_id: operator.operatorId,
+        trans_type: "Rollback",
+        debit_amount: 0,
+      };
+      createTransaction(data);
       const payload = {
         operatorId: operator.operatorId,
-        token: operator.token,
+        token: token,
+        userId: userForToken,
         requestId,
         transactionId,
         timestamp,
+        isClosedType: isClosedType,
         bets: {
           winners: formattedWinners,
           losers: formattedLosers,
         },
       };
-      // console.log(JSON.stringify(payload, null, 2));
       const callbackUrl = OperatorUrls[operator.operatorId];
-      // try {
-      //   console.log(`Sending to ${callbackUrl}`);
-      //   const response = await fetch(callbackUrl, {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify(payload),
-      //   });
-
-      //   const result = await response.text();
-      //   console.log(`Response from ${callbackUrl}:`, result);
-      // } catch (error) {
-      //   console.error(`Failed to send to ${callbackUrl}:`, error.message);
-      // }
-
+      sendNewBatchR(payload, callbackUrl);
       console.log("-------------------------");
     }
     // Step 1: Group all items by bet_id
@@ -600,11 +604,8 @@ const rollbackResults = async (data) => {
         losingBets.push(parseInt(betId));
       }
     }
-    // console.log("Winning Bet IDs:", winningBets);
-    // console.log("Losing Bet IDs:", losingBets);
-    // await ResultModel.rollbackBetsStatusAPI(connection, winningBets, losingBets);
-    await ResultModel.resetBetStatus(connection, mmid, isClosedType);
-    await ResultModel.clearResult(connection, mmid, isClosedType);
+    // await ResultModel.resetBetStatus(connection, mmid, isClosedType);
+    // await ResultModel.clearResult(connection, mmid, isClosedType);
     await db.commit(connection);
     return {
       success: true,
