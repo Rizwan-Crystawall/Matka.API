@@ -1,7 +1,7 @@
 const TokenModal = require("../modal/TokenModal");
 const { generateSignature } = require("./../utils/security");
 const jwt = require("jsonwebtoken");
-function decodeToken(req, res, next) {
+async function decodeToken(req, res, next) {
   const token = req.headers["authorization"]?.split(" ")[1];
   if (!token) {
     return res.status(401).json({
@@ -22,7 +22,8 @@ function decodeToken(req, res, next) {
     const operatorId = req.user.operatorId;
     const userId = req.user.userId;
     const signature_from_token = req.user.signature;
-    const result = TokenModal.getOperatorDetails(operatorId);
+    const result = await TokenModal.getOperatorDetails(operatorId);
+    console.log(result);
     if (result.length > 0) {
       const secret = result[0].shared_secret;
       const signature = generateSignature(userId, secret);
