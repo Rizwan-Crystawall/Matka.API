@@ -229,7 +229,7 @@ const publishResults = async (data) => {
       r.close_result,
       data.user_id,
     ]);
-    // await ResultModel.insertOrUpdateResults(connection, values);
+    await ResultModel.insertOrUpdateResults(connection, values);
     for (const item of data.result) {
       const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
       const digit = item.open_result ?? item.close_result;
