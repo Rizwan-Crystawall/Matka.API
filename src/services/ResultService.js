@@ -406,11 +406,11 @@ const publishResults = async (data) => {
           losingBets.push(parseInt(betId));
         }
       }
-      // await ResultModel.updateBetsStatusAPI(
-      //   connection,
-      //   winningBets,
-      //   losingBets
-      // );
+      await ResultModel.updateBetsStatusAPI(
+        connection,
+        winningBets,
+        losingBets
+      );
     }
     await db.commit(connection);
     return {
@@ -604,8 +604,8 @@ const rollbackResults = async (data) => {
         losingBets.push(parseInt(betId));
       }
     }
-    // await ResultModel.resetBetStatus(connection, mmid, isClosedType);
-    // await ResultModel.clearResult(connection, mmid, isClosedType);
+    await ResultModel.resetBetStatus(connection, mmid, isClosedType);
+    await ResultModel.clearResult(connection, mmid, isClosedType);
     await db.commit(connection);
     return {
       success: true,

@@ -22,12 +22,8 @@ const retryQueue = new Queue('retry-settlements', { connection });
 // *** MAIN CHANGE: create a Worker with your processor callback ***
 // No QueueScheduler needed anymore!
 const retryWorker = new Worker('retry-settlements', async job => {
-  console.log("Job");
-  console.log(job.data);
   const requestId = job.data.requestId;
   const batch = batches.get(requestId);
-  console.log("Batch");
-  console.log(batch);
   if (!batch) {
     console.log(`No batch found for retry with requestId ${requestId}`);
     return;
@@ -156,7 +152,6 @@ async function sendNewBatch(payload, callbackUrl) {
   const transactionId = payload.transactionId;
   const operatorId = payload.operatorId;
   const isClosedType = payload.isClosedType;
-  // console.log(payload);
   batches.set(requestId, {
     requestId,
     operatorId,
@@ -189,7 +184,6 @@ async function sendNewBatch(payload, callbackUrl) {
       .flatMap(b => b.client_bet_id)
       .concat(payload.bets.losers.flatMap(b => b.client_bet_id));
     batches.set(requestId, batch);
-    // console.log(batch.failedBets);
     let data ={
       request_id: requestId,
       transaction_id: transactionId,
