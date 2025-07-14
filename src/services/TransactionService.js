@@ -16,16 +16,17 @@ const placeBet = async (req) => {
     const transction = await TransactionModal.createTransaction(req.body);
     if (transction === 1) {
       let data = {
+        operator_id: req.body.operator_id,
+        user_id: req.body.user_id,
         transaction_id: req.body.transaction_id,
         request_id: req.body.request_id,
         debit_amount: req.body.debit_amount,
-        user_id: req.body.user_id
       }
-      const betPlacable = await BetsService.isThisBetPlacable(data);
-      if (betPlacable.success === true) {
+      const betPlacable = await BetsService.isThisBetPlacable(data); // /betrequest in original
+      if (betPlacable.status === "RS_OK") {
         const walletSnapshot = await TransactionModal.createWalletSnapshot(
           req.body,
-          betPlacable.data.balance
+          betPlacable.balance
         );
         if (walletSnapshot === 1) {
           const result = await BetsService.saveUserBetAPI(req.body, betPlacable.data.bet_id);

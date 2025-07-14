@@ -24,7 +24,7 @@ const fetchBetsByMatchAndUserAPI = async (matchId, userId, operatorId) => {
   if (!operatorId || isNaN(operatorId)) {
     // throw new Error("Invalid Operator ID");
   }
-  return await BetsModal.getBetsByMatchAndUserAPI(matchId, userId, operatorId) ;
+  return await BetsModal.getBetsByMatchAndUserAPI(matchId, userId, operatorId);
 };
 
 const fetchUserBets = async (user_id, match_id) => {
@@ -126,10 +126,10 @@ const saveUserBetAPI = async (data, client_bet_id) => {
     const betId = await BetsModal.insertBetAPI(connection2, {
       ...data,
       match_map_id: matchMap.id,
-      client_bet_id: client_bet_id
+      client_bet_id: client_bet_id,
     });
     // console.log("BET ID IN SET");
-    
+
     // console.log(betId);
     // console.log(data.results);
     if (!data.digit || data.digit.length === 0) {
@@ -186,13 +186,24 @@ const getTotalNumberOfBets = async (digit) => {
 const isThisBetPlacable = async (data) => {
   if (data.debit_amount < 1000) {
     return {
-      success: true,
-      data: { can_place_bet: true, balance: 1500, exposure: 200, bet_id: 15 },
+      // data: {
+        userId: "OP001USER001",
+        transactionId: "txn-ca0acc6b-2126-49af-b1fc-52553fcc63cc",
+        requestId: "debef86c-b653-43db-a402-3c7163d9a657",
+        canPlaceBet: true,
+        clientBetId: 34525,
+        balance: 1000,
+        status: "RS_OK",
+      // },
     };
   } else {
     return {
-      success: false,
-      data: { can_place_bet: false, message: "Insufficient Fund" },
+      status: "RS_FAILED",
+      canPlaceBet: false,
+      message: "Insufficient Fund",
+      // success: false,
+      // data: {
+      // },
     };
   }
 };

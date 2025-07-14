@@ -229,7 +229,7 @@ const publishResults = async (data) => {
       r.close_result,
       data.user_id,
     ]);
-    await ResultModel.insertOrUpdateResults(connection, values);
+    // await ResultModel.insertOrUpdateResults(connection, values);
     for (const item of data.result) {
       const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
       const digit = item.open_result ?? item.close_result;
@@ -301,7 +301,7 @@ const publishResults = async (data) => {
       let finalReports = JSON.stringify(finalOutput, null, 2);
       const OperatorUrls = await ResultModel.getOperatorUrls();
       // console.log(finalReports);
-      const transactionId = "txn_" + uuidv4();
+      const transactionId = "txn-" + uuidv4();
       // 2. Loop through each operator and send the request
       for (const operator of finalOutput) {
         const requestId = uuidv4(); // unique per operator
@@ -373,14 +373,15 @@ const publishResults = async (data) => {
           userId: userForToken,
           requestId,
           transactionId,
-          timestamp,
-          isClosedType: isClosedType,
+          // isClosedType: isClosedType,
           bets: {
             winners: formattedWinners,
             losers: formattedLosers,
           },
+          timestamp,
         };
         const callbackUrl = OperatorUrls[operator.operatorId];
+        // console.log(JSON.stringify(payload, null, 2));
         sendNewBatch(payload, callbackUrl);
         console.log("----------------------------");
       }
@@ -406,11 +407,11 @@ const publishResults = async (data) => {
           losingBets.push(parseInt(betId));
         }
       }
-      await ResultModel.updateBetsStatusAPI(
-        connection,
-        winningBets,
-        losingBets
-      );
+      // await ResultModel.updateBetsStatusAPI(
+      //   connection,
+      //   winningBets,
+      //   losingBets
+      // );
     }
     await db.commit(connection);
     return {
@@ -567,18 +568,20 @@ const rollbackResults = async (data) => {
       createTransaction(data);
       const payload = {
         operatorId: operator.operatorId,
-        token: token,
         userId: userForToken,
-        requestId,
+        token: token,
         transactionId,
-        timestamp,
-        isClosedType: isClosedType,
+        requestId,
+        rollbackReason: "wrong result publish",
         bets: {
           winners: formattedWinners,
           losers: formattedLosers,
         },
+        timestamp,
       };
       const callbackUrl = OperatorUrls[operator.operatorId];
+      // console.log(JSON.stringify(payload, null, 2));
+      // return;
       sendNewBatchR(payload, callbackUrl);
       console.log("-------------------------");
     }

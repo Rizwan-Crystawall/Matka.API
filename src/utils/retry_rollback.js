@@ -196,7 +196,6 @@ async function sendNewBatchR(payload, callbackUrl) {
       payload: payload,
       retry_count: 1,
       failed_bets: JSON.stringify(batch.failedBets),
-      is_closed_type: isClosedType
     }
     createBetSettlementsEntry(data);
     await retryQueue.add('retry-settlement', { requestId }, { delay: RETRY_DELAY_BASE_MS });

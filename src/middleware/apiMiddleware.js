@@ -19,8 +19,8 @@ async function decodeToken(req, res, next) {
       });
     }
     req.user = decoded.payload;
-    const operatorId = req.user.operatorId;
-    const userId = req.user.userId;
+    const operatorId = req.body.operatorId;
+    const userId = req.body.userId;
     const signature_from_token = req.user.signature;
     const result = await TokenModal.getOperatorDetails(operatorId);
     console.log(result);

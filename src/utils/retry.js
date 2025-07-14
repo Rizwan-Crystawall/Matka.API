@@ -68,7 +68,8 @@ const retryWorker = new Worker('retry-settlements', async job => {
     batches.set(requestId, batch);
 
     // Schedule another retry with exponential backoff
-    const delay = RETRY_DELAY_BASE_MS * Math.pow(2, batch.retryCount);
+    // const delay = RETRY_DELAY_BASE_MS * Math.pow(2, batch.retryCount);
+    const delay = 60000;
     await retryQueue.add('retry-settlement', { requestId }, { delay });
   }
 }, { connection });   // pass connection here
@@ -192,7 +193,6 @@ async function sendNewBatch(payload, callbackUrl) {
       payload: payload,
       retry_count: 1,
       failed_bets: JSON.stringify(batch.failedBets),
-      is_closed_type: isClosedType
     }
     createBetSettlementsEntry(data);
     await retryQueue.add('retry-settlement', { requestId }, { delay: RETRY_DELAY_BASE_MS });
