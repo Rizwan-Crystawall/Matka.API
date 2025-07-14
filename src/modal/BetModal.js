@@ -188,8 +188,12 @@ const getBetsByOperatorId = async () => {
   const sql = `
   SELECT
   mt.name AS match_map_id,
-  u.name AS user_id,
+  mth.id AS match_id,
+  mth.name AS match_name,  
+  DATE_FORMAT(mth.draw_date, '%d-%m-%Y') AS match_date,
+  b.user_id AS user_id,
   b.rate,
+  b.id as bet_id,
   st.name AS status_id,
   CASE
     WHEN b.is_closed_type = 0 THEN 'OPEN'
@@ -201,13 +205,15 @@ const getBetsByOperatorId = async () => {
   op.operator_id AS operator_name,
   bd.digit,
   bd.stake
-FROM bets b
-LEFT JOIN bet_digits bd ON bd.bet_id = b.id
-LEFT JOIN operators op ON op.id = b.operator_id
-LEFT JOIN users u ON u.id = b.user_id
-JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id
-JOIN match_types mt ON mtm.type_id = mt.id
-JOIN status st ON st.id = b.status_id;
+  FROM bets b
+  LEFT JOIN bet_digits bd ON bd.bet_id = b.id
+  LEFT JOIN operators op ON op.id = b.operator_id
+  LEFT JOIN users u ON u.id = b.user_id
+  JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id
+  JOIN match_types mt ON mtm.type_id = mt.id
+  JOIN matches mth ON mtm.match_id = mth.id
+  JOIN status st ON st.id = b.status_id
+  ORDER BY b.created_on DESC;
   `;
   return await execute(sql);
 };
@@ -254,7 +260,7 @@ const fetchDigitStats = async (matchTypeId) => {
 
 const getUniqueClients = async (digit) => {
   const sql = `
-  SELECT u.name, u.username, u.phone_number FROM bet_digits bd JOIN bets b ON bd.bet_id = b.id JOIN users u ON b.user_id = u.id WHERE bd.digit = ?;
+  SELECT b.operator_id,op.operator_id,b.user_id FROM bets b JOIN operators op ON op.id = b.operator_id;
   `;
   return await execute(sql, [digit]);
 };
