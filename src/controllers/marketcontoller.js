@@ -93,7 +93,7 @@ const getActiveMatchMappings = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Active match mappings fetched successfully",
+      // message: "Active Matches",
       data: result,
     });
   } catch (error) {

@@ -23,7 +23,7 @@ async function decodeToken(req, res, next) {
     const userId = req.body.userId;
     const signature_from_token = req.user.signature;
     const result = await TokenModal.getOperatorDetails(operatorId);
-    console.log(result);
+    // console.log(result);
     if (result.length > 0) {
       const secret = result[0].shared_secret;
       const signature = generateSignature(userId, secret);

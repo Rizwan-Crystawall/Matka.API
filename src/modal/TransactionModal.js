@@ -6,10 +6,10 @@ const createTransaction = async (data) => {
    VALUES (?, ?, ?, ?, ?,?)
   `;
   const result = await execute(sql, [
-    data.user_id,
+    data.userId,
     data.transaction_id,
     data.request_id,
-    data.operator_id,
+    data.operatorId,
     data.trans_type,
     data.debit_amount,
   ]);
@@ -22,7 +22,7 @@ const createWalletSnapshot = async (data, balance) => {
    VALUES (?, ?, ?, ?, ?)
   `;
   const result = await execute(sql, [
-    data.user_id,
+    data.userId,
     data.transaction_id,
     data.request_id,
     data.request_type,

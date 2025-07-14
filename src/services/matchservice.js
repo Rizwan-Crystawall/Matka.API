@@ -63,7 +63,7 @@ const deleteMatch = async (id) => {
 };
 const fetchMatchTypesByMatchId = async (matchId) => {
   if (!matchId || isNaN(matchId)) {
-    throw new Error("Invalid match ID");
+    throw new Error("Invalid match h ID");
   }
 
   const data = await Match.getMatchTypesByMatchId(matchId);

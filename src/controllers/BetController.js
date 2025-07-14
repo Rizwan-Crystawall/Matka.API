@@ -26,13 +26,13 @@ const getBetsByMatchAndUser = async (req, res) => {
 
 const getBetsByMatchAndUserAPI = async (req, res) => {
   try {
-    const { match_id, user_id, operator_id } = req.body;
+    const { matchId, userId, operatorId } = req.params;
 
-    const result = await BetsService.fetchBetsByMatchAndUserAPI(match_id, user_id, operator_id);
+    const result = await BetsService.fetchBetsByMatchAndUserAPI(matchId, userId, operatorId);
 
     return res.status(200).json({
       success: true,
-      message: "Bets fetched successfully",
+      // message: "Bets fetched successfully",
       data: result,
     });
   } catch (error) {
@@ -61,9 +61,9 @@ const getUserBets = async (req, res) => {
 
 const getUserBetsAPI = async (req, res) => {
   try {
-    const { match_id, user_id, operator_id } = req.body;
+    const { matchId, userId, operatorId } = req.params;
 
-    const bets = await BetsService.fetchUserBetsAPI(user_id, match_id, operator_id);
+    const bets = await BetsService.fetchUserBetsAPI(userId, matchId, operatorId);
     return res.status(200).json({ success: true, data: bets });
   } catch (err) {
     console.error("Error fetching user bets:", err);

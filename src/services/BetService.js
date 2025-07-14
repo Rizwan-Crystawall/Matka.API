@@ -152,7 +152,7 @@ const saveUserBetAPI = async (data, client_bet_id) => {
     const existingDigits = await BetsModal.getExistingDigits(connection2, {
       is_closed_type: data.is_closed_type,
       match_map_id: matchMap.id,
-      user_id: data.user_id,
+      user_id: data.userId,
     });
     // console.log("Existing Digits: " + existingDigits)
     for (const row of existingDigits[0]) {
