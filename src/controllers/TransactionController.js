@@ -1,5 +1,6 @@
 const TransationService = require("../services/TransactionService");
 const { success } = require("../utils/response");
+const statusCodes = require("../utils/statusCodes");
 
 const createTransaction = async (req, res) => {
   try {
@@ -40,7 +41,7 @@ const placeBet = async (req, res) => {
     if (result.success === true) {
       return res.status(200).json({
         status: "RS_OK",
-        message: "Bet Placed Successfully",
+        message: statusCodes.RS_OK,
       });
     }else if (result.success===false){
         return res.status(200).json({

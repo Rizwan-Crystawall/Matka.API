@@ -1,6 +1,6 @@
 const MarketService = require('../services/marketservice');
 const response = require("../utils/response"); // adjust path accordingly
-
+const statusCodes = require("../utils/statusCodes");
 
 
 
@@ -111,7 +111,7 @@ const getActiveMatchMappingsAPI = async (req, res) => {
 
     return res.status(200).json({
       status: "RS_OK",
-      // message: "Active Matches",
+      message: statusCodes.RS_OK,
       data: result,
     });
   } catch (error) {

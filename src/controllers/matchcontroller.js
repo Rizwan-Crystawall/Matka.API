@@ -1,7 +1,7 @@
 const MatchService = require("../services/matchservice");
 const parseJwt = require("../utils/parseJwt"); // if not already required
 const response = require("../utils/response"); // adjust path accordingly
-
+const statusCodes = require("../utils/statusCodes");
 
 const getAllMatches = async (req, res, next) => {
   try {
@@ -175,6 +175,7 @@ const getMatchTypesAPI = async (req, res) => {
     const result = await MatchService.fetchMatchTypesByMatchId(matchId);
     return res.status(200).json({
       status: "RS_OK",
+      message: statusCodes.RS_OK,
       data: result,
     });
   } catch (error) {
