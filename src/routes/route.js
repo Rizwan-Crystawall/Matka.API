@@ -43,6 +43,7 @@ router.post("/addmarket", authMiddleware, marketcontoller.addMarket);
 router.post("/updatemarket", authMiddleware, marketcontoller.updateMarket);
 router.post("/deletemarket", authMiddleware, marketcontoller.deleteMarket);
 router.post("/activeMatchMmappings", authMiddleware,marketcontoller.getActiveMatchMappings);
+router.get("/match", authMiddleware, marketcontoller.getActiveMatchMappings);
 
 // Market for Operator API Internal
 router.post("/get-markets", marketcontoller.getMarketsByOperator);

@@ -90,10 +90,8 @@ const deleteMarket = async (req, res) => {
 const getActiveMatchMappings = async (req, res) => {
   try {
     const result = await MarketService.getActiveMatchMappings();
-
     return res.status(200).json({
       success: true,
-      // message: "Active Matches",
       data: result,
     });
   } catch (error) {
