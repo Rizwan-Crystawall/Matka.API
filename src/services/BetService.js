@@ -115,7 +115,7 @@ const saveUserBetAPI = async (data, client_bet_id) => {
   try {
     const matchMap = await BetsModal.getMatchMap(
       connection2,
-      data.match_id,
+      data.matchId,
       data.type_id
     );
     // console.log("matchMap.id");

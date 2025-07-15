@@ -39,7 +39,7 @@ const placeBet = async (req, res) => {
     // console.log(result);
     if (result.success === true) {
       return res.status(200).json({
-        success: true,
+        status: "RS_OK",
         message: "Bet Placed Successfully",
       });
     }else if (result.success===false){
