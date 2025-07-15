@@ -4,17 +4,17 @@ const jwt = require("jsonwebtoken");
 
 const authToken = async (req) => {
   try {
-    const api_secret = req.headers["api-key"];
-    if (!req.body.operator_id || !req.body.user_id || !api_secret)
+    const apiSecret = req.headers["api-key"];
+    if (!req.body.operatorId || !req.body.userId || !apiSecret)
       return { success: false, message: "Invalid Parameters" };
     const result = await TokenModal.verifyOperator(
-      req.body.operator_id,
-      api_secret
+      req.body.operatorId,
+      apiSecret
     );
     if (result.length > 0) {
       const secret = result[0].shared_secret;
-      const operatorId = req.body.operator_id;
-      const userId = req.body.user_id;
+      const operatorId = req.body.operatorId;
+      const userId = req.body.userId;
       const payload = {
         operatorId,
         userId,

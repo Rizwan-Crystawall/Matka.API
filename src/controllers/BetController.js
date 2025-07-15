@@ -19,6 +19,30 @@ const getBetsByMatchAndUser = async (req, res) => {
     });
   }
 };
+
+// 
+
+// For Operator API
+
+const getBetsByMatchAndUserAPI = async (req, res) => {
+  try {
+    const { matchId, userId, operatorId } = req.params;
+
+    const result = await BetsService.fetchBetsByMatchAndUserAPI(matchId, userId, operatorId);
+
+    return res.status(200).json({
+      success: true,
+      // message: "Bets fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Something went wrong",
+    });
+  }
+};
+
 const getUserBets = async (req, res) => {
   try {
     const { match_id, user_id } = req.body;
@@ -32,6 +56,23 @@ const getUserBets = async (req, res) => {
       .json({ success: false, message: "Internal server error" });
   }
 };
+
+// For Operator API
+
+const getUserBetsAPI = async (req, res) => {
+  try {
+    const { matchId, userId, operatorId } = req.params;
+
+    const bets = await BetsService.fetchUserBetsAPI(userId, matchId, operatorId);
+    return res.status(200).json({ success: true, data: bets });
+  } catch (err) {
+    console.error("Error fetching user bets:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
 const saveUserBet = async (req, res) => {
   try {
     const result = await BetsService.saveUserBet(req.body);
@@ -48,6 +89,9 @@ const saveUserBet = async (req, res) => {
     });
   }
 };
+
+// For Operator API
+
 const saveUserBetAPI = async (req, res) => {
   try {
     const result = await BetsService.saveUserBetAPI(req.body);
@@ -130,6 +174,23 @@ const getTotalNumberOfBets = async (req, res) => {
 //   }
 // };
 
+const isThisBetPlacable = async (req, res) => {
+  try {
+    const betsPlace = await BetsService.isThisBetPlacable(req.body);
+    if (betsPlace.success)
+      res.status(200).json({ success: true, data: betsPlace.data });
+    else res.status(404).json({ success: false, data: betsPlace.data });
+  } catch (err) {
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Unable to place this Bet",
+        error: "Unable to place this Bet",
+      });
+  }
+};
+
 module.exports = {
   getBetsByMatchAndUser,
   getUserBets,
@@ -140,4 +201,7 @@ module.exports = {
   getDigitBetStats,
   getUniqueClients,
   getTotalNumberOfBets,
+  isThisBetPlacable,
+  getBetsByMatchAndUserAPI,
+  getUserBetsAPI,
 };
