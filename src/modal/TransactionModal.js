@@ -7,11 +7,11 @@ const createTransaction = async (data) => {
   `;
   const result = await execute(sql, [
     data.userId,
-    data.transaction_id,
-    data.request_id,
+    data.transactionId,
+    data.requestId,
     data.operatorId,
-    data.trans_type,
-    data.debit_amount,
+    data.transType,
+    data.debitAmount,
   ]);
   return result.affectedRows;
 };
@@ -23,9 +23,9 @@ const createWalletSnapshot = async (data, balance) => {
   `;
   const result = await execute(sql, [
     data.userId,
-    data.transaction_id,
-    data.request_id,
-    data.request_type,
+    data.transactionId,
+    data.requestId,
+    data.requestType,
     balance,
   ]);
   return result.affectedRows;

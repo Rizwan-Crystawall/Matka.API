@@ -184,7 +184,7 @@ const getTotalNumberOfBets = async (digit) => {
 };
 
 const isThisBetPlacable = async (data) => {
-  if (data.debit_amount < 1000) {
+  if (data.debitAmount < 1000) {
     return {
       // data: {
         userId: "OP001USER001",

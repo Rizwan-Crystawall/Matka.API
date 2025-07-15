@@ -16,11 +16,11 @@ const placeBet = async (req) => {
     const transction = await TransactionModal.createTransaction(req.body);
     if (transction === 1) {
       let data = {
-        operator_id: req.body.operatorId,
-        user_id: req.body.userId,
-        transaction_id: req.body.transaction_id,
-        request_id: req.body.request_id,
-        debit_amount: req.body.debit_amount,
+        operatorId: req.body.operatorId,
+        userId: req.body.userId,
+        transactionId: req.body.transactionId,
+        requestId: req.body.requestId,
+        debitAmount: req.body.debitAmount,
       }
       const betPlacable = await BetsService.isThisBetPlacable(data); // /betrequest in original
       if (betPlacable.status === "RS_OK") {

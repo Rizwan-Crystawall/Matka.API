@@ -240,8 +240,8 @@ const insertBetAPI = async (conn, data) => {
     data.rate,
     data.status_id,
     data.ip,
-    data.transaction_id,
-    data.client_bet_id,
+    data.transactionId,
+    data.clientBetId,
     data.is_closed_type || 0,
   ]);
 
