@@ -229,7 +229,7 @@ const publishResults = async (data) => {
       r.close_result,
       data.user_id,
     ]);
-    // await ResultModel.insertOrUpdateResults(connection, values);
+    await ResultModel.insertOrUpdateResults(connection, values);
     for (const item of data.result) {
       const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
       const digit = item.open_result ?? item.close_result;
@@ -311,13 +311,13 @@ const publishResults = async (data) => {
           userId: winner.userId,
           creditAmount: winner.creditAmount,
           totalstake: winner.stake,
-          client_bet_id: winner.bet_ids, // already an array of integers
+          clientBetId: winner.bet_ids, // already an array of integers
         }));
         // Losers
         const formattedLosers = operator.bets.Loosers.map((loser) => ({
           userId: loser.userId,
           totalstake: loser.stake,
-          client_bet_id: loser.bet_ids, // already an array of integers
+          clientBetId: loser.bet_ids, // already an array of integers
         }));
         let userForToken = "";
         if (formattedWinners.length > 0) {
@@ -359,12 +359,12 @@ const publishResults = async (data) => {
         //   }))
         // );
         let data = {
-          user_id: userForToken,
-          transaction_id: transactionId,
-          request_id: requestId,
-          operator_id: operator.operatorId,
-          trans_type: "Result",
-          debit_amount: 0,
+          userId: userForToken,
+          transactionId: transactionId,
+          requestId: requestId,
+          operatorId: operator.operatorId,
+          transType: "Result",
+          debitAmount: 0,
         };
         createTransaction(data);
         const payload = {
@@ -407,11 +407,11 @@ const publishResults = async (data) => {
           losingBets.push(parseInt(betId));
         }
       }
-      // await ResultModel.updateBetsStatusAPI(
-      //   connection,
-      //   winningBets,
-      //   losingBets
-      // );
+      await ResultModel.updateBetsStatusAPI(
+        connection,
+        winningBets,
+        losingBets
+      );
     }
     await db.commit(connection);
     return {
@@ -502,9 +502,10 @@ const rollbackResults = async (data) => {
     let finalReports = JSON.stringify(finalOutput, null, 2);
     const OperatorUrls = await ResultModel.getOperatorUrls();
     // console.log(finalReports);
-    const transactionId = "txn_" + uuidv4();
+    const transactionId = "txn-" + uuidv4();
     // 2. Loop through each operator and send the request
     for (const operator of finalOutput) {
+      // console.log("AAAA");
       const requestId = uuidv4(); // unique per operator
       const timestamp = new Date().toISOString();
       // Winners: keep as one object per user, with array of bet_ids
@@ -512,13 +513,13 @@ const rollbackResults = async (data) => {
         userId: winner.userId,
         rollbackAmount: winner.creditAmount,
         totalstake: winner.stake,
-        client_bet_id: winner.bet_ids, // already an array of integers
+        clientBetId: winner.bet_ids, // already an array of integers
       }));
       // Losers
       const formattedLosers = operator.bets.Loosers.map((loser) => ({
         userId: loser.userId,
         totalstake: loser.stake,
-        client_bet_id: loser.bet_ids, // already an array of integers
+        clientBetId: loser.bet_ids, // already an array of integers
       }));
       let userForToken = "";
       if (formattedWinners.length > 0) {
@@ -558,12 +559,12 @@ const rollbackResults = async (data) => {
       //   }))
       // );
       let data = {
-        user_id: userForToken,
-        transaction_id: transactionId,
-        request_id: requestId,
-        operator_id: operator.operatorId,
-        trans_type: "Rollback",
-        debit_amount: 0,
+        userId: userForToken,
+        transactionId: transactionId,
+        requestId: requestId,
+        operatorId: operator.operatorId,
+        transType: "Rollback",
+        debitAmount: 0,
       };
       createTransaction(data);
       const payload = {

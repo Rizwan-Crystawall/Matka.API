@@ -103,12 +103,12 @@ function handleResponse(response, batch) {
 
     if (response.bets?.winners) {
       response.bets.winners.forEach(bet => {
-        if (bet.bet_status !== 'settled') failedBets.push(...bet.client_bet_id);
+        if (bet.bet_status !== 'settled') failedBets.push(...bet.clientBetId);
       });
     }
     if (response.bets?.losers) {
       response.bets.losers.forEach(bet => {
-        if (bet.bet_status !== 'settled') failedBets.push(...bet.client_bet_id);
+        if (bet.bet_status !== 'settled') failedBets.push(...bet.clientBetId);
       });
     }
 
@@ -117,8 +117,8 @@ function handleResponse(response, batch) {
   } else {
     batch.status = 'failed';
     batch.failedBets = batch.payload.bets.winners
-      .flatMap(b => b.client_bet_id)
-      .concat(batch.payload.bets.losers.flatMap(b => b.client_bet_id));
+      .flatMap(b => b.clientBetId)
+      .concat(batch.payload.bets.losers.flatMap(b => b.clientBetId));
     console.log(`Batch ${batch.requestId} settlement failed completely.`);
   }
 }
@@ -127,11 +127,11 @@ function prepareRetryPayload(batch) {
   const filterBets = (bets, failedIds) =>
     bets
       .map(bet => {
-        const filteredIds = bet.client_bet_id.filter(id => failedIds.includes(id));
+        const filteredIds = bet.clientBetId.filter(id => failedIds.includes(id));
         if (filteredIds.length === 0) return null;
         return {
           ...bet,
-          client_bet_id: filteredIds
+          clientBetId: filteredIds
         };
       })
       .filter(Boolean);
@@ -152,12 +152,12 @@ async function sendNewBatch(payload, callbackUrl) {
   const requestId = payload.requestId;
   const transactionId = payload.transactionId;
   const operatorId = payload.operatorId;
-  const isClosedType = payload.isClosedType;
+  // const isClosedType = payload.isClosedType;
   batches.set(requestId, {
     requestId,
     operatorId,
     transactionId,
-    isClosedType,
+    // isClosedType,
     payload,
     callbackUrl,
     status: 'pending',
@@ -182,8 +182,8 @@ async function sendNewBatch(payload, callbackUrl) {
     batch.retryCount++;
     batch.lastAttempt = new Date();
     batch.failedBets = payload.bets.winners
-      .flatMap(b => b.client_bet_id)
-      .concat(payload.bets.losers.flatMap(b => b.client_bet_id));
+      .flatMap(b => b.clientBetId)
+      .concat(payload.bets.losers.flatMap(b => b.clientBetId));
     batches.set(requestId, batch);
     let data ={
       request_id: requestId,
