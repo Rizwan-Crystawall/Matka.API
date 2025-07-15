@@ -11,20 +11,21 @@ const MatchController = require("../../controllers/matchcontroller");
 
 // API Middleware
 const authAPIMiddleware = require("../../middleware/apiMiddleware");
+const authAPIMiddlewareGet = require("../../middleware/apiMiddlewareGet.js");
 
 // Market for Operator API External
 router.post("/auth/login", TokenController.authToken);
 router.post("/verify-auth", authAPIMiddleware, TokenController.verifyAuth);
 
-router.get("/matches", marketcontoller.getActiveMatchMappings);
-router.get("/match/:matchId", MatchController.getMatchTypes);
+router.get("/matches/:operatorId/:userId", authAPIMiddlewareGet, marketcontoller.getActiveMatchMappingsAPI);
+router.get("/match/:matchId/:operatorId/:userId", authAPIMiddlewareGet, MatchController.getMatchTypesAPI);
 
 router.post("/saveUserBet", authAPIMiddleware, BetController.saveUserBetAPI);
 router.post("/betUsers", BetController.getBetsByMatchAndUserAPI);
 router.post("/betsUserLog", BetController.getUserBetsAPI);
 
-router.get("/bet/:userId/:matchId/:operatorId", BetController.getBetsByMatchAndUserAPI);
-router.get("/bet/digits/:userId/:matchId/:operatorId", BetController.getUserBetsAPI);
+router.get("/bet/:userId/:matchId/:operatorId", authAPIMiddlewareGet, BetController.getBetsByMatchAndUserAPI);
+router.get("/bet/digits/:userId/:matchId/:operatorId", authAPIMiddlewareGet, BetController.getUserBetsAPI);
 
 router.post("/isThisBetPlacable", BetController.isThisBetPlacable);
 router.post("/createTransaction", TransactionController.createTransaction);

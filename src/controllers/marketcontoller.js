@@ -105,6 +105,24 @@ const getActiveMatchMappings = async (req, res) => {
   }
 };
 
+const getActiveMatchMappingsAPI = async (req, res) => {
+  try {
+    const result = await MarketService.getActiveMatchMappings();
+
+    return res.status(200).json({
+      status: "RS_OK",
+      // message: "Active Matches",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching match mappings",
+      error: error.message,
+    });
+  }
+};
+
 const getMarketsByOperator = async (req, res) => {
   try {
     const { username } = req.body;
@@ -135,4 +153,5 @@ module.exports = {
   deleteMarket,
   getActiveMatchMappings,
   getMarketsByOperator,
+  getActiveMatchMappingsAPI,
 };

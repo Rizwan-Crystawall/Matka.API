@@ -169,6 +169,22 @@ const getMatchTypes = async (req, res) => {
   }
 };
 
+const getMatchTypesAPI = async (req, res) => {
+  try {
+    const { matchId } = req.params;
+    const result = await MatchService.fetchMatchTypesByMatchId(matchId);
+    return res.status(200).json({
+      status: "RS_OK",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Failed to fetch match type data",
+    });
+  }
+};
+
 const getAllMatchTypes = async (req, res, next) => {
   try {
     const matches = await MatchService.fetchAllMatchTypes();
@@ -197,5 +213,6 @@ module.exports = {
   updateMatch,
   deleteMatch,
   getMatchById,
-  getMatchTypes
+  getMatchTypes,
+  getMatchTypesAPI,
 };
