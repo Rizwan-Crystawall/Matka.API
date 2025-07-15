@@ -35,8 +35,9 @@ const updateTransaction = async (data) => {
   const sql = `
    UPDATE transactions SET status = "Deleted", rollback_reason="Can Bet False" WHERE transaction_id = ?
   `;
-  const result = await execute(sql, [data.transaction_id]);
-  return result.affectedRows;
+  const result = await execute(sql, [data.transactionId]);
+  // console.log(result);
+  return result.changedRows;
 };
 
 module.exports = {

@@ -4,7 +4,7 @@ const authToken = async (req, res) => {
   try {
     const result = await TokenService.authToken(req);
     if (result.success===true) {
-    const operatorId = req.body.operatorId;
+    const operatorId = result.id;
     const userId = req.body.userId;
       const iframeSrc = "http://localhost:3000/user/home/api/"+operatorId+"/"+userId+"?token="+result.token;
       // const iframeSrc = "http://100.28.41.166:9002/user/home/api/"+operatorId+"/"+userId+"?token="+result.token;

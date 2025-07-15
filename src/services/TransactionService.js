@@ -23,6 +23,7 @@ const placeBet = async (req) => {
         debitAmount: req.body.debitAmount,
       }
       const betPlacable = await BetsService.isThisBetPlacable(data); // /betrequest in original
+      // console.log(betPlacable);
       if (betPlacable.status === "RS_OK") {
         const walletSnapshot = await TransactionModal.createWalletSnapshot(
           req.body,
@@ -35,11 +36,14 @@ const placeBet = async (req) => {
           }
         }
       } else {
+        // console.log("CONDITION ELSE");
         const transction = await TransactionModal.updateTransaction(req.body);
         if (transction === 1) {
           return { success: false };
         }
       }
+    }else{
+
     }
   } catch (error) {
     // console.log("Rollbacked ALL!!!");

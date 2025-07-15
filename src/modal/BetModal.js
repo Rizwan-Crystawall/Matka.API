@@ -271,13 +271,15 @@ const getUniqueClients = async (digit) => {
 
 const getTotalNumberOfBets = async (digit) => {
   const sql = `
-  SELECT b.id,bd.stake,bd.bet_id,b.user_id,b.rate,b.bet_time,b.ip,CASE 
-    WHEN b.is_closed_type = 0 THEN 'OPEN'
-    WHEN b.is_closed_type = 1 THEN 'CLOSE'
-    ELSE 'UNKNOWN'
-  END AS bet_type FROM bet_digits bd
-  JOIN bets b ON bd.bet_id = b.id
-  WHERE  bd.digit = ?;
+    SELECT b.id,bd.stake,bd.bet_id,b.user_id,b.rate,b.bet_time,b.ip,m.name,CASE 
+      WHEN b.is_closed_type = 0 THEN 'OPEN'
+      WHEN b.is_closed_type = 1 THEN 'CLOSE'
+      ELSE 'UNKNOWN'
+      END AS bet_type FROM bet_digits bd
+      JOIN bets b ON bd.bet_id = b.id
+      JOIN matches_type_mapping mtm ON mtm.id=b.match_map_id
+      JOIN matches m ON m.id = mtm.match_id
+      WHERE  bd.digit = ?;
   `;
   return await execute(sql, [digit]);
 };
