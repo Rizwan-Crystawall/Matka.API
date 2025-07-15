@@ -260,7 +260,11 @@ const fetchDigitStats = async (matchTypeId) => {
 
 const getUniqueClients = async (digit) => {
   const sql = `
-  SELECT b.operator_id,op.operator_id,b.user_id FROM bets b JOIN operators op ON op.id = b.operator_id;
+  SELECT b.operator_id,op.operator_id,b.user_id 
+  FROM bets b 
+  JOIN operators op ON op.id = b.operator_id
+  JOIN bet_digits bd ON b.id = bd.bet_id 
+  AND bd.digit = ?;
   `;
   return await execute(sql, [digit]);
 };
