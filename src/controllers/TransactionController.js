@@ -1,5 +1,6 @@
 const TransationService = require("../services/TransactionService");
 const { success } = require("../utils/response");
+const statusCodes = require("../utils/statusCodes");
 
 const createTransaction = async (req, res) => {
   try {
@@ -36,12 +37,13 @@ const createWalletSnapshot = async (req, res) => {
 const placeBet = async (req, res) => {
   try {
     const result = await TransationService.placeBet(req);
+    // console.log(result);
     if (result.success === true) {
       return res.status(200).json({
-        success: true,
-        message: "Bet Placed Successfully",
+        status: "RS_OK",
+        message: statusCodes.RS_OK,
       });
-    }else{
+    }else if (result.success===false){
         return res.status(200).json({
         success: false,
         message: "Unable to Place Bet",
@@ -50,7 +52,7 @@ const placeBet = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: "Internal server 1 error",
+      message: "Internal server error",
     });
   }
 };

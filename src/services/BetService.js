@@ -115,7 +115,7 @@ const saveUserBetAPI = async (data, client_bet_id) => {
   try {
     const matchMap = await BetsModal.getMatchMap(
       connection2,
-      data.match_id,
+      data.matchId,
       data.type_id
     );
     // console.log("matchMap.id");
@@ -126,7 +126,7 @@ const saveUserBetAPI = async (data, client_bet_id) => {
     const betId = await BetsModal.insertBetAPI(connection2, {
       ...data,
       match_map_id: matchMap.id,
-      client_bet_id: client_bet_id,
+      clientBetId: client_bet_id,
     });
     // console.log("BET ID IN SET");
 

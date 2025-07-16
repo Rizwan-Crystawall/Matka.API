@@ -229,7 +229,7 @@ const publishResults = async (data) => {
       r.close_result,
       data.user_id,
     ]);
-    await ResultModel.insertOrUpdateResults(connection, values);
+    // await ResultModel.insertOrUpdateResults(connection, values);
     for (const item of data.result) {
       const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
       const digit = item.open_result ?? item.close_result;
@@ -299,6 +299,7 @@ const publishResults = async (data) => {
         }
       );
       let finalReports = JSON.stringify(finalOutput, null, 2);
+      // console.log(JSON.stringify(finalOutput, null, 2));
       const OperatorUrls = await ResultModel.getOperatorUrls();
       // console.log(finalReports);
       const transactionId = "txn-" + uuidv4();
@@ -322,9 +323,16 @@ const publishResults = async (data) => {
         let userForToken = "";
         if (formattedWinners.length > 0) {
           userForToken = formattedWinners[0].userId;
+        }else{
+          // console.log("No winners found");
         }
+        // console.log(formattedLosers[0].userId);
+        // console.log("ARR");
         if (formattedLosers.length > 0) {
-          userForToken = formattedWinners[0].userId;
+          userForToken = formattedLosers[0].userId;
+          // console.log(userForToken)
+        }else{
+          // console.log("No losers found")
         }
         const oid = operator.operatorId;
         const opr = await TokenModal.getOperatorDetails(oid);
@@ -383,7 +391,7 @@ const publishResults = async (data) => {
         const callbackUrl = OperatorUrls[operator.operatorId];
         // console.log(JSON.stringify(payload, null, 2));
         sendNewBatch(payload, callbackUrl);
-        console.log("----------------------------");
+        // console.log("----------------------------");
       }
       // Step 1: Group all items by bet_id
       const groupedByBetId = {};
@@ -407,11 +415,11 @@ const publishResults = async (data) => {
           losingBets.push(parseInt(betId));
         }
       }
-      await ResultModel.updateBetsStatusAPI(
-        connection,
-        winningBets,
-        losingBets
-      );
+      // await ResultModel.updateBetsStatusAPI(
+      //   connection,
+      //   winningBets,
+      //   losingBets
+      // );
     }
     await db.commit(connection);
     return {
@@ -526,7 +534,7 @@ const rollbackResults = async (data) => {
         userForToken = formattedWinners[0].userId;
       }
       if (formattedLosers.length > 0) {
-        userForToken = formattedWinners[0].userId;
+        userForToken = formattedLosers[0].userId;
       }
       const oid = operator.operatorId;
       const opr = await TokenModal.getOperatorDetails(oid);

@@ -1,7 +1,7 @@
 const MatchService = require("../services/matchservice");
 const parseJwt = require("../utils/parseJwt"); // if not already required
 const response = require("../utils/response"); // adjust path accordingly
-
+const statusCodes = require("../utils/statusCodes");
 
 const getAllMatches = async (req, res, next) => {
   try {
@@ -170,6 +170,23 @@ const getMatchTypes = async (req, res) => {
   }
 };
 
+const getMatchTypesAPI = async (req, res) => {
+  try {
+    const { matchId } = req.params;
+    const result = await MatchService.fetchMatchTypesByMatchId(matchId);
+    return res.status(200).json({
+      status: "RS_OK",
+      message: statusCodes.RS_OK,
+      data: result,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Failed to fetch match type data",
+    });
+  }
+};
+
 const getAllMatchTypes = async (req, res, next) => {
   try {
     const matches = await MatchService.fetchAllMatchTypes();
@@ -198,5 +215,5 @@ module.exports = {
   deleteMatch,
   getMatchById,
   getMatchTypes,
-  getAllMatchTypes
+  getMatchTypesAPI,
 };

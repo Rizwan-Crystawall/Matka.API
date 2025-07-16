@@ -1,5 +1,6 @@
 // src/controller/betsController.js
 const BetsService = require("../services/BetService");
+const statusCodes = require("../utils/statusCodes");
 
 const getBetsByMatchAndUser = async (req, res) => {
   try {
@@ -31,8 +32,8 @@ const getBetsByMatchAndUserAPI = async (req, res) => {
     const result = await BetsService.fetchBetsByMatchAndUserAPI(matchId, userId, operatorId);
 
     return res.status(200).json({
-      success: true,
-      // message: "Bets fetched successfully",
+      status: "RS_OK",
+      message: statusCodes.RS_OK,
       data: result,
     });
   } catch (error) {
@@ -64,7 +65,7 @@ const getUserBetsAPI = async (req, res) => {
     const { matchId, userId, operatorId } = req.params;
 
     const bets = await BetsService.fetchUserBetsAPI(userId, matchId, operatorId);
-    return res.status(200).json({ success: true, data: bets });
+    return res.status(200).json({ status: "RS_OK", message:statusCodes.RS_OK, data: bets });
   } catch (err) {
     console.error("Error fetching user bets:", err);
     return res

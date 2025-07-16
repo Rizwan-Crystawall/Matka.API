@@ -13,7 +13,7 @@ const authToken = async (req) => {
     );
     if (result.length > 0) {
       const secret = result[0].shared_secret;
-      const operatorId = req.body.operatorId;
+      const operatorId = result[0].id;
       const userId = req.body.userId;
       const payload = {
         operatorId,
@@ -29,6 +29,7 @@ const authToken = async (req) => {
         success: true,
         message: "Token Generated Successfully",
         token: token,
+        id: operatorId,
       };
     } else {
       return { success: false, message: "Operator Not Found" };
