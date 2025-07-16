@@ -390,7 +390,7 @@ const publishResults = async (data) => {
         };
         const callbackUrl = OperatorUrls[operator.operatorId];
         // console.log(JSON.stringify(payload, null, 2));
-        sendNewBatch(payload, callbackUrl);
+        await sendNewBatch(payload, callbackUrl);
         // console.log("----------------------------");
       }
       // Step 1: Group all items by bet_id
@@ -574,7 +574,7 @@ const rollbackResults = async (data) => {
         transType: "Rollback",
         debitAmount: 0,
       };
-      createTransaction(data);
+      await createTransaction(data);
       const payload = {
         operatorId: operator.operatorId,
         userId: userForToken,
@@ -591,7 +591,7 @@ const rollbackResults = async (data) => {
       const callbackUrl = OperatorUrls[operator.operatorId];
       // console.log(JSON.stringify(payload, null, 2));
       // return;
-      sendNewBatchR(payload, callbackUrl);
+      await sendNewBatch(payload, callbackUrl);
       console.log("-------------------------");
     }
     // Step 1: Group all items by bet_id

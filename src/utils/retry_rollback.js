@@ -17,11 +17,11 @@ const connection = new IORedis("redis://127.0.0.1:6379", {
 });
 
 // Create the retry queue
-const retryQueue = new Queue('retry-settlements', { connection });
+const retryQueue = new Queue('retry-settlements_rollback', { connection });
 
 // *** MAIN CHANGE: create a Worker with your processor callback ***
 // No QueueScheduler needed anymore!
-const retryWorker = new Worker('retry-settlements', async job => {
+const retryWorker = new Worker('retry-settlements_rollback', async job => {
   // console.log("Job");
   // console.log(job.data);
   const requestId = job.data.requestId;
@@ -29,7 +29,7 @@ const retryWorker = new Worker('retry-settlements', async job => {
   // console.log("Batch");
   // console.log(batch);
   if (!batch) {
-    console.log(`No batch found for retry with requestId ${requestId}`);
+    console.log(`No batch found for retry with requestId AAJJCC ${requestId}`);
     return;
   }
 

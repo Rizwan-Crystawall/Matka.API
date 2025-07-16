@@ -109,7 +109,7 @@ const retryWorker = new Worker('retry-settlements', async job => {
   const requestId = job.data.requestId;
   const batch = batches.get(requestId);
   if (!batch) {
-    console.log(`No batch found for retry with requestId ${requestId}`);
+    console.log(`No batch found for retry with requestId AAJJMM ${requestId}`);
     return;
   }
 

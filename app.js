@@ -3,6 +3,9 @@ const cors = require('cors');
 
 const app = express();
 
+const bullBoardAdapter = require('./src/queues/bullDashboard');
+app.use('/admin/queues', bullBoardAdapter.getRouter());
+
 const routes = require('./src/routes/route');
 const routesV2 = require('./src/routes/v2/route');
 
