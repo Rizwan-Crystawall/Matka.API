@@ -1,5 +1,5 @@
 const TokenModal = require("../modal/TokenModal");
-const { generateSignature } = require("./../utils/security");
+const { generateSignature } = require("../utils/security");
 const jwt = require("jsonwebtoken");
 
 const authToken = async (req) => {
