@@ -1,206 +1,182 @@
-const axios = require('axios');                   // fixed import (no destructuring)
-const { Queue, Worker } = require('bullmq');
-const { v4: uuidv4 } = require('uuid');           // fixed uuid import
-const IORedis = require('ioredis');
-const { createBetSettlementsEntry, updateBetSettlementsRetryCount } = require('../modal/BetModal');
+const axios = require("axios"); // fixed import (no destructuring)
+const { Queue, Worker } = require("bullmq");
+const { v4: uuidv4 } = require("uuid"); // fixed uuid import
+const IORedis = require("ioredis");
+const {
+  createBetSettlementsEntry,
+  updateBetSettlementsRetryCount,
+  updateBetSettlementsWithReqId,
+  getBatchByRequestId,
+  getCallbackUrl,
+} = require("../modal/BetModal");
 
-// --- In-memory batch store (replace with DB in production) ---
 const batches = new Map();
-
-// Constants
 const MAX_RETRIES = 3;
-// const OPERATOR_API_URL = 'https://operator.com/api/settle-bets'; // Replace with real URL
-const RETRY_DELAY_BASE_MS = 60 * 1000; // 1 minute base delay for retries
+const RETRY_DELAY_BASE_MS = 60 * 1000;
 
 const connection = new IORedis("redis://127.0.0.1:6379", {
-  maxRetriesPerRequest: null
+  maxRetriesPerRequest: null,
 });
 
-// Create the retry queue
-const retryQueue = new Queue('retry-settlements_rollback', { connection });
+const retryQueue = new Queue("retry-settlements-rollback", { connection });
 
-// *** MAIN CHANGE: create a Worker with your processor callback ***
-// No QueueScheduler needed anymore!
-const retryWorker = new Worker('retry-settlements_rollback', async job => {
-  // console.log("Job");
-  // console.log(job.data);
-  const requestId = job.data.requestId;
-  const batch = batches.get(requestId);
-  // console.log("Batch");
-  // console.log(batch);
-  if (!batch) {
-    console.log(`No batch found for retry with requestId AAJJCC ${requestId}`);
-    return;
-  }
-
-  if (batch.retryCount >= MAX_RETRIES) {
-    console.error(`Max retries reached for batch ${requestId}. Manual intervention required.`);
-    return;
-  }
-
-  console.log(`Retry attempt #${batch.retryCount + 1} for batch ${requestId}`);
-  updateBetSettlementsRetryCount(requestId);
-
-  const retryPayload = prepareRetryPayload(batch);
-  if (
-    retryPayload.bets.winners.length === 0 &&
-    retryPayload.bets.losers.length === 0
-  ) {
-    console.log(`No failed bets left to retry for batch ${requestId}`);
-    batch.status = 'success'; // everything settled
-    batch.failedBets = [];
-    return;
-  }
-
-  try {
-    const response = await sendSettlement(retryPayload, batch.callbackUrl);
-    handleResponse(response, batch);
-
-    batch.retryCount++;
-    batch.lastAttempt = new Date();
-    batches.set(requestId, batch);
-
-    if (batch.status === 'partial' || batch.status === 'failed') {
-      // Schedule another retry with exponential backoff
-      const delay = RETRY_DELAY_BASE_MS * Math.pow(2, batch.retryCount);
-      await retryQueue.add('retry-settlement', { requestId }, { delay });
+const retryWorker = new Worker(
+  "retry-settlements-rollback",
+  async (job) => {
+    const requestId = job.data.requestId;
+    const dbBatche = await getBatchByRequestId(requestId);
+    const dbBatch = dbBatche[0];
+    if (!dbBatch) {
+      console.log(`No batch found in DB for retry with requestId ${requestId}`);
+      return;
     }
-  } catch (err) {
-    console.error(`Retry failed for batch ${requestId}:`, err.message);
-    batch.retryCount++;
-    batch.lastAttempt = new Date();
-    batches.set(requestId, batch);
 
-    // Schedule another retry with exponential backoff
-    const delay = RETRY_DELAY_BASE_MS * Math.pow(2, batch.retryCount);
-    await retryQueue.add('retry-settlement', { requestId }, { delay });
-  }
-}, { connection });   // pass connection here
+    if (dbBatch.retry_count >= MAX_RETRIES) {
+      console.error(`Max retries reached for batch ${requestId}`);
+      return;
+    }
 
-// --- The rest of your code remains unchanged ---
+    console.log(`Retry attempt #${dbBatch.retry_count + 1} for batch ${requestId}`);
+    await updateBetSettlementsRetryCount(requestId);
+
+    const payload = JSON.parse(dbBatch.payload);
+    const failedBets = JSON.parse(dbBatch.failed_bets || "[]");
+
+    const retryPayload = prepareRetryPayload(payload, failedBets);
+    if (
+      retryPayload.bets.winners.length === 0 &&
+      retryPayload.bets.losers.length === 0
+    ) {
+      console.log(`No failed bets left to retry for batch ${requestId}`);
+      await updateBatchStatusAndFailedBets(requestId, "success", []);
+      return;
+    }
+
+    try {
+      const response = await sendSettlement(retryPayload, dbBatch.callback_url);
+      const { newStatus, updatedFailedBets } = handleResponse(response, payload);
+      await updateBatchStatusAndFailedBets(requestId, newStatus, updatedFailedBets);
+      if (newStatus === "partial" || newStatus === "failed") {
+        const delay = RETRY_DELAY_BASE_MS * Math.pow(2, dbBatch.retry_count + 1);
+        await retryQueue.add("retry-settlements-rollback", { requestId }, { delay });
+      }
+    } catch (err) {
+      console.error(`Retry failed for batch ${requestId}:${dbBatch.callback_url}`, err.message);
+      if (dbBatch.retry_count + 1 < MAX_RETRIES) {
+        await retryQueue.add("retry-settlements-rollback", { requestId }, { delay: RETRY_DELAY_BASE_MS });
+      }else{
+        console.log(`Maximum Retries, Manual Intervention Required! ${requestId} ${dbBatch.callback_url}`);
+      }
+    }
+  },
+  { connection }
+);
 
 async function sendSettlement(payload, callbackUrl) {
-  try {
-    const response = await axios.post(callbackUrl, payload, {
-      headers: {
-        Authorization: `Bearer ${payload.token}`,
-        'Content-Type': 'application/json',
-        'Idempotency-Key': payload.requestId
-      },
-      timeout: 10000
-    });
-    return response.data;
-  } catch (err) {
-    throw err;
-  }
+  const response = await axios.post(callbackUrl, payload, {
+    headers: {
+      Authorization: `Bearer ${payload.token}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": payload.requestId,
+    },
+    timeout: 10000,
+  });
+  return response.data;
 }
 
-function handleResponse(response, batch) {
-  if (response.status === 'RS_OK') {
-    batch.status = 'success';
-    batch.failedBets = [];
-    console.log(`Batch ${batch.requestId} fully settled.`);
-  } else if (response.status === 'RS_PARTIAL') {
-    batch.status = 'partial';
-    const failedBets = [];
-
-    if (response.bets?.winners) {
-      response.bets.winners.forEach(bet => {
-        if (bet.bet_status !== 'settled') failedBets.push(...bet.clientBetId);
-      });
-    }
-    if (response.bets?.losers) {
-      response.bets.losers.forEach(bet => {
-        if (bet.bet_status !== 'settled') failedBets.push(...bet.clientBetId);
-      });
-    }
-
-    batch.failedBets = failedBets;
-    console.log(`Batch ${batch.requestId} partially settled. Failed bets:`, failedBets);
-  } else {
-    batch.status = 'failed';
-    batch.failedBets = batch.payload.bets.winners
-      .flatMap(b => b.clientBetId)
-      .concat(batch.payload.bets.losers.flatMap(b => b.clientBetId));
-    console.log(`Batch ${batch.requestId} settlement failed completely.`);
-  }
-}
-
-function prepareRetryPayload(batch) {
+function prepareRetryPayload(payload, failedBets) {
   const filterBets = (bets, failedIds) =>
     bets
-      .map(bet => {
-        const filteredIds = bet.clientBetId.filter(id => failedIds.includes(id));
+      .map((bet) => {
+        const filteredIds = bet.clientBetId.filter((id) =>
+          failedIds.includes(id)
+        );
         if (filteredIds.length === 0) return null;
         return {
           ...bet,
-          clientBetId: filteredIds
+          clientBetId: filteredIds,
         };
       })
       .filter(Boolean);
 
   return {
-    operatorId: batch.payload.operatorId,
-    token: batch.payload.token,
-    requestId: batch.requestId,
-    transactionId: batch.payload.transactionId,
+    operatorId: payload.operatorId,
+    token: payload.token,
+    requestId: payload.requestId,
+    transactionId: payload.transactionId,
     bets: {
-      winners: filterBets(batch.payload.bets.winners, batch.failedBets),
-      losers: filterBets(batch.payload.bets.losers, batch.failedBets),
-    }
+      winners: filterBets(payload.bets.winners, failedBets),
+      losers: filterBets(payload.bets.losers, failedBets),
+    },
   };
 }
 
-async function sendNewBatchR(payload, callbackUrl) {
-  const requestId = payload.requestId;
-  const transactionId = payload.transactionId;
-  const operatorId = payload.operatorId;
-  // const isClosedType = payload.isClosedType;
-  batches.set(requestId, {
-    requestId,
-    operatorId,
-    transactionId,
-    // isClosedType,
+function handleResponse(response, payload) {
+  if (response.status === "RS_OK") {
+    console.log(`Batch ${payload.requestId} fully settled.`);
+    return { newStatus: "success", updatedFailedBets: [] };
+  }
+
+  if (response.status === "RS_PARTIAL") {
+    const failedBets = [];
+
+    for (const bet of response.bets?.winners || []) {
+      if (bet.betStatus !== "settled") failedBets.push(...bet.clientBetId);
+    }
+    for (const bet of response.bets?.losers || []) {
+      if (bet.betStatus !== "settled") failedBets.push(...bet.clientBetId);
+    }
+
+    console.log(`Batch ${payload.requestId} partially settled. Failed bets:`, failedBets);
+    return { newStatus: "partial", updatedFailedBets: failedBets };
+  }
+
+  const allFailed = payload.bets.winners
+    .flatMap((b) => b.clientBetId)
+    .concat(payload.bets.losers.flatMap((b) => b.clientBetId));
+
+  console.log(`Batch ${payload.requestId} settlement failed completely.`);
+  return { newStatus: "failed", updatedFailedBets: allFailed };
+}
+
+async function sendNewBatchForRollback(payload, callbackUrl) {
+  const { requestId, transactionId, operatorId } = payload;
+
+  const batchData = {
+    request_id: requestId,
+    transaction_id: transactionId,
+    operator_id: operatorId,
+    status: "pending",
     payload,
-    callbackUrl,
-    status: 'pending',
-    retryCount: 0,
-    lastAttempt: new Date(),
-    failedBets: []
-  });
+    retry_count: 0,
+    failed_bets: [],
+    callback_url: callbackUrl,
+  };
+
+  await createBetSettlementsEntry(batchData);
 
   try {
-    const response = await sendSettlement(payload, callbackUrl);
-    const batch = batches.get(requestId);
-    handleResponse(response, batch);
-    batches.set(requestId, batch);
 
-    if (batch.status === 'partial' || batch.status === 'failed') {
-      await retryQueue.add('retry-settlement', { requestId }, { delay: RETRY_DELAY_BASE_MS });
+    const response = await sendSettlement(payload, callbackUrl);
+    const { newStatus, updatedFailedBets } = handleResponse(response, payload);
+
+    await updateBetSettlementsWithReqId(requestId, newStatus, updatedFailedBets);
+
+    if (newStatus === "partial" || newStatus === "failed") {
+      await retryQueue.add("retry-settlements-rollback", { requestId }, { delay: RETRY_DELAY_BASE_MS });
     }
   } catch (err) {
+
     console.error(`Initial settlement failed for batch ${requestId}:${transactionId}`, err.message);
-    const batch = batches.get(requestId);
-    batch.status = 'failed';
-    batch.retryCount++;
-    batch.lastAttempt = new Date();
-    batch.failedBets = payload.bets.winners
-      .flatMap(b => b.clientBetId)
-      .concat(payload.bets.losers.flatMap(b => b.clientBetId));
-    batches.set(requestId, batch);
-    let data ={
-      request_id: requestId,
-      transaction_id: transactionId,
-      operator_id: operatorId,
-      status: "failed",
-      payload: payload,
-      retry_count: 1,
-      failed_bets: JSON.stringify(batch.failedBets),
-    }
-    createBetSettlementsEntry(data);
-    await retryQueue.add('retry-settlement', { requestId }, { delay: RETRY_DELAY_BASE_MS });
+    const allFailed = payload.bets.winners
+      .flatMap((b) => b.clientBetId)
+      .concat(payload.bets.losers.flatMap((b) => b.clientBetId));
+
+    await updateBetSettlementsWithReqId(requestId, "failed", allFailed);
+    await retryQueue.add("retry-settlements-rollback", { requestId }, { delay: RETRY_DELAY_BASE_MS });
   }
 }
-module.exports ={
-    sendNewBatchR
-}
+
+module.exports = {
+  sendNewBatchForRollback,
+};

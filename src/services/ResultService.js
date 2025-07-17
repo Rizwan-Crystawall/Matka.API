@@ -4,7 +4,7 @@ const axios = require("axios");
 const db = require("../utils/dbHelper");
 const ResultModel = require("../modal/ResultModal");
 const { sendNewBatch } = require("../utils/retry.js");
-const { sendNewBatchR } = require("../utils/retry_rollback");
+const { sendNewBatchForRollback } = require("../utils/retry_rollback");
 const TokenModal = require("../modal/TokenModal");
 const { generateSignature } = require("./../utils/security");
 const jwt = require("jsonwebtoken");
@@ -591,8 +591,8 @@ const rollbackResults = async (data) => {
       const callbackUrl = OperatorUrls[operator.operatorId];
       // console.log(JSON.stringify(payload, null, 2));
       // return;
-      await sendNewBatch(payload, callbackUrl);
-      console.log("-------------------------");
+      await sendNewBatchForRollback(payload, callbackUrl);
+      // console.log("-------------------------");
     }
     // Step 1: Group all items by bet_id
     const groupedByBetId = {};

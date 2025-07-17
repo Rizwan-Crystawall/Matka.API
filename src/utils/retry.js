@@ -121,10 +121,10 @@ function handleResponse(response, payload) {
     const failedBets = [];
 
     for (const bet of response.bets?.winners || []) {
-      if (bet.bet_status !== "settled") failedBets.push(...bet.clientBetId);
+      if (bet.betStatus !== "settled") failedBets.push(...bet.clientBetId);
     }
     for (const bet of response.bets?.losers || []) {
-      if (bet.bet_status !== "settled") failedBets.push(...bet.clientBetId);
+      if (bet.betStatus !== "settled") failedBets.push(...bet.clientBetId);
     }
 
     console.log(`Batch ${payload.requestId} partially settled. Failed bets:`, failedBets);
