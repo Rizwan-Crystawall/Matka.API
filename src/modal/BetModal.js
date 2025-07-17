@@ -313,7 +313,6 @@ const updateBetSettlementsRetryCount = async (request_id) => {
 };
 
 const updateBetSettlementsWithReqId = async (request_id, status, failed_bets) => {
-  // console.log("updateBetSettlementsWithReqId");
   const sql = `
     UPDATE bet_settlements
     SET retry_count = retry_count + 1, status = ?, failed_bets = ?

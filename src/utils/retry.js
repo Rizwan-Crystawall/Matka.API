@@ -48,14 +48,14 @@ const retryWorker = new Worker(
       retryPayload.bets.losers.length === 0
     ) {
       console.log(`No failed bets left to retry for batch ${requestId}`);
-      await updateBatchStatusAndFailedBets(requestId, "success", []);
+      await updateBetSettlementsWithReqId(requestId, "success", []);
       return;
     }
 
     try {
       const response = await sendSettlement(retryPayload, dbBatch.callback_url);
       const { newStatus, updatedFailedBets } = handleResponse(response, payload);
-      await updateBatchStatusAndFailedBets(requestId, newStatus, updatedFailedBets);
+      await updateBetSettlementsWithReqId(requestId, newStatus, updatedFailedBets);
       if (newStatus === "partial" || newStatus === "failed") {
         const delay = RETRY_DELAY_BASE_MS * Math.pow(2, dbBatch.retry_count + 1);
         await retryQueue.add("retry-settlements", { requestId }, { delay });
