@@ -3,6 +3,8 @@ const TransactionModal = require("../modal/TransactionModal");
 const BetsService = require("../services/BetService");
 const { success } = require("../utils/response");
 
+const axios = require('axios');
+
 const createTransaction = async (req) => {
   return await TransactionModal.createTransaction(req.body);
 };
@@ -10,6 +12,11 @@ const createTransaction = async (req) => {
 const createWalletSnapshot = async (req) => {
   return await TransactionModal.createWalletSnapshot(req.body);
 };
+
+function capitalize(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 const placeBet = async (req) => {
   try {
@@ -21,8 +28,23 @@ const placeBet = async (req) => {
         transactionId: req.body.transactionId,
         requestId: req.body.requestId,
         debitAmount: req.body.debitAmount,
-      }
-      const betPlacable = await BetsService.isThisBetPlacable(data); // /betrequest in original
+        betType: capitalize(req.body.type_name),
+      };
+      // console.log(data);return;
+      // const betPlacable = await BetsService.isThisBetPlacable(data); // /betrequest in original
+      const betPlacable = await axios
+        .post("http://100.28.41.166:9010/placebet", data, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.API_TOKEN}`, // optional
+          },
+        })
+        .then((res) => res.data)
+        .catch((err) => {
+          console.error("Error calling external API:", err.message);
+          return { status: "RS_ERROR_UNKNOWN" };
+        });
+
       // console.log(betPlacable);
       if (betPlacable.status === "RS_OK") {
         const walletSnapshot = await TransactionModal.createWalletSnapshot(
@@ -30,24 +52,23 @@ const placeBet = async (req) => {
           betPlacable.balance
         );
         if (walletSnapshot === 1) {
-          const result = await BetsService.saveUserBetAPI(req.body, betPlacable.clientBetId);
+          const result = await BetsService.saveUserBetAPI(
+            req.body,
+            betPlacable.clientBetId
+          );
           if (result.success === 1) {
-            return { success: true };
+            return { success: true, status: "RS_OK" };
           }
         }
       } else {
-        // console.log("CONDITION ELSE");
         const transction = await TransactionModal.updateTransaction(req.body);
         if (transction === 1) {
-          return { success: false };
+          return { success: false, status: betPlacable.status };
         }
       }
-    }else{
-
+    } else {
     }
   } catch (error) {
-    // console.log("Rollbacked ALL!!!");
-    throw error;
   }
 };
 

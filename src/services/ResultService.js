@@ -9,6 +9,7 @@ const TokenModal = require("../modal/TokenModal");
 const { generateSignature } = require("./../utils/security");
 const jwt = require("jsonwebtoken");
 const { createTransaction } = require("../modal/TransactionModal.js");
+const TYPE_NAMES = require("../utils/typeMap");
 
 const saveBetResults = async (data) => {
   const connection = await db.beginTransaction();
@@ -233,6 +234,7 @@ const publishResults = async (data) => {
     for (const item of data.result) {
       const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
       const digit = item.open_result ?? item.close_result;
+      const typeName = TYPE_NAMES[item.type_id] || "Unknown";
       const mmid = item.mmid;
       const bets = await ResultModel.fetchBetsAPI(
         connection,
@@ -240,7 +242,6 @@ const publishResults = async (data) => {
         mmid,
         isClosedType
       );
-      // Step 1: Group by operator_id → user_id
       const operatorsMap = {};
       for (const bet of bets) {
         const opId = bet.operator_id;
@@ -265,13 +266,12 @@ const publishResults = async (data) => {
           user.hasWin = true;
         }
       }
-      // Step 2: Build final grouped array per operator
       const finalOutput = Object.entries(operatorsMap).map(
         ([opId, usersMap]) => {
           const winners = [];
           const losers = [];
           for (const [userId, user] of Object.entries(usersMap)) {
-            const bet_ids = [...user.bet_ids].map(Number); // Convert Set to array of numbers
+            const bet_ids = [...user.bet_ids].map(Number);
             if (user.hasWin) {
               const creditAmount = user.profit + user.stake;
               winners.push({
@@ -299,40 +299,30 @@ const publishResults = async (data) => {
         }
       );
       let finalReports = JSON.stringify(finalOutput, null, 2);
-      // console.log(JSON.stringify(finalOutput, null, 2));
       const OperatorUrls = await ResultModel.getOperatorUrls();
-      // console.log(finalReports);
       const transactionId = "txn-" + uuidv4();
-      // 2. Loop through each operator and send the request
       for (const operator of finalOutput) {
-        const requestId = uuidv4(); // unique per operator
+        const requestId = uuidv4();
         const timestamp = new Date().toISOString();
-        // Winners: keep as one object per user, with array of bet_ids
         const formattedWinners = operator.bets.winners.map((winner) => ({
           userId: winner.userId,
           creditAmount: winner.creditAmount,
           totalstake: winner.stake,
-          clientBetId: winner.bet_ids, // already an array of integers
+          clientBetId: winner.bet_ids,
         }));
-        // Losers
         const formattedLosers = operator.bets.Loosers.map((loser) => ({
           userId: loser.userId,
           totalstake: loser.stake,
-          clientBetId: loser.bet_ids, // already an array of integers
+          clientBetId: loser.bet_ids,
         }));
         let userForToken = "";
         if (formattedWinners.length > 0) {
           userForToken = formattedWinners[0].userId;
-        }else{
-          // console.log("No winners found");
+        } else {
         }
-        // console.log(formattedLosers[0].userId);
-        // console.log("ARR");
         if (formattedLosers.length > 0) {
           userForToken = formattedLosers[0].userId;
-          // console.log(userForToken)
-        }else{
-          // console.log("No losers found")
+        } else {
         }
         const oid = operator.operatorId;
         const opr = await TokenModal.getOperatorDetails(oid);
@@ -350,8 +340,6 @@ const publishResults = async (data) => {
           algorithm: "HS256",
           expiresIn: "1h",
         });
-        // console.log(token);
-        // console.log(formattedLosers[0].userId);
         // const formattedWinners = operator.bets.winners.flatMap((winner) =>
         //   winner.bet_ids.map((betId) => ({
         //     userId: winner.userId,
@@ -374,14 +362,15 @@ const publishResults = async (data) => {
           transType: "Result",
           debitAmount: 0,
         };
-        createTransaction(data);
+        await createTransaction(data);
         const payload = {
           operatorId: operator.operatorId,
           token: token,
           userId: userForToken,
           requestId,
           transactionId,
-          // isClosedType: isClosedType,
+          winningDigit: digit,
+          betType: typeName,
           bets: {
             winners: formattedWinners,
             losers: formattedLosers,
@@ -391,9 +380,8 @@ const publishResults = async (data) => {
         const callbackUrl = OperatorUrls[operator.operatorId];
         // console.log(JSON.stringify(payload, null, 2));
         await sendNewBatch(payload, callbackUrl);
-        // console.log("----------------------------");
+        console.log("----------------------------");
       }
-      // Step 1: Group all items by bet_id
       const groupedByBetId = {};
       bets.forEach((item) => {
         if (!groupedByBetId[item.bet_id]) {
@@ -401,7 +389,6 @@ const publishResults = async (data) => {
         }
         groupedByBetId[item.bet_id].push(item);
       });
-      // Step 2: Separate into winning and losing bet_ids
       const winningBets = [];
       const losingBets = [];
       for (const betId in groupedByBetId) {
@@ -442,13 +429,14 @@ const publishResults = async (data) => {
 const rollbackResults = async (data) => {
   const connection = await db.beginTransaction();
   try {
-    const { mmid, isClosedType, digit } = data;
+    const { mmid, isClosedType, digit, type_id } = data;
     const bets = await ResultModel.fetchBetsAPIForROllback(
       connection,
       digit,
       mmid,
       isClosedType
     );
+    const typeName = TYPE_NAMES[type_id] || "Unknown";
     const operatorsMap = {};
     for (const bet of bets) {
       const opId = bet.operator_id;
@@ -509,21 +497,16 @@ const rollbackResults = async (data) => {
     });
     let finalReports = JSON.stringify(finalOutput, null, 2);
     const OperatorUrls = await ResultModel.getOperatorUrls();
-    // console.log(finalReports);
     const transactionId = "txn-" + uuidv4();
-    // 2. Loop through each operator and send the request
     for (const operator of finalOutput) {
-      // console.log("AAAA");
-      const requestId = uuidv4(); // unique per operator
+      const requestId = uuidv4();
       const timestamp = new Date().toISOString();
-      // Winners: keep as one object per user, with array of bet_ids
       const formattedWinners = operator.bets.winners.map((winner) => ({
         userId: winner.userId,
         rollbackAmount: winner.creditAmount,
         totalstake: winner.stake,
         clientBetId: winner.bet_ids, // already an array of integers
       }));
-      // Losers
       const formattedLosers = operator.bets.Loosers.map((loser) => ({
         userId: loser.userId,
         totalstake: loser.stake,
@@ -582,6 +565,8 @@ const rollbackResults = async (data) => {
         transactionId,
         requestId,
         rollbackReason: "wrong result publish",
+        winningDigit: digit,
+        betType: typeName,
         bets: {
           winners: formattedWinners,
           losers: formattedLosers,
@@ -592,7 +577,7 @@ const rollbackResults = async (data) => {
       // console.log(JSON.stringify(payload, null, 2));
       // return;
       await sendNewBatchForRollback(payload, callbackUrl);
-      // console.log("-------------------------");
+      console.log("-------------------------");
     }
     // Step 1: Group all items by bet_id
     const groupedByBetId = {};
