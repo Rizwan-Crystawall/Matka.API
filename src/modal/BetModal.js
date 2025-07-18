@@ -39,6 +39,36 @@ const getBetsByMatchAndUser = async (matchId, userId) => {
   return rows;
 };
 
+const getBetsByMatchAndUserAPI = async (matchId, userId, operatorId) => {
+  const sql = `
+    SELECT 
+      b.id,
+      bd.digit,
+      bd.stake,
+      b.rate, 
+      mtm.type_id as type, 
+      CASE 
+        WHEN mtm.type_id = 1 THEN 'single' 
+        WHEN mtm.type_id = 2 THEN 'singlePatti' 
+        WHEN mtm.type_id = 3 THEN 'doublePatti' 
+        WHEN mtm.type_id = 4 THEN 'tripplePatti' 
+        WHEN mtm.type_id = 5 THEN 'jodi' 
+        ELSE 'unknown' 
+      END AS type_name, 
+      CASE 
+        WHEN b.is_closed_type = 0 THEN 'open' 
+        WHEN b.is_closed_type = 1 THEN 'close' 
+        ELSE 'unknown' 
+      END AS time 
+    FROM bets b 
+    JOIN bet_digits bd ON b.id = bd.bet_id 
+    JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id 
+    WHERE mtm.match_id = ? AND b.user_id = ? AND b.operator_id = ? AND b.status_id = 1
+  `;
+  const rows = await execute(sql, [matchId, userId, operatorId]);
+  return rows;
+};
+
 const getUserBetsByMatch = async (user_id, match_id) => {
   const sql = `
     SELECT 
@@ -63,6 +93,35 @@ const getUserBetsByMatch = async (user_id, match_id) => {
   const rows = await execute(sql, [user_id, match_id]);
   return rows;
 };
+
+// For Operator API
+
+const getUserBetsByMatchAPI = async (user_id, match_id, operator_id) => {
+  const sql = `
+    SELECT 
+      m.name,
+      mtm.type_id AS match_map_id,
+      b.is_closed_type,
+      bd.digit,
+      bd.stake,
+      b.rate,
+      b.created_on
+    FROM 
+      bets b
+      JOIN bet_digits bd ON b.id = bd.bet_id
+      JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id
+      JOIN matches m ON mtm.match_id = m.id
+    WHERE 
+      b.user_id = ?
+      AND mtm.match_id = ?
+      AND b.operator_id = ?
+      AND b.status_id = 1
+  `;
+
+  const rows = await execute(sql, [user_id, match_id, operator_id]);
+  return rows;
+};
+
 const getMatchMap = async (conn, match_id, type_id) => {
   const sql =
     "SELECT id FROM matches_type_mapping WHERE match_id = ? AND type_id = ?";
@@ -74,17 +133,19 @@ const getMatchMap = async (conn, match_id, type_id) => {
 const insertBet = async (conn, data) => {
   // console.log("insertBet data:", data);
   const betSql = `
-    INSERT INTO bets (user_id, match_map_id, rate, status_id, ip, is_closed_type)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO bets (user_id, operator_id, match_map_id, rate, status_id, ip, transaction_id, is_closed_type)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const betResult = await conn.query(betSql, [
     data.user_id,
+    data.operator_id,
     data.match_map_id,
     // data.stake,
     data.rate,
     data.status_id,
     data.ip,
+    data.transaction_id,
     data.is_closed_type || 0,
   ]);
 
@@ -134,16 +195,16 @@ const updateWallet = async (conn, user_id, amount) => {
 
 const getBetsByOperatorId = async () => {
   const sql = `
- SELECT 
+  SELECT
   mt.name AS match_map_id,
-  mth.id AS match_id, 
+  mth.id AS match_id,
   mth.name AS match_name,  
   DATE_FORMAT(mth.draw_date, '%d-%m-%Y') AS match_date,
   b.user_id AS user_id,
   b.rate,
   b.id as bet_id,
   st.name AS status_id,
-  CASE 
+  CASE
     WHEN b.is_closed_type = 0 THEN 'OPEN'
     WHEN b.is_closed_type = 1 THEN 'CLOSE'
     ELSE 'UNKNOWN'
@@ -175,20 +236,22 @@ const getOperatorIds = async () => {
 };
 
 const insertBetAPI = async (conn, data) => {
-  // console.log("insertBet data:", data);
+  // console.log("insertBet API data:", data);
   const betSql = `
-    INSERT INTO bets (user_id, operator_id, match_map_id, stake, rate, status_id, ip, is_closed_type)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO bets (user_id, operator_id, match_map_id, rate, status_id, ip, transaction_id, client_bet_id, is_closed_type)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const betResult = await conn.query(betSql, [
-    data.user_id,
-    data.operator_id,
+    data.userId,
+    data.operatorId,
     data.match_map_id,
-    data.stake,
+    // data.stake,
     data.rate,
     data.status_id,
     data.ip,
+    data.transactionId,
+    data.clientBetId,
     data.is_closed_type || 0,
   ]);
 
@@ -206,22 +269,85 @@ SELECT bd.digit, COUNT(bd.bet_id) AS total_bets_on_digit, COUNT(DISTINCT b.user_
 
 const getUniqueClients = async (digit) => {
   const sql = `
-SELECT b.operator_id,op.operator_id,b.user_id FROM bets b JOIN operators op ON op.id = b.operator_id;
+  SELECT b.operator_id,op.operator_id,b.user_id 
+  FROM bets b 
+  JOIN operators op ON op.id = b.operator_id
+  JOIN bet_digits bd ON b.id = bd.bet_id 
+  AND bd.digit = ?;
   `;
   return await execute(sql, [digit]);
 };
 
 const getTotalNumberOfBets = async (digit) => {
   const sql = `
-  SELECT b.id,bd.stake,bd.bet_id,b.user_id,b.rate,b.bet_time,b.ip,CASE 
-    WHEN b.is_closed_type = 0 THEN 'OPEN'
-    WHEN b.is_closed_type = 1 THEN 'CLOSE'
-    ELSE 'UNKNOWN'
-  END AS bet_type FROM bet_digits bd
-  JOIN bets b ON bd.bet_id = b.id
-  WHERE  bd.digit = ?;
+    SELECT b.id,bd.stake,bd.bet_id,b.user_id,b.rate,b.bet_time,b.ip,m.name,CASE 
+      WHEN b.is_closed_type = 0 THEN 'OPEN'
+      WHEN b.is_closed_type = 1 THEN 'CLOSE'
+      ELSE 'UNKNOWN'
+      END AS bet_type FROM bet_digits bd
+      JOIN bets b ON bd.bet_id = b.id
+      JOIN matches_type_mapping mtm ON mtm.id=b.match_map_id
+      JOIN matches m ON m.id = mtm.match_id
+      WHERE  bd.digit = ?;
   `;
   return await execute(sql, [digit]);
+};
+
+const createBetSettlementsEntry = async (data) => {
+  // console.log("HERE IN BET MODAL FOR INITIAL ENTRY");
+  // console.log(data);
+
+  const sql = `
+   INSERT INTO bet_settlements (request_id, transaction_id, operator_id, status, payload, retry_count)
+   VALUES (?,?,?,?,?,?)
+  `;
+  const result = await execute(sql, [
+    data.request_id,
+    data.transaction_id,
+    data.operator_id,
+    data.status,
+    JSON.stringify(data.payload),
+    data.retry_count,
+    // data.failed_bets,
+  ]);
+  return result.affectedRows;
+};
+
+const updateBetSettlementsRetryCount = async (request_id) => {
+  const sql = `
+    UPDATE bet_settlements
+    SET retry_count = retry_count + 1
+    WHERE request_id = ?`;
+  return await execute(sql, [request_id]);
+};
+
+const updateBetSettlementsWithReqId = async (request_id, status, failed_bets) => {
+  const sql = `
+    UPDATE bet_settlements
+    SET retry_count = retry_count + 1, status = ?, failed_bets = ?
+    WHERE request_id = ?`;
+  await execute(sql, [status, JSON.stringify(failed_bets), request_id]);
+};
+
+const getBatchByRequestIdResult = async (request_id) => {
+  const sql = `
+    SELECT bs.id, bs.request_id, bs.transaction_id, bs.operator_id, bs.payload, bs.status, bs.retry_count, bs.last_attempt, bs.failed_bets, CASE WHEN RIGHT(op.callback_url, 1) = '/' THEN CONCAT(op.callback_url, 'resultpublish') ELSE CONCAT(op.callback_url, '/resultpublish') END AS callback_url FROM bet_settlements bs, operators op WHERE bs.operator_id = op.id AND bs.request_id = ?
+  `;
+
+  return await execute(sql, [request_id]);
+};
+
+const getBatchByRequestIdRollback = async (request_id) => {
+  const sql = `
+    SELECT bs.id, bs.request_id, bs.transaction_id, bs.operator_id, bs.payload, bs.status, bs.retry_count, bs.last_attempt, bs.failed_bets, CASE WHEN RIGHT(op.callback_url, 1) = '/' THEN CONCAT(op.callback_url, 'rollbackrequest') ELSE CONCAT(op.callback_url, '/rollbackrequest') END AS callback_url FROM bet_settlements bs, operators op WHERE bs.operator_id = op.id AND bs.request_id = ?
+  `;
+
+  return await execute(sql, [request_id]);
+};
+
+const getCallbackUrl = async (operator_id) => {
+  const url = await execute(`SELECT * from operators where id = ?`, [operator_id]);
+ return url[0] || [];
 };
 
 module.exports = {
@@ -239,4 +365,12 @@ module.exports = {
   getOperatorIds,
   getUniqueClients,
   getTotalNumberOfBets,
+  getBetsByMatchAndUserAPI,
+  getUserBetsByMatchAPI,
+  createBetSettlementsEntry,
+  updateBetSettlementsRetryCount,
+  updateBetSettlementsWithReqId,
+  getBatchByRequestIdResult,
+  getBatchByRequestIdRollback,
+  getCallbackUrl,
 };

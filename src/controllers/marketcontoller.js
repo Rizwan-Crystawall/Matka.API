@@ -1,6 +1,6 @@
 const MarketService = require('../services/marketservice');
 const response = require("../utils/response"); // adjust path accordingly
-
+const statusCodes = require("../utils/statusCodes");
 
 
 
@@ -90,10 +90,26 @@ const deleteMarket = async (req, res) => {
 const getActiveMatchMappings = async (req, res) => {
   try {
     const result = await MarketService.getActiveMatchMappings();
-
     return res.status(200).json({
       success: true,
-      message: "Active match mappings fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching match mappings",
+      error: error.message,
+    });
+  }
+};
+
+const getActiveMatchMappingsAPI = async (req, res) => {
+  try {
+    const result = await MarketService.getActiveMatchMappings();
+
+    return res.status(200).json({
+      status: "RS_OK",
+      message: statusCodes.RS_OK,
       data: result,
     });
   } catch (error) {
@@ -135,4 +151,5 @@ module.exports = {
   deleteMarket,
   getActiveMatchMappings,
   getMarketsByOperator,
+  getActiveMatchMappingsAPI,
 };

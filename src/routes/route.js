@@ -44,26 +44,18 @@ router.post("/addmarket", authMiddleware, MarketController.addMarket);
 router.post("/updatemarket", authMiddleware, MarketController.updateMarket);
 router.post("/deletemarket", authMiddleware, MarketController.deleteMarket);
 router.post("/match", authMiddleware,MarketController.getActiveMatchMappings);
+// router.post("/activeMatchMmappings", authMiddleware,marketcontoller.getActiveMatchMappings);
+// router.get("/match/:matchId", authMiddleware, matchcontroller.getMatchTypes);
 
 // Market for Operator API Internal
 router.post("/get-markets", MarketController.getMarketsByOperator);
 router.post("/verify-user", UserController.verifyUser);
-
-// Market for Operator API External
-router.post("/auth-token", TokenController.authToken);
-router.post("/verify-auth", authAPIMiddleware, TokenController.verifyAuth);
-router.post("/op/activeMatchMmappings", MarketController.getActiveMatchMappings);
-router.post("/op/saveUserBet", BetController.saveUserBetAPI);
-router.post("/op/betUsers", BetController.getBetsByMatchAndUser);
-router.post("/op/betsUserLog", BetController.getUserBets);
-
 
 //Dashboard
 router.post("/totaldata", authMiddleware, DashboardController.getDashboardData);
 router.post("/dashboard/marketwise",authMiddleware,DashboardController.getMarketwiseDashboardData);
 router.post("/dashboard/bettype",authMiddleware,DashboardController.getBetTypeDistribution);
 router.post("/recent/matches",authMiddleware,DashboardController.getRecentMatches);
-
 
 //Results
 router.post("/results", authMiddleware, ResultController.saveBetResults);
@@ -74,11 +66,8 @@ router.post("/getMarketById", authMiddleware, ResultController.getMarketById);
 router.post("/getMatchTypeResults",authMiddleware,ResultController.getMatchTypeResults); 
 router.post("/getMatchTypeId", authMiddleware, ResultController.getMatchTypeId);
 
-
-
 //Wallet
 router.get("/wallet",WalletController.getWalletDetails);
-
 
 //BetUsers
 router.post("/bet", authMiddleware, BetController.getBetsByMatchAndUser);
@@ -97,10 +86,6 @@ router.post('/operator', OperatorController.addOperators);
 router.get('/operators/:id', OperatorController.getOperatorById);
 router.post('/operator/:id', OperatorController.updateOperator);
 router.delete('/deleteoperator/:id', OperatorController.deleteOperator);
-
-
-
-
 
 
 module.exports = router;

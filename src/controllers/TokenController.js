@@ -3,8 +3,12 @@ const TokenService = require("../services/TokenService");
 const authToken = async (req, res) => {
   try {
     const result = await TokenService.authToken(req);
-    if (result.success) {
-      return res.status(200).json({ token: result.token });
+    if (result.success===true) {
+    const operatorId = result.id;
+    const userId = req.body.userId;
+      const iframeSrc = "http://localhost:3000/user/home/api/"+operatorId+"/"+userId+"?token="+result.token;
+      // const iframeSrc = "http://100.28.41.166:9002/user/home/api/"+operatorId+"/"+userId+"?token="+result.token;
+      return res.status(200).json({ token: result.token, iframe: iframeSrc });
     } else {
       return res.status(404).json(result);
     }

@@ -1,8 +1,8 @@
-const ResultService = require('../services/ResultService');
+const ResultService = require("../services/ResultService");
 
 // const saveBetResults = async (req, res) => {
 //   try {
-//       console.log("Incoming request body:", req.body); // 
+//       console.log("Incoming request body:", req.body); //
 //     const result = await ResultService.saveBetResults(req.body);
 //     return res.status(200).json({ success: true, message: "Bet results saved", result });
 //   } catch (error) {
@@ -29,17 +29,15 @@ const getAllResults = async (req, res) => {
 };
 const getResultById = async (req, res) => {
   try {
-          const { result_id } = req.body; // or req.params / req.query depending on how it's sent
+    const { result_id } = req.body; // or req.params / req.query depending on how it's sent
 
-
-    const response = await ResultService.getResultById(result_id); 
+    const response = await ResultService.getResultById(result_id);
 
     return res.status(response.status).json({
       success: response.success,
       message: response.message,
       data: response.data[0] || null,
     });
-
   } catch (error) {
     console.error("Controller Error:", error);
     return res.status(500).json({
@@ -49,7 +47,7 @@ const getResultById = async (req, res) => {
   }
 };
 const getMarketById = async (req, res) => {
-   try {
+  try {
     const result = await ResultService.getActiveMatchesWithMarket();
 
     return res.status(200).json({
@@ -106,13 +104,13 @@ const saveBetResults = async (req, res) => {
     await ResultService.saveBetResults(data);
     return res.status(200).json({
       success: true,
-      message: 'Bet results saved and balances updated.',
+      message: "Bet results saved and balances updated.",
     });
   } catch (error) {
     console.error("Error saving bet results:", error);
     return res.status(500).json({
       success: false,
-      message: 'An error occurred while saving bet results.',
+      message: "An error occurred while saving bet results.",
     });
   }
 };
@@ -130,13 +128,56 @@ const rollbackBetResults = async (req, res) => {
   }
 };
 
+const publishResults = async (req, res) => {
+  try {
+    const result = await ResultService.publishResults(req.body);
+    res.status(result.success ? 200 : 400).json(result);
+  } catch (error) {
+    console.error("Error saving bet results:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+const rollbackResults = async (req, res) => {
+  try {
+    const result = await ResultService.rollbackResults(req.body);
+    res.status(result.success ? 200 : 400).json(result);
+  } catch (error) {
+    console.error("Rollback Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+const settleBet = async (req, res) => {
+  try {
+    const settlebet = await ResultService.settleBet(req.body);
+    if (settlebet.success)
+      res.status(200).json({ success: true, data: settlebet.data });
+    else res.status(404).json({ success: false, data: settlebet.data });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Unable to settle this Bet",
+      error: "Unable to settle this Bet",
+    });
+  }
+};
 
 module.exports = {
- saveBetResults,
- rollbackBetResults,
- getAllResults,
- getResultById,
- getMarketById,
- getMatchTypeResults,
- getMatchTypeId
+  saveBetResults,
+  rollbackBetResults,
+  getAllResults,
+  getResultById,
+  getMarketById,
+  getMatchTypeResults,
+  getMatchTypeId,
+  publishResults,
+  rollbackResults,
+  settleBet,
 };
