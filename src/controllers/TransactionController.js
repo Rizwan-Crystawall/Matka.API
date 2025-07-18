@@ -37,7 +37,6 @@ const createWalletSnapshot = async (req, res) => {
 const placeBet = async (req, res) => {
   try {
     const result = await TransationService.placeBet(req);
-    console.log(result);
     if (result.status === "RS_OK") {
       return res.status(200).json({
         status: "RS_OK",

@@ -3,7 +3,7 @@ const TransactionModal = require("../modal/TransactionModal");
 const BetsService = require("../services/BetService");
 const { success } = require("../utils/response");
 
-const axios = require('axios');
+const axios = require("axios");
 
 const createTransaction = async (req) => {
   return await TransactionModal.createTransaction(req.body);
@@ -14,7 +14,7 @@ const createWalletSnapshot = async (req) => {
 };
 
 function capitalize(str) {
-  if (!str) return '';
+  if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
@@ -30,13 +30,14 @@ const placeBet = async (req) => {
         debitAmount: req.body.debitAmount,
         betType: capitalize(req.body.type_name),
       };
-      // console.log(data);return;
-      // const betPlacable = await BetsService.isThisBetPlacable(data); // /betrequest in original
+      const requestUrl = await TransactionModal.getBetRequestUrl(
+        req.body.operatorId
+      );
       const betPlacable = await axios
-        .post("http://100.28.41.166:9010/placebet", data, {
+        .post(requestUrl, data, {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.API_TOKEN}`, // optional
+            Authorization: `Bearer ${process.env.API_TOKEN}`,
           },
         })
         .then((res) => res.data)
@@ -44,8 +45,6 @@ const placeBet = async (req) => {
           console.error("Error calling external API:", err.message);
           return { status: "RS_ERROR_UNKNOWN" };
         });
-
-      // console.log(betPlacable);
       if (betPlacable.status === "RS_OK") {
         const walletSnapshot = await TransactionModal.createWalletSnapshot(
           req.body,
@@ -68,8 +67,7 @@ const placeBet = async (req) => {
       }
     } else {
     }
-  } catch (error) {
-  }
+  } catch (error) {}
 };
 
 module.exports = {

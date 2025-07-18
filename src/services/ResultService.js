@@ -299,7 +299,7 @@ const publishResults = async (data) => {
         }
       );
       let finalReports = JSON.stringify(finalOutput, null, 2);
-      const OperatorUrls = await ResultModel.getOperatorUrls();
+      const OperatorUrls = await ResultModel.getOperatorUrlsForResult();
       const transactionId = "txn-" + uuidv4();
       for (const operator of finalOutput) {
         const requestId = uuidv4();
@@ -378,9 +378,10 @@ const publishResults = async (data) => {
           timestamp,
         };
         const callbackUrl = OperatorUrls[operator.operatorId];
+        // console.log(callbackUrl);return;
         // console.log(JSON.stringify(payload, null, 2));
         await sendNewBatch(payload, callbackUrl);
-        console.log("----------------------------");
+        // console.log("----------------------------");
       }
       const groupedByBetId = {};
       bets.forEach((item) => {
@@ -496,7 +497,8 @@ const rollbackResults = async (data) => {
       };
     });
     let finalReports = JSON.stringify(finalOutput, null, 2);
-    const OperatorUrls = await ResultModel.getOperatorUrls();
+    const OperatorUrls = await ResultModel.getOperatorUrlsForRollback();
+    // console.log(OperatorUrls);return;
     const transactionId = "txn-" + uuidv4();
     for (const operator of finalOutput) {
       const requestId = uuidv4();
@@ -577,7 +579,7 @@ const rollbackResults = async (data) => {
       // console.log(JSON.stringify(payload, null, 2));
       // return;
       await sendNewBatchForRollback(payload, callbackUrl);
-      console.log("-------------------------");
+      // console.log("-------------------------");
     }
     // Step 1: Group all items by bet_id
     const groupedByBetId = {};

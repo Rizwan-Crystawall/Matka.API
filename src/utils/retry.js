@@ -6,7 +6,7 @@ const {
   createBetSettlementsEntry,
   updateBetSettlementsRetryCount,
   updateBetSettlementsWithReqId,
-  getBatchByRequestId,
+  getBatchByRequestIdResult,
   getCallbackUrl,
 } = require("../modal/BetModal");
 
@@ -24,7 +24,7 @@ const retryWorker = new Worker(
   "retry-settlements",
   async (job) => {
     const requestId = job.data.requestId;
-    const dbBatche = await getBatchByRequestId(requestId);
+    const dbBatche = await getBatchByRequestIdResult(requestId);
     const dbBatch = dbBatche[0];
     if (!dbBatch) {
       console.log(`No batch found in DB for retry with requestId ${requestId}`);
@@ -167,7 +167,7 @@ async function sendNewBatch(payload, callbackUrl) {
     }
   } catch (err) {
 
-    console.error(`Initial settlement failed for batch ${requestId}:${transactionId}`, err.message);
+    console.error(`Initial settlement failed for batch ${requestId}:${callbackUrl}`, err.message);
     const allFailed = payload.bets.winners
       .flatMap((b) => b.clientBetId)
       .concat(payload.bets.losers.flatMap((b) => b.clientBetId));
