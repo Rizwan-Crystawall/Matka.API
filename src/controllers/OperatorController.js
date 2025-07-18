@@ -11,7 +11,7 @@ const getOperators = async (req, res) => {
 };
 
 const addOperators = async (req, res) => {
-  try {
+  try {    
     const result = await operatorService.addOperator(req.body);
     res.status(201).json({ message: 'Operator added successfully', data: result });
   } catch (error) {
@@ -29,8 +29,42 @@ const updateOperator = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+const getOperatorById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const operator = await operatorService.getById(id);
+
+    if (!operator) {
+      return res.status(404).json({ success: false, message: "Operator not found" });
+    }
+
+    res.status(200).json({ success: true, data: operator });
+  } catch (error) {
+    console.error("Error fetching operator by ID:", error.message);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const deleteOperator = async (req, res) => {
+  try {  
+    const id = req.params.id;
+     await operatorService.deleteOperatorById(id);
+     res.status(200).json({
+      success: true,
+      message: "Market deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Error deleting market:", error.message);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+
 module.exports = {
  getOperators,
  addOperators,
- updateOperator
+ updateOperator,
+ getOperatorById,
+ deleteOperator
 };

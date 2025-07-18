@@ -94,7 +94,11 @@ router.post("/getTotalNumberOfBets", authMiddleware,BetController.getTotalNumber
 //Operators
 router.get('/operators', OperatorController.getOperators);
 router.post('/operator', OperatorController.addOperators);
+router.get('/operators/:id', OperatorController.getOperatorById);
 router.post('/operator/:id', OperatorController.updateOperator);
+router.delete('/deleteoperator/:id', OperatorController.deleteOperator);
+
+
 
 
 

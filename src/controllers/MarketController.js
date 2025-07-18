@@ -1,5 +1,5 @@
-const MarketService = require('../Services/MarketService');
-const response = require("../Utils/Response"); // adjust path accordingly
+const MarketService = require('../services/marketservice');
+const response = require("../utils/response"); 
 
 
 

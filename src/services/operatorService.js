@@ -15,11 +15,18 @@ const fetchOperators = async () => {
 };
 
 const addOperator = async ({ operator_id, environment, callback_url,status }) => {
-  if (!operator_id || !environment || !callback_url || !status) {
-    const error = new Error("All fields (operator_id, environment, callback_url,status) are required.");
-    error.status = 400;
-    throw error;
-  }
+if (
+  operator_id === undefined || operator_id === '' ||
+  environment === undefined || environment === '' ||
+  callback_url === undefined || callback_url === '' ||
+  status === undefined
+) {
+   return {
+      success: false,
+      message: "All fields are required.",
+    };
+}
+ 
 
   const newOperator = await OperatorModal.addOperator({
     operator_id,
@@ -31,13 +38,27 @@ const addOperator = async ({ operator_id, environment, callback_url,status }) =>
   return newOperator;
 };
 
-const editOperator = async (operatorData) => {
-  // You can add validation here if needed
+// const editOperator = async (operatorData) => {
+//   // You can add validation here if needed
 
-  const updatedOperator = await OperatorModal.updateOperator(operatorData);
-  return updatedOperator;
+//   const updatedOperator = await OperatorModal.updateOperator(operatorData);
+//   return updatedOperator;
+// };
+const getById = async (id) => {
+  return await OperatorModal.getOperatorById(id); // Sequelize
+  // return await Operator.findById(id); // Mongoose
+};
+
+
+const deleteOperatorById = async (id) => {  
+  if (!id || isNaN(id)) {
+    throw new Error("Invalid operator ID.");
+  }
+  const result =  OperatorModal.deleteOperator(id);
+  return result;
 };
 module.exports = {
   fetchOperators,addOperator,
-  editOperator
+  getById,
+  deleteOperatorById
 };
