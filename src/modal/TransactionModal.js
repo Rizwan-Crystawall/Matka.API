@@ -2,8 +2,8 @@ const { execute } = require("../utils/dbHelper");
 
 const createTransaction = async (data) => {
   const sql = `
-   INSERT INTO transactions (user_id, transaction_id, request_id, operator_id, trans_type, amount)
-   VALUES (?, ?, ?, ?, ?,?)
+   INSERT INTO transactions (user_id, transaction_id, request_id, operator_id, trans_type, rollback_reason, amount)
+   VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
   const result = await execute(sql, [
     data.userId,
@@ -11,6 +11,7 @@ const createTransaction = async (data) => {
     data.requestId,
     data.operatorId,
     data.transType,
+    data.reason || null,
     data.debitAmount,
   ]);
   return result.affectedRows;

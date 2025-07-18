@@ -430,7 +430,7 @@ const publishResults = async (data) => {
 const rollbackResults = async (data) => {
   const connection = await db.beginTransaction();
   try {
-    const { mmid, isClosedType, digit, type_id } = data;
+    const { mmid, isClosedType, digit, type_id, reason } = data;
     const bets = await ResultModel.fetchBetsAPIForROllback(
       connection,
       digit,
@@ -558,6 +558,7 @@ const rollbackResults = async (data) => {
         operatorId: operator.operatorId,
         transType: "Rollback",
         debitAmount: 0,
+        reason: reason,
       };
       await createTransaction(data);
       const payload = {
