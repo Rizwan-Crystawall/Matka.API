@@ -10,7 +10,7 @@ const getBetsByMatchAndUser = async (matchId, userId) => {
       res.close_result,
       bd.stake,
       b.rate, 
-      mtm.type_id as type, 
+      mtm.type_id AS type, 
       CASE 
         WHEN mtm.type_id = 1 THEN 'single' 
         WHEN mtm.type_id = 2 THEN 'singlePatti' 
@@ -23,12 +23,14 @@ const getBetsByMatchAndUser = async (matchId, userId) => {
         WHEN b.is_closed_type = 0 THEN 'open' 
         WHEN b.is_closed_type = 1 THEN 'close' 
         ELSE 'unknown' 
-      END AS time 
-        CASE
-    WHEN b.is_closed_type = 0 AND bd.digit = res.open_result THEN 1
-    WHEN b.is_closed_type = 1 AND bd.digit = res.close_result THEN 1
-    ELSE 0
-    END AS win
+      END AS time,  
+
+      CASE
+        WHEN b.is_closed_type = 0 AND bd.digit = res.open_result THEN 1
+        WHEN b.is_closed_type = 1 AND bd.digit = res.close_result THEN 1
+        ELSE 0
+      END AS win
+
     FROM bets b 
     JOIN bet_digits bd ON b.id = bd.bet_id 
     JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id 
@@ -38,6 +40,7 @@ const getBetsByMatchAndUser = async (matchId, userId) => {
   const rows = await execute(sql, [matchId, userId]);
   return rows;
 };
+
 
 const getBetsByMatchAndUserAPI = async (matchId, userId, operatorId) => {
   const sql = `
