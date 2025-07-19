@@ -216,4 +216,5 @@ module.exports = {
   getMatchById,
   getMatchTypes,
   getMatchTypesAPI,
+  getAllMatchTypes,
 };
