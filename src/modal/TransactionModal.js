@@ -2,8 +2,8 @@ const { execute } = require("../utils/dbHelper");
 
 const createTransaction = async (data) => {
   const sql = `
-   INSERT INTO transactions (user_id, transaction_id, request_id, operator_id, trans_type, amount)
-   VALUES (?, ?, ?, ?, ?,?)
+   INSERT INTO transactions (user_id, transaction_id, request_id, operator_id, trans_type, rollback_reason, amount)
+   VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
   const result = await execute(sql, [
     data.userId,
@@ -11,6 +11,7 @@ const createTransaction = async (data) => {
     data.requestId,
     data.operatorId,
     data.transType,
+    data.reason || null,
     data.debitAmount,
   ]);
   return result.affectedRows;
@@ -40,8 +41,22 @@ const updateTransaction = async (data) => {
   return result.changedRows;
 };
 
+const getBetRequestUrl = async (operatorId) => {
+  const sql = `SELECT CASE
+    WHEN RIGHT(callback_url, 1) = '/' THEN CONCAT(callback_url, 'placebet')
+    ELSE CONCAT(callback_url, '/placebet')
+    END AS callback_url FROM operators WHERE id = ?`;
+  const result = await execute(sql, [operatorId]);
+  if (result.length > 0) {
+    return result[0].callback_url;
+  } else {
+    throw new Error("Operator not found");
+  }
+};
+
 module.exports = {
   createTransaction,
   createWalletSnapshot,
   updateTransaction,
+  getBetRequestUrl,
 };

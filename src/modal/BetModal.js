@@ -289,8 +289,8 @@ const createBetSettlementsEntry = async (data) => {
   // console.log(data);
 
   const sql = `
-   INSERT INTO bet_settlements (request_id, transaction_id, operator_id, status, payload, retry_count, failed_bets)
-   VALUES (?,?,?,?,?,?,?)
+   INSERT INTO bet_settlements (request_id, transaction_id, operator_id, status, payload, retry_count)
+   VALUES (?,?,?,?,?,?)
   `;
   const result = await execute(sql, [
     data.request_id,
@@ -299,7 +299,7 @@ const createBetSettlementsEntry = async (data) => {
     data.status,
     JSON.stringify(data.payload),
     data.retry_count,
-    data.failed_bets,
+    // data.failed_bets,
   ]);
   return result.affectedRows;
 };
@@ -310,6 +310,35 @@ const updateBetSettlementsRetryCount = async (request_id) => {
     SET retry_count = retry_count + 1
     WHERE request_id = ?`;
   return await execute(sql, [request_id]);
+};
+
+const updateBetSettlementsWithReqId = async (request_id, status, failed_bets) => {
+  const sql = `
+    UPDATE bet_settlements
+    SET retry_count = retry_count + 1, status = ?, failed_bets = ?
+    WHERE request_id = ?`;
+  await execute(sql, [status, JSON.stringify(failed_bets), request_id]);
+};
+
+const getBatchByRequestIdResult = async (request_id) => {
+  const sql = `
+    SELECT bs.id, bs.request_id, bs.transaction_id, bs.operator_id, bs.payload, bs.status, bs.retry_count, bs.last_attempt, bs.failed_bets, CASE WHEN RIGHT(op.callback_url, 1) = '/' THEN CONCAT(op.callback_url, 'resultpublish') ELSE CONCAT(op.callback_url, '/resultpublish') END AS callback_url FROM bet_settlements bs, operators op WHERE bs.operator_id = op.id AND bs.request_id = ?
+  `;
+
+  return await execute(sql, [request_id]);
+};
+
+const getBatchByRequestIdRollback = async (request_id) => {
+  const sql = `
+    SELECT bs.id, bs.request_id, bs.transaction_id, bs.operator_id, bs.payload, bs.status, bs.retry_count, bs.last_attempt, bs.failed_bets, CASE WHEN RIGHT(op.callback_url, 1) = '/' THEN CONCAT(op.callback_url, 'rollbackrequest') ELSE CONCAT(op.callback_url, '/rollbackrequest') END AS callback_url FROM bet_settlements bs, operators op WHERE bs.operator_id = op.id AND bs.request_id = ?
+  `;
+
+  return await execute(sql, [request_id]);
+};
+
+const getCallbackUrl = async (operator_id) => {
+  const url = await execute(`SELECT * from operators where id = ?`, [operator_id]);
+ return url[0] || [];
 };
 
 module.exports = {
@@ -331,4 +360,8 @@ module.exports = {
   getUserBetsByMatchAPI,
   createBetSettlementsEntry,
   updateBetSettlementsRetryCount,
+  updateBetSettlementsWithReqId,
+  getBatchByRequestIdResult,
+  getBatchByRequestIdRollback,
+  getCallbackUrl,
 };

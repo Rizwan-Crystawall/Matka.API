@@ -282,9 +282,18 @@ const clearResult = async (conn, mmid, isClosedType) => {
   );
 };
 
-const getOperatorUrls = async () => {
+const getOperatorUrlsForResult = async () => {
   const rows = await execute(
-    "SELECT id, operator_id, callback_url FROM operators"
+    "SELECT id, operator_id, CASE WHEN RIGHT(callback_url, 1) = '/' THEN CONCAT(callback_url, 'resultpublish') ELSE CONCAT(callback_url, '/resultpublish') END AS callback_url FROM operators"
+  );
+  return Object.fromEntries(
+    rows.map((row) => [row.id.toString(), row.callback_url])
+  );
+};
+
+const getOperatorUrlsForRollback = async () => {
+  const rows = await execute(
+    "SELECT id, operator_id, CASE WHEN RIGHT(callback_url, 1) = '/' THEN CONCAT(callback_url, 'rollbackrequest') ELSE CONCAT(callback_url, '/rollbackrequest') END AS callback_url FROM operators"
   );
   return Object.fromEntries(
     rows.map((row) => [row.id.toString(), row.callback_url])
@@ -308,7 +317,8 @@ module.exports = {
   rollbackLoser,
   resetBetStatus,
   clearResult,
-  getOperatorUrls,
+  getOperatorUrlsForResult,
+  getOperatorUrlsForRollback,
   fetchBetsAPI,
   updateBetsStatusAPI,
   fetchBetsAPIForROllback,
