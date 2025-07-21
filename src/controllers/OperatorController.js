@@ -1,4 +1,4 @@
-const operatorService = require('../services/operatorService');
+const operatorService = require("../services/operatorService");
 
 const getOperators = async (req, res) => {
   try {
@@ -11,20 +11,27 @@ const getOperators = async (req, res) => {
 };
 
 const addOperators = async (req, res) => {
-  try {    
+  try {
     const result = await operatorService.addOperator(req.body);
-    res.status(201).json({ message: 'Operator added successfully', data: result });
+    res
+      .status(201)
+      .json({ message: "Operator added successfully", data: result });
   } catch (error) {
-    console.error('Error adding operator:', error);
-    res.status(error.status || 500).json({ message: error.message || 'Server error' });
+    console.error("Error adding operator:", error);
+    res
+      .status(error.status || 500)
+      .json({ message: error.message || "Server error" });
   }
 };
 const updateOperator = async (req, res) => {
   try {
-    const data = { ...req.body, id: req.params.id };  // add id here
+    const data = { ...req.body, id: req.params.id }; // add id here
 
     const updatedOperator = await operatorService.editOperator(data);
-    res.json({ message: "Operator updated successfully", data: updatedOperator });
+    res.json({
+      message: "Operator updated successfully",
+      data: updatedOperator,
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -36,7 +43,9 @@ const getOperatorById = async (req, res) => {
     const operator = await operatorService.getById(id);
 
     if (!operator) {
-      return res.status(404).json({ success: false, message: "Operator not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Operator not found" });
     }
 
     res.status(200).json({ success: true, data: operator });
@@ -47,10 +56,10 @@ const getOperatorById = async (req, res) => {
 };
 
 const deleteOperator = async (req, res) => {
-  try {  
+  try {
     const id = req.params.id;
-     await operatorService.deleteOperatorById(id);
-     res.status(200).json({
+    await operatorService.deleteOperatorById(id);
+    res.status(200).json({
       success: true,
       message: "Market deleted successfully.",
     });
@@ -60,11 +69,25 @@ const deleteOperator = async (req, res) => {
   }
 };
 
+const updateStatus = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { status } = req.body;
+    const updated = await operatorService.updateOperatorStatus({ status, id });
+    res.json({
+      message: "Operator updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 module.exports = {
- getOperators,
- addOperators,
- updateOperator,
- getOperatorById,
- deleteOperator
+  getOperators,
+  addOperators,
+  updateOperator,
+  getOperatorById,
+  deleteOperator,
+  updateStatus,
 };

@@ -15,14 +15,13 @@ const addOperator = async ({
   operator_id,
   environment,
   callback_url,
-  status,
 }) => {
   const sql = `
-    INSERT INTO operators (operator_id, environment, callback_url, status, created_at)
-    VALUES (?, ?, ?, ?, NOW())
+    INSERT INTO operators (operator_id, environment, callback_url, created_at)
+    VALUES (?, ?, ?, NOW())
   `;
 
-  const values = [operator_id, environment, callback_url, status];
+  const values = [operator_id, environment, callback_url];
   const result = await execute(sql, values);
 
   return {
@@ -30,7 +29,6 @@ const addOperator = async ({
     operator_id,
     environment,
     callback_url,
-    status,
   };
 };
 const updateOperator = async ({
@@ -38,15 +36,14 @@ const updateOperator = async ({
   operator_id,
   environment,
   callback_url,
-  status,
 }) => {
   const sql = `
     UPDATE operators
-    SET operator_id = ?, environment = ?, callback_url = ?, status = ?
+    SET operator_id = ?, environment = ?, callback_url = ?
     WHERE id = ?
   `;
 
-  const values = [operator_id, environment, callback_url, status, id];
+  const values = [operator_id, environment, callback_url, id];
   const result = await execute(sql, values);
 
   if (result.affectedRows === 0) {
@@ -60,7 +57,6 @@ const updateOperator = async ({
     operator_id,
     environment,
     callback_url,
-    status,
   };
 };
 const getOperatorById = async (id) => {
@@ -90,10 +86,35 @@ const deleteOperator = async (id) => {
   return await execute(sql, [id]);
 };
 
+// OperatorModal.js
+const updateOperatorStatus = async ( status, id ) => {
+  console.log(status, id)
+  const sql = `
+    UPDATE operators
+    SET status = ?
+    WHERE id = ?
+  `;
+  const values = [status, id];
+  const result = await execute(sql, values);
+
+  if (result.affectedRows === 0) {
+    throw new Error(`Operator with id ${id} not found`);
+  }
+
+  return { id, status };
+};
+
+
+
+
+
+
+
 module.exports = {
   getOperators,
   addOperator,
   updateOperator,
   getOperatorById,
-  deleteOperator
+  deleteOperator,
+  updateOperatorStatus
 };

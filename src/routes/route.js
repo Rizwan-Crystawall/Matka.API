@@ -10,7 +10,7 @@ const ResultController = require("../Controllers/ResultController");
 const WalletController = require("../Controllers/Walletcontroller");
 const BetController = require("../Controllers/Betcontroller");
 const TokenController = require("../Controllers/TokenController");
-const OperatorController = require("../Controllers/OperatorController");
+const OperatorController = require("../controllers/OperatorController");
 
 //Middlware
 const authMiddleware = require("../middleware/middleware");
@@ -34,7 +34,7 @@ router.post("/addmatch", authMiddleware, MatchController.addMatch);
 router.post("/editmatch/:id", authMiddleware, MatchController.updateMatch);
 router.post("/matches", MatchController.getMatchById);
 router.delete("/deletematch/:id", authMiddleware, MatchController.deleteMatch);
-router.get("/matchDetails", MatchController.getMatchTypes);
+// router.get("/matchDetails", MatchController.getMatchTypes);
 router.get("/matchTypes", MatchController.getAllMatchTypes);
 
 //Market
@@ -43,9 +43,9 @@ router.get("/market/:id", authMiddleware, MarketController.getMarket);
 router.post("/addmarket", authMiddleware, MarketController.addMarket);
 router.post("/updatemarket", authMiddleware, MarketController.updateMarket);
 router.post("/deletemarket", authMiddleware, MarketController.deleteMarket);
-router.post("/match", authMiddleware,MarketController.getActiveMatchMappings);
+router.get("/match", authMiddleware,MarketController.getActiveMatchMappings);
 // router.post("/activeMatchMmappings", authMiddleware,marketcontoller.getActiveMatchMappings);
-// router.get("/match/:matchId", authMiddleware, matchcontroller.getMatchTypes);
+ router.get("/match/:matchId", authMiddleware, MatchController.getMatchTypes);
 
 // Market for Operator API Internal
 router.post("/get-markets", MarketController.getMarketsByOperator);
@@ -86,6 +86,8 @@ router.post('/operator', OperatorController.addOperators);
 router.get('/operators/:id', OperatorController.getOperatorById);
 router.post('/operator/:id', OperatorController.updateOperator);
 router.delete('/deleteoperator/:id', OperatorController.deleteOperator);
+router.post('/operator/status/:id', OperatorController.updateStatus);
+
 
 
 module.exports = router;

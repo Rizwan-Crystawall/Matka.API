@@ -154,9 +154,9 @@ const deleteMatch = async (req, res) => {
   }
 };
 const getMatchTypes = async (req, res) => {
-  try {
-  const { match_id } = req.query; 
-    const result = await MatchService.fetchMatchTypesByMatchId(match_id);
+  try {    
+  const { matchId } = req.params; 
+    const result = await MatchService.fetchMatchTypesByMatchId(matchId);
 
     return res.status(200).json({
       success: true,
@@ -216,5 +216,6 @@ module.exports = {
   deleteMatch,
   getMatchById,
   getMatchTypes,
-  getAllMatchTypes
+  getAllMatchTypes,
+  getMatchTypesAPI,
 };
