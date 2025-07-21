@@ -62,23 +62,36 @@ const getBetsByMatchAndUserAPI = async (matchId, userId, operatorId) => {
 
 const getUserBetsByMatch = async (user_id, match_id) => {
   const sql = `
-    SELECT 
+    SELECT
       m.name,
       mtm.type_id AS match_map_id,
       b.is_closed_type,
       bd.digit,
       bd.stake,
+      res.open_result,
+      res.close_result,
       b.rate,
-      b.created_on
-    FROM 
+      b.created_on,
+      CASE
+        WHEN b.is_closed_type = 0 AND bd.digit = res.open_result THEN 1
+        WHEN b.is_closed_type = 1 AND bd.digit = res.close_result THEN 1
+        ELSE 0
+      END AS win,
+       CASE
+        WHEN b.is_closed_type = 0 THEN 'open'
+        WHEN b.is_closed_type = 1 THEN 'close'
+        ELSE 'unknown'
+      END AS time
+    FROM
       bets b
       JOIN bet_digits bd ON b.id = bd.bet_id
       JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id
       JOIN matches m ON mtm.match_id = m.id
-    WHERE 
+       LEFT JOIN results res ON res.match_map_id = mtm.id
+    WHERE
       b.user_id = ?
       AND mtm.match_id = ?
-      AND b.status_id = 1
+      ORDER BY b.created_on DESC
   `;
 
   const rows = await execute(sql, [user_id, match_id]);
@@ -89,24 +102,37 @@ const getUserBetsByMatch = async (user_id, match_id) => {
 
 const getUserBetsByMatchAPI = async (user_id, match_id, operator_id) => {
   const sql = `
-    SELECT 
+    SELECT
       m.name,
       mtm.type_id AS match_map_id,
       b.is_closed_type,
       bd.digit,
       bd.stake,
+      res.open_result,
+      res.close_result,
       b.rate,
-      b.created_on
-    FROM 
+      b.created_on,
+      CASE
+        WHEN b.is_closed_type = 0 AND bd.digit = res.open_result THEN 1
+        WHEN b.is_closed_type = 1 AND bd.digit = res.close_result THEN 1
+        ELSE 0
+      END AS win,
+       CASE
+        WHEN b.is_closed_type = 0 THEN 'open'
+        WHEN b.is_closed_type = 1 THEN 'close'
+        ELSE 'unknown'
+      END AS time
+    FROM
       bets b
       JOIN bet_digits bd ON b.id = bd.bet_id
       JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id
       JOIN matches m ON mtm.match_id = m.id
-    WHERE 
+       LEFT JOIN results res ON res.match_map_id = mtm.id
+    WHERE
       b.user_id = ?
       AND mtm.match_id = ?
       AND b.operator_id = ?
-      AND b.status_id = 1
+      ORDER BY b.created_on DESC
   `;
 
   const rows = await execute(sql, [user_id, match_id, operator_id]);
