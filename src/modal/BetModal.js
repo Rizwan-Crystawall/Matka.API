@@ -121,6 +121,7 @@ const getUserBetsByMatchAPI = async (user_id, match_id, operator_id) => {
       AND mtm.match_id = ?
       AND b.operator_id = ?
       AND b.status_id = 1
+      ORDER BY b.created_on DESC
   `;
 
   const rows = await execute(sql, [user_id, match_id, operator_id]);
