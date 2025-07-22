@@ -25,13 +25,21 @@ if (
       message: "All fields are required.",
     };
 }
+  const existing = await OperatorModal.findByOperatorId(operator_id);
+  
+  if (existing.length > 0) {
+    return {
+      success: false,
+      message: "Operator ID already exists.",
+      status: 400,
+    };
+  }
  
 
   const newOperator = await OperatorModal.addOperator({
     operator_id,
     environment,
     callback_url,
-    status,
   });
 
   return newOperator;
@@ -56,15 +64,19 @@ const deleteOperatorById = async (id) => {
   const result =  OperatorModal.deleteOperator(id);
 };
 
-const updateOperatorStatus = async ({ status, id }) => {
-  console.log(status, id);
-  
+const updateOperatorStatus = async ({ status, id }) => {  
   return await OperatorModal.updateOperatorStatus(status, id);
 };
+const getStatusByOperatorId = async (operatorId) => {   
+  return await OperatorModal.getStatusByOperatorId(operatorId);
+};
+
+
 module.exports = {
   fetchOperators,addOperator,
   getById,
   deleteOperatorById,
   editOperator,
-  updateOperatorStatus
+  updateOperatorStatus,
+  getStatusByOperatorId
 };

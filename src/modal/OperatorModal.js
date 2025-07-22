@@ -11,11 +11,7 @@ FROM operators WHERE is_deleted = 0
   return rows;
 };
 
-const addOperator = async ({
-  operator_id,
-  environment,
-  callback_url,
-}) => {
+const addOperator = async ({ operator_id, environment, callback_url }) => {
   const sql = `
     INSERT INTO operators (operator_id, environment, callback_url, created_at)
     VALUES (?, ?, ?, NOW())
@@ -31,6 +27,11 @@ const addOperator = async ({
     callback_url,
   };
 };
+const findByOperatorId = async (operator_id) => {
+  const sql = `SELECT * FROM operators WHERE operator_id = ?`;
+  return await execute(sql, [operator_id]);
+};
+
 const updateOperator = async ({
   id,
   operator_id,
@@ -87,8 +88,7 @@ const deleteOperator = async (id) => {
 };
 
 // OperatorModal.js
-const updateOperatorStatus = async ( status, id ) => {
-  console.log(status, id)
+const updateOperatorStatus = async (status, id) => {
   const sql = `
     UPDATE operators
     SET status = ?
@@ -96,19 +96,27 @@ const updateOperatorStatus = async ( status, id ) => {
   `;
   const values = [status, id];
   const result = await execute(sql, values);
-
-  if (result.affectedRows === 0) {
-    throw new Error(`Operator with id ${id} not found`);
-  }
-
-  return { id, status };
+  return { result };
 };
 
-
-
-
-
-
+const getStatusByOperatorId = async (operatorId) => {
+  const sql = `
+ SELECT
+  o.id AS id,
+  o.operator_id AS operator_id,       
+  COUNT(DISTINCT b.id) AS total_bets,
+  COUNT(DISTINCT b.user_id) AS total_users,
+  SUM(bd.stake) AS total_stake
+  FROM operators o
+  JOIN bets b ON b.operator_id = o.id
+  JOIN bet_digits bd ON bd.bet_id = b.id
+  WHERE o.id = ?
+  GROUP BY o.id;
+  `;
+  const values = [operatorId];
+  const result = await execute(sql, values);
+  return { result };
+};
 
 module.exports = {
   getOperators,
@@ -116,5 +124,7 @@ module.exports = {
   updateOperator,
   getOperatorById,
   deleteOperator,
-  updateOperatorStatus
+  updateOperatorStatus,
+  findByOperatorId,
+  getStatusByOperatorId,
 };

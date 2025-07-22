@@ -15,7 +15,7 @@ const addOperators = async (req, res) => {
     const result = await operatorService.addOperator(req.body);
     res
       .status(201)
-      .json({ message: "Operator added successfully", data: result });
+      .json({ message: "Operator added successfullysss", data: result });
   } catch (error) {
     console.error("Error adding operator:", error);
     res
@@ -83,6 +83,21 @@ const updateStatus = async (req, res) => {
   }
 };
 
+const getStatusByOperatorId = async (req, res) => {
+  try {
+   const updated = await  operatorService.getStatusByOperatorId(req.params.id);
+
+        res.json({
+      message: "Operator fetch successfully",
+      data: updated,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+
 module.exports = {
   getOperators,
   addOperators,
@@ -90,4 +105,5 @@ module.exports = {
   getOperatorById,
   deleteOperator,
   updateStatus,
+  getStatusByOperatorId
 };
