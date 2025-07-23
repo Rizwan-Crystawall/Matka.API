@@ -21,6 +21,8 @@ const addOperator = async ({ operator_id, environment, callback_url }) => {
   const result = await execute(sql, values);
 
   return {
+    status: 201,
+    success: true,
     id: result.insertId,
     operator_id,
     environment,
@@ -106,7 +108,8 @@ const getStatusByOperatorId = async (operatorId) => {
   o.operator_id AS operator_id,       
   COUNT(DISTINCT b.id) AS total_bets,
   COUNT(DISTINCT b.user_id) AS total_users,
-  SUM(bd.stake) AS total_stake
+  SUM(bd.stake) AS total_stake,
+  COUNT(bd.digit) AS total_digits
   FROM operators o
   JOIN bets b ON b.operator_id = o.id
   JOIN bet_digits bd ON bd.bet_id = b.id
@@ -119,7 +122,7 @@ const getStatusByOperatorId = async (operatorId) => {
 };
 const getOperatorsList = async () => {
   const sql = `SELECT id, operator_id FROM operators ORDER BY id ASC`;
-  const rows = await execute(sql); 
+  const rows = await execute(sql);
   return rows;
 };
 
@@ -132,5 +135,5 @@ module.exports = {
   updateOperatorStatus,
   findByOperatorId,
   getStatusByOperatorId,
-  getOperatorsList
+  getOperatorsList,
 };
