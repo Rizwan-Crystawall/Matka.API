@@ -244,7 +244,7 @@ ORDER BY b.created_on DESC;
 const getOperatorIds = async () => {
   const sql = "SELECT id FROM operators";
   const rows = await execute(sql);
-  console.log("Operator rows:", rows);
+  // console.log("Operator rows:", rows);
   return rows.map((row) => row.id);
 };
 

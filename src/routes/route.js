@@ -10,7 +10,9 @@ const ResultController = require("../Controllers/ResultController");
 const WalletController = require("../Controllers/Walletcontroller");
 const BetController = require("../Controllers/Betcontroller");
 const TokenController = require("../Controllers/TokenController");
-const OperatorController = require("../controllers/OperatorController");
+const OperatorController = require("../Controllers/OperatorController");
+const marketcontoller = require("../Controllers/MarketController");
+const matchcontroller = require("../Controllers/MatchController");
 
 //Middlware
 const authMiddleware = require("../middleware/middleware");
@@ -38,14 +40,15 @@ router.delete("/deletematch/:id", authMiddleware, MatchController.deleteMatch);
 router.get("/matchTypes", MatchController.getAllMatchTypes);
 
 //Market
-router.get("/markets", authMiddleware, MarketController.getAllMarkets);
-router.get("/market/:id", authMiddleware, MarketController.getMarket);
-router.post("/addmarket", authMiddleware, MarketController.addMarket);
-router.post("/updatemarket", authMiddleware, MarketController.updateMarket);
-router.post("/deletemarket", authMiddleware, MarketController.deleteMarket);
-router.get("/match", authMiddleware,MarketController.getActiveMatchMappings);
-// router.post("/activeMatchMmappings", authMiddleware,marketcontoller.getActiveMatchMappings);
- router.get("/match/:matchId", authMiddleware, MatchController.getMatchTypes);
+router.post("/getmarket", authMiddleware, marketcontoller.getAllMarkets);
+router.get("/markets", authMiddleware, marketcontoller.getMarket);
+router.post("/getmarkets", authMiddleware, marketcontoller.getMarket);
+router.post("/addmarket", authMiddleware, marketcontoller.addMarket);
+router.post("/updatemarket", authMiddleware, marketcontoller.updateMarket);
+router.post("/deletemarket", authMiddleware, marketcontoller.deleteMarket);
+router.post("/activeMatchMmappings", authMiddleware,marketcontoller.getActiveMatchMappings);
+router.get("/match", authMiddleware,marketcontoller.getActiveMatchMappings);
+router.get("/match/:matchId", authMiddleware, matchcontroller.getMatchTypes);
 
 // Market for Operator API Internal
 router.post("/get-markets", MarketController.getMarketsByOperator);
