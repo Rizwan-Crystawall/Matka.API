@@ -2,6 +2,8 @@ const operatorService = require("../services/operatorService");
 
 const getOperators = async (req, res) => {
   try {
+    console.log("FFFF");
+    
     const operators = await operatorService.fetchOperators();
     res.status(200).json(operators);
   } catch (error) {
@@ -95,6 +97,23 @@ const getStatusByOperatorId = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+const getOperatorList = async (req, res) => {
+  try {
+    // console.log("GET OPERATORS");return;
+    
+    const operatorsList = await operatorService.fetchOperatorsList();
+    res.status(200).json({
+      success: true,
+      data: operatorsList,
+    });
+  } catch (error) {
+    console.error('Error in getOperatorList:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch operator list',
+    });
+  }
+};
 
 
 
@@ -105,5 +124,6 @@ module.exports = {
   getOperatorById,
   deleteOperator,
   updateStatus,
-  getStatusByOperatorId
+  getStatusByOperatorId,
+  getOperatorList
 };

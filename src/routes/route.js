@@ -10,7 +10,7 @@ const ResultController = require("../Controllers/ResultController");
 const WalletController = require("../Controllers/Walletcontroller");
 const BetController = require("../Controllers/Betcontroller");
 const TokenController = require("../Controllers/TokenController");
-const OperatorController = require("../Controllers/OperatorController");
+const OperatorController = require("../controllers/OperatorController");
 
 //Middlware
 const authMiddleware = require("../middleware/middleware");
@@ -88,6 +88,9 @@ router.post('/operator/:id', OperatorController.updateOperator);
 router.delete('/deleteoperator/:id', OperatorController.deleteOperator);
 router.post('/operator/status/:id', OperatorController.updateStatus);
 router.get('/operator/:id/status', OperatorController. getStatusByOperatorId);
+router.get('/operat/list', OperatorController.getOperatorList);
+
+
 
 
 

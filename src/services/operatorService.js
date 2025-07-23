@@ -14,6 +14,7 @@ const fetchOperators = async () => {
   };
 };
 
+
 const addOperator = async ({ operator_id, environment, callback_url,status }) => {
 if (
   operator_id === undefined || operator_id === '' ||
@@ -71,12 +72,16 @@ const getStatusByOperatorId = async (operatorId) => {
   return await OperatorModal.getStatusByOperatorId(operatorId);
 };
 
-
+const fetchOperatorsList = async () => {
+  const result = await OperatorModal.getOperatorsList();
+  return result;
+};
 module.exports = {
   fetchOperators,addOperator,
   getById,
   deleteOperatorById,
   editOperator,
   updateOperatorStatus,
-  getStatusByOperatorId
+  getStatusByOperatorId,
+  fetchOperatorsList
 };

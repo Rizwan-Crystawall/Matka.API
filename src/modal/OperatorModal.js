@@ -117,6 +117,11 @@ const getStatusByOperatorId = async (operatorId) => {
   const result = await execute(sql, values);
   return { result };
 };
+const getOperatorsList = async () => {
+  const sql = `SELECT id, operator_id FROM operators ORDER BY id ASC`;
+  const rows = await execute(sql); 
+  return rows;
+};
 
 module.exports = {
   getOperators,
@@ -127,4 +132,5 @@ module.exports = {
   updateOperatorStatus,
   findByOperatorId,
   getStatusByOperatorId,
+  getOperatorsList
 };
