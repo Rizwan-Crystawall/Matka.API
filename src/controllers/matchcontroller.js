@@ -216,5 +216,6 @@ module.exports = {
   deleteMatch,
   getMatchById,
   getMatchTypes,
-  getAllMatchTypes
+  getAllMatchTypes,
+  getMatchTypesAPI,
 };

@@ -11,6 +11,8 @@ const WalletController = require("../Controllers/Walletcontroller");
 const BetController = require("../Controllers/Betcontroller");
 const TokenController = require("../Controllers/TokenController");
 const OperatorController = require("../Controllers/OperatorController");
+const marketcontoller = require("../Controllers/MarketController");
+const matchcontroller = require("../Controllers/MatchController");
 
 //Middlware
 const authMiddleware = require("../middleware/middleware");
@@ -39,6 +41,7 @@ router.get("/matchTypes", MatchController.getAllMatchTypes);
 
 //Market
 router.post("/getmarket", authMiddleware, marketcontoller.getAllMarkets);
+router.get("/markets", authMiddleware, marketcontoller.getMarket);
 router.post("/getmarkets", authMiddleware, marketcontoller.getMarket);
 router.post("/addmarket", authMiddleware, marketcontoller.addMarket);
 router.post("/updatemarket", authMiddleware, marketcontoller.updateMarket);
