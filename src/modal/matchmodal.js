@@ -32,6 +32,7 @@ const getAllMatches = async () => {
   return rows;
 };
 
+
 const insertMatch = async ({
   market_id,
   name,
@@ -247,10 +248,10 @@ const getAllMatchTypes = async () => {
 
 module.exports = {
   getAllMatches,
-  getAllMatchTypes,
   insertMatch,
   updateMatch,
   deleteMatch,
   fetchMatchById,
-  getMatchTypesByMatchId
+  getMatchTypesByMatchId,
+  getAllMatchTypes
 };

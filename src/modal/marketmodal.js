@@ -75,7 +75,7 @@ const fetchActiveMatchMappings = async () => {
       m.close_suspend,
       res.open_result,
       res.close_result,
-      mtm.id
+       mtm.id
     FROM matches m
     JOIN matches_type_mapping mtm ON mtm.match_id = m.id
     JOIN markets mkt ON m.market_id = mkt.id

@@ -1,4 +1,4 @@
-const DashboardModel = require("../modal/dashboardmodal");
+const DashboardModel = require("../modal/DashboardModal");
 
 const fetchDashboardStats = async () => {
   const stats = await DashboardModel.getDashboardStats();

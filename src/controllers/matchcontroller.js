@@ -23,6 +23,7 @@ const getAllMatches = async (req, res, next) => {
   }
 };
 
+
 const addMatch = async (req, res) => {
   try {
     const {
@@ -154,8 +155,9 @@ const deleteMatch = async (req, res) => {
 };
 const getMatchTypes = async (req, res) => {
   try {
-    const { matchId } = req.params;
-    const result = await MatchService.fetchMatchTypesByMatchId(matchId);
+  const { match_id } = req.query; 
+    const result = await MatchService.fetchMatchTypesByMatchId(match_id);
+
     return res.status(200).json({
       success: true,
       // message: "Match type data fetched successfully",
@@ -208,12 +210,11 @@ const getAllMatchTypes = async (req, res, next) => {
 
 
 module.exports = {
-  getAllMatchTypes,
   getAllMatches,
   addMatch,
   updateMatch,
   deleteMatch,
   getMatchById,
   getMatchTypes,
-  getMatchTypesAPI,
+  getAllMatchTypes
 };

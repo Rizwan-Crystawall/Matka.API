@@ -1,6 +1,6 @@
 const Match = require("../modal/matchmodal");
 
-const getAllMatches = async () => {
+const getAllMatches = async (userId) => {
   const profile = await Match.getAllMatches();
 
   if (!profile || profile.length === 0) {
@@ -15,6 +15,9 @@ const getAllMatches = async () => {
 
   const match = await Match.getAllMatches(s_id);
   return match;
+};
+const fetchAllMatchTypes = async () => {
+  return await Match.getAllMatchTypes();
 };
 const createMatch = async ({
   market_id,
@@ -70,16 +73,14 @@ const fetchMatchTypesByMatchId = async (matchId) => {
   return data;
 };
 
-const fetchAllMatchTypes = async () => {
-  return await Match.getAllMatchTypes();
-};
+
 
 module.exports = {
   getAllMatches,
-  fetchAllMatchTypes,
   createMatch,
   updateMatch,
   deleteMatch,
   getMatchById,
-  fetchMatchTypesByMatchId
+  fetchMatchTypesByMatchId,
+  fetchAllMatchTypes
 };

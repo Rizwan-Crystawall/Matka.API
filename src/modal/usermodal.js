@@ -47,11 +47,6 @@ const registerUser = async (username, name, password, phone, role_id, status, wa
   };
 };
 
-
-
-
-
-
 const updateUserFromAdmin = async ({ user_id, username, name, phone, role_id, status }) => {
   const updateQuery = `
     UPDATE users

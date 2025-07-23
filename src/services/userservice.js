@@ -25,7 +25,7 @@ const registerUser = async (data) => {
   if ( !username || !name || !phone || !password || status === undefined) {
     return {
       success: false,
-      message: "All fields are requiredf.",
+      message: "All fields are required.",
     };
   }
 

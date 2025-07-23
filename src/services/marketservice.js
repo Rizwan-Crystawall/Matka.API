@@ -10,8 +10,8 @@ const getAllMarkets = async () => {
     }
   };
 
-  const getMarket = async () => {
-  const rows = await MarketModel.getMarket();
+ const getMarket = async (data) => {
+  const rows = await MarketModel.getMarket(data);
   return rows;
 };
 const addMarket = async (name) => {

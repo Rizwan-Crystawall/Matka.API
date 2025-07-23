@@ -6,7 +6,7 @@ const parseJwt = require('../utils/parseJwt'); // if not already required
 const getAdminDashboardUsers = async (req, res) => {
   
   try {
-    const  data = req.body;
+    const  data = req.query;
     const users = await UserService.fetchAdminDashboardUsers(data );
     res.status(200).json({
       success: true,

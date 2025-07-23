@@ -4,10 +4,13 @@ const getBetsByMatchAndUser = async (matchId, userId) => {
   const sql = `
     SELECT 
       b.id,
+      mtm.id AS match_type_map_id,
       bd.digit,
+      res.open_result,
+      res.close_result,
       bd.stake,
       b.rate, 
-      mtm.type_id as type, 
+      mtm.type_id AS type, 
       CASE 
         WHEN mtm.type_id = 1 THEN 'single' 
         WHEN mtm.type_id = 2 THEN 'singlePatti' 
@@ -20,15 +23,24 @@ const getBetsByMatchAndUser = async (matchId, userId) => {
         WHEN b.is_closed_type = 0 THEN 'open' 
         WHEN b.is_closed_type = 1 THEN 'close' 
         ELSE 'unknown' 
-      END AS time 
+      END AS time,  
+
+      CASE
+        WHEN b.is_closed_type = 0 AND bd.digit = res.open_result THEN 1
+        WHEN b.is_closed_type = 1 AND bd.digit = res.close_result THEN 1
+        ELSE 0
+      END AS win
+
     FROM bets b 
     JOIN bet_digits bd ON b.id = bd.bet_id 
     JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id 
+    LEFT JOIN results res ON res.match_map_id = mtm.id
     WHERE mtm.match_id = ? AND b.user_id = ? AND b.status_id = 1
   `;
   const rows = await execute(sql, [matchId, userId]);
   return rows;
 };
+
 
 const getBetsByMatchAndUserAPI = async (matchId, userId, operatorId) => {
   const sql = `
@@ -231,15 +243,16 @@ const getBetsByOperatorId = async () => {
   op.operator_id AS operator_name,
   bd.digit,
   bd.stake
-  FROM bets b
-  LEFT JOIN bet_digits bd ON bd.bet_id = b.id
-  LEFT JOIN operators op ON op.id = b.operator_id
-  LEFT JOIN users u ON u.id = b.user_id
-  JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id
-  JOIN match_types mt ON mtm.type_id = mt.id
-  JOIN matches mth ON mtm.match_id = mth.id
-  JOIN status st ON st.id = b.status_id
-  ORDER BY b.created_on DESC;
+FROM bets b
+LEFT JOIN bet_digits bd ON bd.bet_id = b.id
+LEFT JOIN operators op ON op.id = b.operator_id 
+LEFT JOIN users u ON u.id = b.user_id
+JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id
+JOIN match_types mt ON mtm.type_id = mt.id
+JOIN matches mth ON mtm.match_id = mth.id
+JOIN status st ON st.id = b.status_id
+ORDER BY b.created_on DESC;
+;
   `;
   return await execute(sql);
 };
@@ -278,8 +291,7 @@ const insertBetAPI = async (conn, data) => {
 
 const fetchDigitStats = async (matchTypeId) => {
   const sql = `
-    SELECT bd.digit, COUNT(bd.bet_id) AS total_bets_on_digit, COUNT(DISTINCT b.user_id) AS unique_users_on_digit, SUM(bd.stake) AS total_stake_on_digit FROM bet_digits bd JOIN bets b ON bd.bet_id = b.id JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id JOIN match_types mt ON mtm.type_id = mt.id WHERE mt.id = ? GROUP BY bd.digit
-  `;
+SELECT bd.digit, COUNT(bd.bet_id) AS total_bets_on_digit, COUNT(DISTINCT b.user_id) AS unique_users_on_digit, SUM(bd.stake) AS total_stake_on_digit FROM bet_digits bd JOIN bets b ON bd.bet_id = b.id JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id JOIN match_types mt ON mtm.type_id = mt.id WHERE mt.id = ? GROUP BY bd.digit;  `;
 
   return await execute(sql, [matchTypeId]);
 };

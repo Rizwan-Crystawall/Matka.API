@@ -46,7 +46,7 @@ const getBetsByMatchAndUserAPI = async (req, res) => {
 
 const getUserBets = async (req, res) => {
   try {
-    const { match_id, user_id } = req.body;
+    const { match_id, user_id } = req.query;
 
     const bets = await BetsService.fetchUserBets(user_id, match_id);
     return res.status(200).json({ success: true, data: bets });
@@ -165,6 +165,15 @@ const getTotalNumberOfBets = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch operator ids" });
   }
 };
+// const getDigitBetStats = async (req, res) => {
+//   try {
+//     const stats = await BetsService.fetchDigitBetStats();
+//     res.json({ success: true, data: stats });
+//   } catch (error) {
+//     console.error("Error fetching digit stats:", error);
+//     res.status(500).json({ success: false, message: "Server error" });
+//   }
+// };
 
 const isThisBetPlacable = async (req, res) => {
   try {
