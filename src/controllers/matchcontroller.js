@@ -154,9 +154,10 @@ const deleteMatch = async (req, res) => {
   }
 };
 const getMatchTypes = async (req, res) => {
-  try {
-    const { matchId } = req.params;
+  try {    
+  const { matchId } = req.params; 
     const result = await MatchService.fetchMatchTypesByMatchId(matchId);
+
     return res.status(200).json({
       success: true,
       // message: "Match type data fetched successfully",

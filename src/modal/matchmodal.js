@@ -229,7 +229,7 @@ const getMatchTypesByMatchId = async (matchId) => {
       m.is_active, 
       m.open_suspend, 
       m.close_suspend, 
-      m.draw_date 
+      DATE_FORMAT(m.draw_date, '%d-%m-%Y') AS draw_date
     FROM matches_type_mapping mtm
     JOIN matches m ON m.id = mtm.match_id
     JOIN match_types mt ON mt.id = mtm.type_id

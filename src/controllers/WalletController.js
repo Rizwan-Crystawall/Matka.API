@@ -2,7 +2,8 @@ const WalletService = require('../services/WalletService');
 
 const getWalletDetails = async (req, res) => {
   try {
-    const userId = req.body.user_id;    
+    const userId = req.query.user_id; // ← changed from req.body to req.query
+
     const wallet = await WalletService.getWalletDetails(userId);
 
     return res.status(200).json({

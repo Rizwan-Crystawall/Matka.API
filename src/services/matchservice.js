@@ -1,6 +1,6 @@
 const Match = require("../modal/matchmodal");
 
-const getAllMatches = async () => {
+const getAllMatches = async (userId) => {
   const profile = await Match.getAllMatches();
 
   if (!profile || profile.length === 0) {

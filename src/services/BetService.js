@@ -29,7 +29,10 @@ const fetchBetsByMatchAndUserAPI = async (matchId, userId, operatorId) => {
 
 const fetchUserBets = async (user_id, match_id) => {
   if (isNaN(user_id) || isNaN(match_id)) {
-    // throw new Error("Invalid IDs");
+     return res.status(400).json({
+        success: false,
+        message: "match_id and user_id are required",
+      });
   }
   return await BetsModal.getUserBetsByMatch(user_id, match_id);
 };
