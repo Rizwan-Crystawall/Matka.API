@@ -84,6 +84,7 @@ const fetchActiveMatchMappings = async () => {
       mkt.is_active = 1 AND 
       m.is_active = 1 AND 
       m.is_deleted = 0
+      AND DATE(m.draw_date) = CURDATE();
   `;
 
   return await execute(sql);

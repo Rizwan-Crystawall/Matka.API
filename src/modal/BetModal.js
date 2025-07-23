@@ -6,8 +6,6 @@ const getBetsByMatchAndUser = async (matchId, userId) => {
       b.id,
       mtm.id AS match_type_map_id,
       bd.digit,
-      res.open_result,
-      res.close_result,
       bd.stake,
       b.rate, 
       mtm.type_id AS type, 
@@ -18,29 +16,15 @@ const getBetsByMatchAndUser = async (matchId, userId) => {
         WHEN mtm.type_id = 4 THEN 'tripplePatti' 
         WHEN mtm.type_id = 5 THEN 'jodi' 
         ELSE 'unknown' 
-      END AS type_name, 
-      CASE 
-        WHEN b.is_closed_type = 0 THEN 'open' 
-        WHEN b.is_closed_type = 1 THEN 'close' 
-        ELSE 'unknown' 
-      END AS time,  
-
-      CASE
-        WHEN b.is_closed_type = 0 AND bd.digit = res.open_result THEN 1
-        WHEN b.is_closed_type = 1 AND bd.digit = res.close_result THEN 1
-        ELSE 0
-      END AS win
-
+      END AS type_name
     FROM bets b 
     JOIN bet_digits bd ON b.id = bd.bet_id 
     JOIN matches_type_mapping mtm ON b.match_map_id = mtm.id 
-    LEFT JOIN results res ON res.match_map_id = mtm.id
     WHERE mtm.match_id = ? AND b.user_id = ? AND b.status_id = 1
   `;
   const rows = await execute(sql, [matchId, userId]);
   return rows;
 };
-
 
 const getBetsByMatchAndUserAPI = async (matchId, userId, operatorId) => {
   const sql = `
@@ -160,7 +144,7 @@ const getMatchMap = async (conn, match_id, type_id) => {
 };
 
 const insertBet = async (conn, data) => {
-  // console.log("insertBet data:", data);
+  console.log("insertBet data:", data);
   const betSql = `
     INSERT INTO bets (user_id, operator_id, match_map_id, rate, status_id, ip, transaction_id, is_closed_type)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -350,7 +334,11 @@ const updateBetSettlementsRetryCount = async (request_id) => {
   return await execute(sql, [request_id]);
 };
 
-const updateBetSettlementsWithReqId = async (request_id, status, failed_bets) => {
+const updateBetSettlementsWithReqId = async (
+  request_id,
+  status,
+  failed_bets
+) => {
   const sql = `
     UPDATE bet_settlements
     SET retry_count = retry_count + 1, status = ?, failed_bets = ?
@@ -375,8 +363,10 @@ const getBatchByRequestIdRollback = async (request_id) => {
 };
 
 const getCallbackUrl = async (operator_id) => {
-  const url = await execute(`SELECT * from operators where id = ?`, [operator_id]);
- return url[0] || [];
+  const url = await execute(`SELECT * from operators where id = ?`, [
+    operator_id,
+  ]);
+  return url[0] || [];
 };
 
 module.exports = {

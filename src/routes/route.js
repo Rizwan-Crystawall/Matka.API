@@ -10,9 +10,13 @@ const ResultController = require("../Controllers/ResultController");
 const WalletController = require("../Controllers/Walletcontroller");
 const BetController = require("../Controllers/Betcontroller");
 const TokenController = require("../Controllers/TokenController");
+<<<<<<< HEAD
 const OperatorController = require("../Controllers/OperatorController");
 const marketcontoller = require("../Controllers/MarketController");
 const matchcontroller = require("../Controllers/MatchController");
+=======
+const OperatorController = require("../controllers/OperatorController");
+>>>>>>> 98aff205473177820d98bcb1ad403132c9b928ae
 
 //Middlware
 const authMiddleware = require("../middleware/middleware");
@@ -36,7 +40,7 @@ router.post("/addmatch", authMiddleware, MatchController.addMatch);
 router.post("/editmatch/:id", authMiddleware, MatchController.updateMatch);
 router.post("/matches", MatchController.getMatchById);
 router.delete("/deletematch/:id", authMiddleware, MatchController.deleteMatch);
-router.get("/matchDetails", MatchController.getMatchTypes);
+// router.get("/matchDetails", MatchController.getMatchTypes);
 router.get("/matchTypes", MatchController.getAllMatchTypes);
 
 //Market
@@ -89,6 +93,12 @@ router.post('/operator', OperatorController.addOperators);
 router.get('/operators/:id', OperatorController.getOperatorById);
 router.post('/operator/:id', OperatorController.updateOperator);
 router.delete('/deleteoperator/:id', OperatorController.deleteOperator);
+router.post('/operator/status/:id', OperatorController.updateStatus);
+router.get('/operator/:id/status', OperatorController. getStatusByOperatorId);
+router.get('/operat/list', OperatorController.getOperatorList);
+
+
+
 
 
 module.exports = router;
