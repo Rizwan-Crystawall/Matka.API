@@ -28,7 +28,7 @@ const getAllMarkets = async (req, res, next) => {
 const getMarket = async (req, res) => {
   try {
     const  data = req.query;
-    console.log(data);
+    // console.log(data);
     const markets = await MarketService.getMarket(data);
     res.status(200).json({ success: true, data: markets });
   } catch (error) {

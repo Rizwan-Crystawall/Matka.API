@@ -2,7 +2,7 @@ const operatorService = require("../services/operatorService");
 
 const getOperators = async (req, res) => {
   try {
-    console.log("FFFF");
+    // console.log("FFFF");
     
     const operators = await operatorService.fetchOperators();
     res.status(200).json(operators);

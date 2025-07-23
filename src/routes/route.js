@@ -10,13 +10,9 @@ const ResultController = require("../Controllers/ResultController");
 const WalletController = require("../Controllers/Walletcontroller");
 const BetController = require("../Controllers/Betcontroller");
 const TokenController = require("../Controllers/TokenController");
-<<<<<<< HEAD
 const OperatorController = require("../Controllers/OperatorController");
 const marketcontoller = require("../Controllers/MarketController");
 const matchcontroller = require("../Controllers/MatchController");
-=======
-const OperatorController = require("../controllers/OperatorController");
->>>>>>> 98aff205473177820d98bcb1ad403132c9b928ae
 
 //Middlware
 const authMiddleware = require("../middleware/middleware");
