@@ -103,18 +103,15 @@ const updateOperatorStatus = async (status, id) => {
 
 const getStatusByOperatorId = async (operatorId) => {
   const sql = `
- SELECT
-  o.id AS id,
-  o.operator_id AS operator_id,       
-  COUNT(DISTINCT b.id) AS total_bets,
-  COUNT(DISTINCT b.user_id) AS total_users,
-  SUM(bd.stake) AS total_stake,
-  COUNT(bd.digit) AS total_digits
-  FROM operators o
-  JOIN bets b ON b.operator_id = o.id
+    SELECT
+   b.user_id AS total_users ,
+   COUNT(DISTINCT b.id) AS total_bets,
+   COUNT(bd.digit) AS total_digits,
+  SUM(bd.stake)  AS total_amount
+  FROM bets b
   JOIN bet_digits bd ON bd.bet_id = b.id
-  WHERE o.id = ?
-  GROUP BY o.id;
+  WHERE b.operator_id = ?
+  GROUP BY b.user_id;
   `;
   const values = [operatorId];
   const result = await execute(sql, values);
