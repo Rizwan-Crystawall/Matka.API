@@ -59,14 +59,6 @@ const updateOperator = async ({ id, operator_id, environment, callback_url }) =>
   // Check if operator_id exists in other records
   const existing = await OperatorModal.findByOperatorId(operator_id);
 
-  if (existing.length > 0 && existing[0].id !== id) {
-    return {
-      success: false,
-      message: "Operator ID already exists.",
-      status: 400,
-    };
-  }
-
   // Proceed to update
   const result = await OperatorModal.updateOperator({ id, operator_id, environment, callback_url });
 
