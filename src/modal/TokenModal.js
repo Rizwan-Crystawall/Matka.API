@@ -2,7 +2,7 @@ const { execute } = require("../utils/dbHelper");
 
 const verifyOperator = async (operatorId, apiSecret) => {
   const sql =
-    "SELECT * FROM operators where operator_id = ? AND api_secret = ?";
+    "SELECT * FROM operators where operator_id = ? AND api_secret = ? AND status=1";
   const rows = await execute(sql, [operatorId, apiSecret]);
   return rows || [];
 };
