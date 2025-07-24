@@ -1,7 +1,10 @@
 const db = require("../utils/dbHelper");
 const TransactionModal = require("../modal/TransactionModal");
+const TokenModal = require("../modal/TokenModal");
 const BetsService = require("../services/BetService");
 const { success } = require("../utils/response");
+const { generateSignature } = require("./../utils/security");
+const jwt = require("jsonwebtoken");
 
 const axios = require("axios");
 
@@ -22,9 +25,28 @@ const placeBet = async (req) => {
   try {
     const transction = await TransactionModal.createTransaction(req.body);
     if (transction === 1) {
+
+      const oid = req.body.operatorId;
+      const uid = req.body.userId;
+      const opr = await TokenModal.getOperatorDetails(oid);
+      let secret = "";
+      if (opr.length > 0) {
+        secret = opr[0].shared_secret;
+      }
+      const payloadForToken = {
+        oid,
+        uid,
+        signature: generateSignature(uid, secret),
+        iat: Math.floor(Date.now() / 1000),
+      };
+      const token = jwt.sign(payloadForToken, secret, {
+        algorithm: "HS256",
+        expiresIn: "1h",
+      });
       let data = {
         operatorId: req.body.operatorId,
         userId: req.body.userId,
+        token: token,
         transactionId: req.body.transactionId,
         requestId: req.body.requestId,
         debitAmount: req.body.debitAmount,
@@ -37,7 +59,7 @@ const placeBet = async (req) => {
         .post(requestUrl, data, {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.API_TOKEN}`,
+            // Authorization: `Bearer ${process.env.API_TOKEN}`,
           },
         })
         .then((res) => res.data)
