@@ -46,12 +46,28 @@ if (
   return newOperator;
 };
 
-const editOperator = async (operatorData) => {
-  // You can add validation here if needed
+const updateOperator = async ({ id, operator_id, environment, callback_url }) => {
+  // Basic validation
+  if (!operator_id || !environment || !callback_url) {
+    return {
+      success: false,
+      message: "All fields are required.",
+      status: 400,
+    };
+  }
 
-  const updatedOperator = await OperatorModal.updateOperator(operatorData);
-  return updatedOperator;
+  // Check if operator_id exists in other records
+  const existing = await OperatorModal.findByOperatorId(operator_id);
+
+  // Proceed to update
+  const result = await OperatorModal.updateOperator({ id, operator_id, environment, callback_url });
+
+  return {
+    success: true,
+    ...result, // assuming updateOperator returns updated row info or at least id
+  };
 };
+
 const getById = async (id) => {
   return await OperatorModal.getOperatorById(id); // Sequelize
   // return await Operator.findById(id); // Mongoose
@@ -80,7 +96,7 @@ module.exports = {
   fetchOperators,addOperator,
   getById,
   deleteOperatorById,
-  editOperator,
+  updateOperator,
   updateOperatorStatus,
   getStatusByOperatorId,
   fetchOperatorsList
