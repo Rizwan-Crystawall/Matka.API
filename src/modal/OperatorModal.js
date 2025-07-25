@@ -21,6 +21,8 @@ const addOperator = async ({ operator_id, environment, callback_url }) => {
   const result = await execute(sql, values);
 
   return {
+    status: 201,
+    success: true,
     id: result.insertId,
     operator_id,
     environment,
@@ -32,20 +34,31 @@ const findByOperatorId = async (operator_id) => {
   return await execute(sql, [operator_id]);
 };
 
-const updateOperator = async ({
-  id,
-  operator_id,
-  environment,
-  callback_url,
-}) => {
-  const sql = `
+const updateOperator = async ({ id, operator_id, environment, callback_url }) => {
+  // Check if operator_id exists for another record
+  const checkSql = `SELECT id FROM operators WHERE operator_id = ? AND id != ?`;
+  const existing = await execute(checkSql, [operator_id, id]);
+
+  if (existing.length > 0) {
+    return {
+      success: false,
+      message: "Operator ID already exists.",
+      status: 400,
+    };
+  }
+
+  const updateSql = `
     UPDATE operators
     SET operator_id = ?, environment = ?, callback_url = ?
     WHERE id = ?
   `;
 
-  const values = [operator_id, environment, callback_url, id];
-  const result = await execute(sql, values);
+  const result = await execute(updateSql, [
+    operator_id,
+    environment,
+    callback_url,
+    id,
+  ]);
 
   if (result.affectedRows === 0) {
     const error = new Error(`Operator with id ${id} not found`);
@@ -54,12 +67,18 @@ const updateOperator = async ({
   }
 
   return {
-    id,
-    operator_id,
-    environment,
-    callback_url,
+    success: true,
+    message: "Operator updated successfully",
+    data: {
+      id,
+      operator_id,
+      environment,
+      callback_url,
+    },
   };
 };
+
+
 const getOperatorById = async (id) => {
   const _sql = `
     SELECT 
@@ -101,17 +120,15 @@ const updateOperatorStatus = async (status, id) => {
 
 const getStatusByOperatorId = async (operatorId) => {
   const sql = `
- SELECT
-  o.id AS id,
-  o.operator_id AS operator_id,       
+  SELECT
+  b.user_id AS total_users ,
   COUNT(DISTINCT b.id) AS total_bets,
-  COUNT(DISTINCT b.user_id) AS total_users,
-  SUM(bd.stake) AS total_stake
-  FROM operators o
-  JOIN bets b ON b.operator_id = o.id
+  COUNT(bd.digit) AS total_digits,
+  SUM(bd.stake)  AS total_amount
+  FROM bets b
   JOIN bet_digits bd ON bd.bet_id = b.id
-  WHERE o.id = ?
-  GROUP BY o.id;
+  WHERE b.operator_id = ?
+  GROUP BY b.user_id;
   `;
   const values = [operatorId];
   const result = await execute(sql, values);
@@ -119,7 +136,7 @@ const getStatusByOperatorId = async (operatorId) => {
 };
 const getOperatorsList = async () => {
   const sql = `SELECT id, operator_id FROM operators ORDER BY id ASC`;
-  const rows = await execute(sql); 
+  const rows = await execute(sql);
   return rows;
 };
 
@@ -132,5 +149,5 @@ module.exports = {
   updateOperatorStatus,
   findByOperatorId,
   getStatusByOperatorId,
-  getOperatorsList
+  getOperatorsList,
 };

@@ -634,7 +634,7 @@ const rollbackResults = async (data) => {
       r.close_result,
       data.user_id,
     ]);
-    // await ResultModel.insertOrUpdateResults(connection, values);
+    
     for (const item of data.result) {
       const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
       const digit = item.open_result ?? item.close_result;
@@ -744,20 +744,6 @@ const rollbackResults = async (data) => {
           algorithm: "HS256",
           expiresIn: "1h",
         });
-        // const formattedWinners = operator.bets.winners.flatMap((winner) =>
-        //   winner.bet_ids.map((betId) => ({
-        //     userId: winner.userId,
-        //     creditAmount: winner.creditAmount,
-        //     client_bet_id: betId,
-        //   }))
-        // );
-        // const formattedLosers = operator.bets.Loosers.flatMap((loser) =>
-        //   loser.bet_ids.map((betId) => ({
-        //     userId: loser.userId,
-        //     totalstake: loser.stake,
-        //     client_bet_id: betId,
-        //   }))
-        // );
         let data = {
           userId: userForToken,
           transactionId: transactionId,
@@ -765,7 +751,6 @@ const rollbackResults = async (data) => {
           operatorId: operator.operatorId,
           transType: "Rollback",
           debitAmount: 0,
-          // reason: reason,       
         };
         await createTransaction(data);
         const payload = {
@@ -782,26 +767,8 @@ const rollbackResults = async (data) => {
           },
           timestamp,
         };
-        // const payload = {
-  //       operatorId: operator.operatorId,
-  //       userId: userForToken,
-  //       token: token,
-  //       transactionId,
-  //       requestId,
-  //       rollbackReason: "wrong result publish",
-  //       winningDigit: digit,
-  //       betType: typeName,
-  //       bets: {
-  //         winners: formattedWinners,
-  //         losers: formattedLosers,
-  //       },
-  //       timestamp,
-  //     };
         const callbackUrl = OperatorUrls[operator.operatorId];
-        // console.log(callbackUrl);return;
-        // console.log(JSON.stringify(payload, null, 2));
         await sendNewBatchForRollback(payload, callbackUrl);
-        // console.log("----------------------------");
       }
       const groupedByBetId = {};
       bets.forEach((item) => {
@@ -823,13 +790,7 @@ const rollbackResults = async (data) => {
           losingBets.push(parseInt(betId));
         }
       }
-      // await ResultModel.updateBetsStatusAPI(
-      //   connection,
-      //   winningBets,
-      //   losingBets
-      // );
       await ResultModel.resetBetStatus(connection, mmid, isClosedType);
-      // await ResultModel.clearResult(connection, mmid, isClosedType);
     }
     await ResultModel.insertOrUpdateResults(connection, values);
     await db.commit(connection);
