@@ -37,21 +37,16 @@ const updateTransaction = async (data) => {
    UPDATE transactions SET status = "Deleted", rollback_reason="Can Bet False" WHERE transaction_id = ?
   `;
   const result = await execute(sql, [data.transactionId]);
-  // console.log(result);
   return result.changedRows;
 };
 
 const getBetRequestUrl = async (operatorId) => {
   const sql = `SELECT CASE
-    WHEN RIGHT(callback_url, 1) = '/' THEN CONCAT(callback_url, 'placebet')
-    ELSE CONCAT(callback_url, '/placebet')
+    WHEN RIGHT(callback_url, 1) = '/' THEN CONCAT(callback_url, 'betrequest')
+    ELSE CONCAT(callback_url, '/betrequest')
     END AS callback_url FROM operators WHERE id = ?`;
   const result = await execute(sql, [operatorId]);
-  if (result.length > 0) {
-    return result[0].callback_url;
-  } else {
-    throw new Error("Operator not found");
-  }
+  return result[0].callback_url;
 };
 
 module.exports = {
