@@ -215,6 +215,126 @@ const getMatchTypeId = async (match_id) => {
 
 // For Operator API
 
+function getByteSize(obj) {
+  return Buffer.byteLength(JSON.stringify(obj));
+}
+
+function getByteSizeInMB(obj) {
+  const bytes = Buffer.byteLength(JSON.stringify(obj));
+  const megabytes = bytes / (1024 * 1024); // 1 MB = 1024 * 1024 bytes
+  return megabytes;
+}
+
+// function chunkArray(arr, size) {
+//   const result = [];
+//   for (let i = 0; i < arr.length; i += size) {
+//     result.push(arr.slice(i, i + size));
+//   }
+//   return result;
+// }
+
+// function chunkPayloadByBets(originalPayload, maxItemsPerChunk = 100) {
+//   const { bets, requestId, ...rest } = originalPayload;
+//   const winnersChunks = chunkArray(bets.winners || [], maxItemsPerChunk);
+//   const losersChunks = chunkArray(bets.losers || [], maxItemsPerChunk);
+
+//   const payloads = [];
+//   let chunkCount = 1;
+
+//   // Chunk winners first
+//   for (const chunk of winnersChunks.length ? winnersChunks : [[]]) {
+//     payloads.push({
+//       ...rest,
+//       requestId: `${requestId}-reqId-${chunkCount++}`,
+//       bets: {
+//         winners: chunk,
+//         losers: []
+//       },
+//       timestamp: new Date().toISOString()
+//     });
+//   }
+
+//   // Then chunk losers
+//   for (const chunk of losersChunks.length ? losersChunks : [[]]) {
+//     payloads.push({
+//       ...rest,
+//       requestId: `${requestId}-${chunkCount++}`,
+//       bets: {
+//         winners: [],
+//         losers: chunk
+//       },
+//       timestamp: new Date().toISOString()
+//     });
+//   }
+
+//   return payloads;
+// }
+
+function chunkArray(arr, size) {
+  const result = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+}
+
+function chunkPayloadByBets(payload, maxItemsPerChunk = 100) {
+  const { bets, requestId, timestamp, ...rest } = payload;
+
+  const winners = Array.isArray(bets.winners) ? bets.winners : [];
+  const losers = Array.isArray(bets.losers) ? bets.losers : [];
+
+  const winnerChunks = chunkArray(winners, maxItemsPerChunk);
+  const loserChunks = chunkArray(losers, maxItemsPerChunk);
+
+  const chunks = [];
+  let counter = 1;
+
+  // Chunk winners first
+  if (winnerChunks.length > 0) {
+    for (const chunk of winnerChunks) {
+      chunks.push({
+        ...rest,
+        requestId: `${requestId}-${counter++}`,
+        bets: {
+          winners: chunk,
+          losers: []
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+  } else {
+    chunks.push({
+      ...rest,
+      requestId: `${requestId}-${counter++}`,
+      bets: {
+        winners: [],
+        losers: []
+      },
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Then chunk losers
+  if (loserChunks.length > 0) {
+    for (const chunk of loserChunks) {
+      chunks.push({
+        ...rest,
+        requestId: `${requestId}-${counter++}`,
+        bets: {
+          winners: [],
+          losers: chunk
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  return chunks;
+}
+
+
+
 const publishResults = async (data) => {
   const connection = await db.beginTransaction();
   try {
@@ -230,7 +350,7 @@ const publishResults = async (data) => {
       r.close_result,
       data.user_id,
     ]);
-    await ResultModel.insertOrUpdateResults(connection, values);
+    // await ResultModel.insertOrUpdateResults(connection, values);
     for (const item of data.result) {
       const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
       const digit = item.open_result ?? item.close_result;
@@ -380,8 +500,41 @@ const publishResults = async (data) => {
         const callbackUrl = OperatorUrls[operator.operatorId];
         // console.log(callbackUrl);return;
         // console.log(JSON.stringify(payload, null, 2));
-        await sendNewBatch(payload, callbackUrl);
-        // console.log("----------------------------");
+        // await sendNewBatch(payload, callbackUrl);
+        // console.log(getByteSize(ppload));
+        // console.log(getByteSizeInMB(ppload));
+        const originalPayload = {
+          operatorId: "1",
+          token: "eyJh...",
+          userId: "101",
+          requestId: "e39bf334",
+          transactionId: "txn-115cded3",
+          winningDigit: 1,
+          betType: "Single",
+          bets: {
+            winners: new Array(205).fill({
+              userId: "101",
+              creditAmount: 100,
+              totalstake: 20,
+              clientBetId: [1111],
+            }),
+            losers: new Array(135).fill({
+              userId: "102",
+              totalstake: 10,
+              clientBetId: [2222],
+            }),
+          },
+          timestamp: new Date().toISOString(),
+        };
+        const chunks = chunkPayloadByBets(originalPayload, 100);
+        console.log(chunks.length); // ➜ 4 chunks (3 winners, 2 losers)
+        console.log(chunks[0]); // Inspect 1st chunk
+        console.log(chunks[1]); // Inspect 2nd chunk
+        console.log(chunks[2]); // Inspect 3rd
+        console.log(chunks[3]); // Inspect 4th chunk
+        console.log(chunks[4]); // Inspect 5th chunk
+        // await sendNewBatch(payload, callbackUrl);
+        console.log("----------------------------");
       }
       const groupedByBetId = {};
       bets.forEach((item) => {
@@ -403,11 +556,11 @@ const publishResults = async (data) => {
           losingBets.push(parseInt(betId));
         }
       }
-      await ResultModel.updateBetsStatusAPI(
-        connection,
-        winningBets,
-        losingBets
-      );
+      // await ResultModel.updateBetsStatusAPI(
+      //   connection,
+      //   winningBets,
+      //   losingBets
+      // );
     }
     await db.commit(connection);
     return {
@@ -634,7 +787,7 @@ const rollbackResults = async (data) => {
       r.close_result,
       data.user_id,
     ]);
-    
+
     for (const item of data.result) {
       const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
       const digit = item.open_result ?? item.close_result;
@@ -807,7 +960,6 @@ const rollbackResults = async (data) => {
       error: error.message,
     };
   }
-
 };
 
 const settleBet = async (data) => {
