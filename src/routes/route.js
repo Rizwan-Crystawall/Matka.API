@@ -4,14 +4,13 @@ const LoginController = require("../Controllers/LoginController");
 const UserController = require("../Controllers/UserController");
 const MatchController = require("../Controllers/MatchController");
 const RegisterController = require("../Controllers/RegisterController");
-const MarketController = require("../Controllers/MarketContoller");
 const DashboardController = require("../Controllers/DashboardController");
 const ResultController = require("../Controllers/ResultController");
 const WalletController = require("../Controllers/Walletcontroller");
 const BetController = require("../Controllers/Betcontroller");
 const TokenController = require("../Controllers/TokenController");
 const OperatorController = require("../Controllers/OperatorController");
-const marketcontoller = require("../Controllers/MarketController");
+const marketcontoller = require("../controllers/MarketController");
 const matchcontroller = require("../Controllers/MatchController");
 
 //Middlware
@@ -51,7 +50,7 @@ router.get("/match", authMiddleware,marketcontoller.getActiveMatchMappings);
 router.get("/match/:matchId", authMiddleware, matchcontroller.getMatchTypes);
 
 // Market for Operator API Internal
-router.post("/get-markets", MarketController.getMarketsByOperator);
+router.post("/get-markets", marketcontoller.getMarketsByOperator);
 router.post("/verify-user", UserController.verifyUser);
 
 //Dashboard
@@ -84,14 +83,14 @@ router.post("/getTotalNumberOfBets", authMiddleware,BetController.getTotalNumber
 
 
 //Operators
-router.get('/operators', OperatorController.getOperators);
-router.post('/operator', OperatorController.addOperators);
-router.get('/operators/:id', OperatorController.getOperatorById);
-router.post('/operator/:id', OperatorController.updateOperator);
-router.delete('/deleteoperator/:id', OperatorController.deleteOperator);
-router.post('/operator/status/:id', OperatorController.updateStatus);
-router.get('/operator/:id/status', OperatorController. getStatusByOperatorId);
-router.get('/operat/list', OperatorController.getOperatorList);
+router.get('/operators',  authMiddleware,OperatorController.getOperators);
+router.post('/operator',  authMiddleware,OperatorController.addOperators);
+router.get('/operators/:id',  authMiddleware,OperatorController.getOperatorById);
+router.post('/operator/:id',  authMiddleware,OperatorController.updateOperator);
+router.delete('/deleteoperator/:id',  authMiddleware,OperatorController.deleteOperator);
+router.post('/operator/status/:id',  authMiddleware,OperatorController.updateStatus);
+router.get('/operator/:id/status',  authMiddleware,OperatorController. getStatusByOperatorId);
+router.get('/operat/list',  authMiddleware,OperatorController.getOperatorList);
 
 
 

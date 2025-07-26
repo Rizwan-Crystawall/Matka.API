@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const marketcontoller = require("../../controllers/marketcontoller");
+const marketcontoller = require("../../controllers/MarketController.js");
 const BetController = require("../../controllers/BetController");
 const TokenController = require("../../controllers/TokenController");
 const TransactionController = require("../../controllers/TransactionController");

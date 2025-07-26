@@ -1,7 +1,10 @@
 const MarketService = require('../services/marketservice');
-const response = require("../utils/response"); 
+const response = require("../utils/response"); // adjust path accordingly
+const statusCodes = require("../utils/statusCodes");
+const redisClient = require('../config/redisClient'); 
+const CACHE_KEY = 'cached_markets';
 
-
+  const TTL = 60 * 60;
 
 
 const getAllMarkets = async (req, res, next) => {
@@ -27,21 +30,33 @@ const getAllMarkets = async (req, res, next) => {
 };
 const getMarket = async (req, res) => {
   try {
-    const  data = req.query;
-    // console.log(data);
-    const markets = await MarketService.getMarket(data);
-    res.status(200).json({ success: true, data: markets });
+    const cachedData = await redisClient.get(CACHE_KEY);
+
+    if (cachedData) {
+      console.log('Returning cached market data');
+      const parsed = JSON.parse(cachedData);      
+      return res.json({ success: true, data: parsed });
+    }
+
+    const markets = await MarketService.getMarket();
+
+    await redisClient.setEx(CACHE_KEY, TTL, JSON.stringify(markets));
+    console.log('🚀 Returning fresh market data from DB');
+    res.status(200).json({ success: true, data: markets }); // already correct
   } catch (error) {
     console.error("Error fetching admin markets:", error.message);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
+
 const addMarket = async (req, res) => {
  try {
     const { name } = req.body;
 
-    const result = await MarketService.addMarket(name);    
+    const result = await MarketService.addMarket(name);   
+       await redisClient.del(CACHE_KEY);
+    console.log('🗑 Cache invalidated due to market addition'); 
  if (!result.success) {
       return res.status(400).json(result);
     }
@@ -61,6 +76,8 @@ const updateMarket = async (req, res) => {
      const is_active = status;
 
     const result = await MarketService.updateMarket(market_id, name, is_active);
+      await redisClient.del(CACHE_KEY);
+    console.log('🗑 Cache invalidated due to market update');
 
     return res.status(200).json({
       success: true,
@@ -92,10 +109,26 @@ const deleteMarket = async (req, res) => {
 const getActiveMatchMappings = async (req, res) => {
   try {
     const result = await MarketService.getActiveMatchMappings();
-
     return res.status(200).json({
       success: true,
-      message: "Active match mappings fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching match mappings",
+      error: error.message,
+    });
+  }
+};
+
+const getActiveMatchMappingsAPI = async (req, res) => {
+  try {
+    const result = await MarketService.getActiveMatchMappings();
+
+    return res.status(200).json({
+      status: "RS_OK",
+      message: statusCodes.RS_OK,
       data: result,
     });
   } catch (error) {
@@ -137,4 +170,5 @@ module.exports = {
   deleteMarket,
   getActiveMatchMappings,
   getMarketsByOperator,
+  getActiveMatchMappingsAPI,
 };
