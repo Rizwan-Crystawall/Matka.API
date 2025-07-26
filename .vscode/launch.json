@@ -4,12 +4,27 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug Server",
-      "program": "./bin/www.js",
-      "skipFiles": ["<node_internals>/**"],
+      "name": "Debug Express App",
+      "program": "${workspaceFolder}/bin/www",
       "env": {
-        "PORT": "5002"
-      }
+        "NODE_ENV": "development"
+      },
+      "runtimeArgs": ["--nolazy"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug with Nodemon (Hot Reload)",
+      "runtimeExecutable": "nodemon",
+      "program": "${workspaceFolder}/bin/www",
+      "restart": true,
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
     }
   ]
 }

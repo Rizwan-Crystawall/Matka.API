@@ -10,6 +10,7 @@ const { generateSignature } = require("./../utils/security");
 const jwt = require("jsonwebtoken");
 const { createTransaction } = require("../modal/TransactionModal.js");
 const TYPE_NAMES = require("../utils/typeMap");
+const chunkPayloadByBets = require("../utils/betChunk.js");
 
 const saveBetResults = async (data) => {
   const connection = await db.beginTransaction();
@@ -270,68 +271,68 @@ function getByteSizeInMB(obj) {
 //   return payloads;
 // }
 
-function chunkArray(arr, size) {
-  const result = [];
-  for (let i = 0; i < arr.length; i += size) {
-    result.push(arr.slice(i, i + size));
-  }
-  return result;
-}
+// function chunkArray(arr, size) {
+//   const result = [];
+//   for (let i = 0; i < arr.length; i += size) {
+//     result.push(arr.slice(i, i + size));
+//   }
+//   return result;
+// }
 
-function chunkPayloadByBets(payload, maxItemsPerChunk = 100) {
-  const { bets, requestId, timestamp, ...rest } = payload;
+// function chunkPayloadByBets(payload, maxItemsPerChunk = 100) {
+//   const { bets, requestId, timestamp, ...rest } = payload;
 
-  const winners = Array.isArray(bets.winners) ? bets.winners : [];
-  const losers = Array.isArray(bets.losers) ? bets.losers : [];
+//   const winners = Array.isArray(bets.winners) ? bets.winners : [];
+//   const losers = Array.isArray(bets.losers) ? bets.losers : [];
 
-  const winnerChunks = chunkArray(winners, maxItemsPerChunk);
-  const loserChunks = chunkArray(losers, maxItemsPerChunk);
+//   const winnerChunks = chunkArray(winners, maxItemsPerChunk);
+//   const loserChunks = chunkArray(losers, maxItemsPerChunk);
 
-  const chunks = [];
-  let counter = 1;
+//   const chunks = [];
+//   let counter = 1;
 
-  // Chunk winners first
-  if (winnerChunks.length > 0) {
-    for (const chunk of winnerChunks) {
-      chunks.push({
-        ...rest,
-        requestId: `${requestId}-${counter++}`,
-        bets: {
-          winners: chunk,
-          losers: []
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-  } else {
-    chunks.push({
-      ...rest,
-      requestId: `${requestId}-${counter++}`,
-      bets: {
-        winners: [],
-        losers: []
-      },
-      timestamp: new Date().toISOString()
-    });
-  }
+//   // Chunk winners first
+//   if (winnerChunks.length > 0) {
+//     for (const chunk of winnerChunks) {
+//       chunks.push({
+//         ...rest,
+//         requestId: `${requestId}-${counter++}`,
+//         bets: {
+//           winners: chunk,
+//           losers: []
+//         },
+//         timestamp: new Date().toISOString()
+//       });
+//     }
+//   } else {
+//     chunks.push({
+//       ...rest,
+//       requestId: `${requestId}-${counter++}`,
+//       bets: {
+//         winners: [],
+//         losers: []
+//       },
+//       timestamp: new Date().toISOString()
+//     });
+//   }
 
-  // Then chunk losers
-  if (loserChunks.length > 0) {
-    for (const chunk of loserChunks) {
-      chunks.push({
-        ...rest,
-        requestId: `${requestId}-${counter++}`,
-        bets: {
-          winners: [],
-          losers: chunk
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-  }
+//   // Then chunk losers
+//   if (loserChunks.length > 0) {
+//     for (const chunk of loserChunks) {
+//       chunks.push({
+//         ...rest,
+//         requestId: `${requestId}-${counter++}`,
+//         bets: {
+//           winners: [],
+//           losers: chunk
+//         },
+//         timestamp: new Date().toISOString()
+//       });
+//     }
+//   }
 
-  return chunks;
-}
+//   return chunks;
+// }
 
 
 
@@ -350,7 +351,7 @@ const publishResults = async (data) => {
       r.close_result,
       data.user_id,
     ]);
-    // await ResultModel.insertOrUpdateResults(connection, values);
+    await ResultModel.insertOrUpdateResults(connection, values);
     for (const item of data.result) {
       const isClosedType = item.hasOwnProperty("open_result") ? 0 : 1;
       const digit = item.open_result ?? item.close_result;
@@ -474,15 +475,7 @@ const publishResults = async (data) => {
         //     client_bet_id: betId,
         //   }))
         // );
-        let data = {
-          userId: userForToken,
-          transactionId: transactionId,
-          requestId: requestId,
-          operatorId: operator.operatorId,
-          transType: "Result",
-          debitAmount: 0,
-        };
-        await createTransaction(data);
+        
         const payload = {
           operatorId: operator.operatorId,
           token: token,
@@ -498,9 +491,11 @@ const publishResults = async (data) => {
           timestamp,
         };
         const callbackUrl = OperatorUrls[operator.operatorId];
+
+        
+
         // console.log(callbackUrl);return;
         // console.log(JSON.stringify(payload, null, 2));
-        // await sendNewBatch(payload, callbackUrl);
         // console.log(getByteSize(ppload));
         // console.log(getByteSizeInMB(ppload));
         const originalPayload = {
@@ -526,15 +521,29 @@ const publishResults = async (data) => {
           },
           timestamp: new Date().toISOString(),
         };
-        const chunks = chunkPayloadByBets(originalPayload, 100);
-        console.log(chunks.length); // ➜ 4 chunks (3 winners, 2 losers)
-        console.log(chunks[0]); // Inspect 1st chunk
-        console.log(chunks[1]); // Inspect 2nd chunk
-        console.log(chunks[2]); // Inspect 3rd
-        console.log(chunks[3]); // Inspect 4th chunk
-        console.log(chunks[4]); // Inspect 5th chunk
+        const chunks = chunkPayloadByBets(payload, 100);
+        // console.log(chunks);
+        
+
+        for (const chunk of chunks) {
+          let data = {
+          userId: userForToken,
+          transactionId: transactionId,
+          requestId: chunk.requestId,
+          operatorId: operator.operatorId,
+          transType: "Result",
+          debitAmount: 0,
+        };
+        await createTransaction(data);
+          await sendNewBatch(chunk, callbackUrl);
+        }
+        // console.log(chunks.length); // ➜ 4 chunks (3 winners, 2 losers)
+        // console.log(chunks[0]); // Inspect 1st chunk
+        // console.log(chunks[1]); // Inspect 2nd chunk
+        // console.log(chunks[2]); // Inspect 3rd
+        // console.log(chunks[3]); // Inspect 4th chunk
+        // console.log(chunks[4]); // Inspect 5th chunk
         // await sendNewBatch(payload, callbackUrl);
-        console.log("----------------------------");
       }
       const groupedByBetId = {};
       bets.forEach((item) => {
@@ -556,11 +565,11 @@ const publishResults = async (data) => {
           losingBets.push(parseInt(betId));
         }
       }
-      // await ResultModel.updateBetsStatusAPI(
-      //   connection,
-      //   winningBets,
-      //   losingBets
-      // );
+      await ResultModel.updateBetsStatusAPI(
+        connection,
+        winningBets,
+        losingBets
+      );
     }
     await db.commit(connection);
     return {
@@ -897,15 +906,7 @@ const rollbackResults = async (data) => {
           algorithm: "HS256",
           expiresIn: "1h",
         });
-        let data = {
-          userId: userForToken,
-          transactionId: transactionId,
-          requestId: requestId,
-          operatorId: operator.operatorId,
-          transType: "Rollback",
-          debitAmount: 0,
-        };
-        await createTransaction(data);
+       
         const payload = {
           operatorId: operator.operatorId,
           token: token,
@@ -920,9 +921,27 @@ const rollbackResults = async (data) => {
           },
           timestamp,
         };
+
+        const chunks = chunkPayloadByBets(payload, 100);
+
         const callbackUrl = OperatorUrls[operator.operatorId];
-        await sendNewBatchForRollback(payload, callbackUrl);
+        // await sendNewBatchForRollback(payload, callbackUrl);
+
+        
+        for (const chunk of chunks) {
+           let data = {
+          userId: userForToken,
+          transactionId: transactionId,
+          requestId: chunk.requestId,
+          operatorId: operator.operatorId,
+          transType: "Rollback",
+          debitAmount: 0,
+        };
+        await createTransaction(data);
+          await sendNewBatchForRollback(chunk, callbackUrl);
+        }
       }
+
       const groupedByBetId = {};
       bets.forEach((item) => {
         if (!groupedByBetId[item.bet_id]) {
@@ -949,7 +968,7 @@ const rollbackResults = async (data) => {
     await db.commit(connection);
     return {
       success: true,
-      message: "Bet results saved successfully.",
+      message: "Bet result rolled back successfully.",
     };
   } catch (error) {
     await db.rollback(connection);

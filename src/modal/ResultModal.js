@@ -191,7 +191,9 @@ const fetchRollbackBets = async (conn, digit, mmid, isClosedType) => {
   // `;
 
   const rows = await conn.query(
-    `SELECT b.user_id, b.id AS bet_id, bd_all.id as bet_digits_id, bd_all.digit, bd_all.stake, bd_win.potential_profit as winning_potential_profit FROM bets b JOIN bet_digits bd_all ON b.id = bd_all.bet_id LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ? WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 2;`,
+    `SELECT b.user_id, b.id AS bet_id, bd_all.id as bet_digits_id, bd_all.digit, bd_all.stake, bd_win.potential_profit as winning_potential_profit 
+    
+    FROM bets b JOIN bet_digits bd_all ON b.id = bd_all.bet_id LEFT JOIN bet_digits bd_win ON b.id = bd_win.bet_id AND bd_win.digit = ? WHERE b.match_map_id = ? AND b.is_closed_type = ? AND b.status_id = 2;`,
     [digit, mmid, isClosedType]
   );
 
